@@ -1,1 +1,25 @@
-<p>navbar works!</p>
+
+<div id="navbar">
+    <p-toolbar>
+        <div class="p-toolbar-group-left">
+            <!--  -->
+            <div class="p-inputgroup">
+                <span class="p-inputgroup-addon">
+                    <i class="fas fa-search"></i>
+                </span>
+                <p-autoComplete [placeholder]="'Enter text ID'" [suggestions]="filteredText" (completeMethod)="filterText($event)" [minLength]="0" [virtualScroll]="true" [itemSize]="34" field="label"></p-autoComplete>
+            </div>
+        </div>
+    
+        <div id="navbar-logo">
+            ΣρiLeχo Search
+        </div>
+        
+        <div class="p-toolbar-group-right">
+            <button routerLink="/" routerLinkActive="active" pButton pRipple type="button" label="Home" class="p-button-secondary p-button-text"></button>
+            <button routerLink="/browse" routerLinkActive="active"pButton pRipple type="button" label="Browse" class="p-button-secondary p-button-text"></button>
+            <button routerLink="/search" routerLinkActive="active"pButton pRipple type="button" label="Search" class="p-button-secondary p-button-text"></button>
+            <button routerLink="/references" routerLinkActive="active" pButton pRipple type="button" label="References" class="p-button-secondary p-button-text"></button>
+        </div>
+    </p-toolbar>
+</div>
