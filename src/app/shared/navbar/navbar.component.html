@@ -1,6 +1,6 @@
 
 <div id="navbar">
-    <p-toolbar>
+    <p-toolbar class="hidden lg:block">
         <div class="p-toolbar-group-left">
             <!--  -->
             <div class="p-inputgroup">
@@ -22,4 +22,16 @@
             <button routerLink="/references" routerLinkActive="active" pButton pRipple type="button" label="References" class="p-button-secondary p-button-text"></button>
         </div>
     </p-toolbar>
+
+    <p-menubar [model]="menu_items" class="sm:block md:block lg:hidden">
+        <ng-template pTemplate="end">
+            <div class="p-inputgroup">
+                <span class="p-inputgroup-addon">
+                    <i class="fas fa-search"></i>
+                </span>
+                <p-autoComplete [placeholder]="'Enter text ID'" [suggestions]="filteredText" (completeMethod)="filterText($event)" [minLength]="0" [virtualScroll]="true" [itemSize]="34" field="label"></p-autoComplete>
+            </div>
+        </ng-template>
+    </p-menubar>
+
 </div>

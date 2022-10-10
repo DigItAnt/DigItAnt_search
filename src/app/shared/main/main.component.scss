@@ -1,3 +1,29 @@
+@import '../../../mixins.scss';
+
 #main-content {
-    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-family: "M PLUS Rounded 1c", sans-serif;
+    background: white;
+    overflow: auto;
+    margin: 0 10%;
+
+
+    @include md {
+        margin-left: 0;
+        margin-right: 0;
+        margin-top: 7rem;
+        margin-bottom: 3rem;
+    }
+
+    @include sm {
+        margin-left: 0;
+        margin-right: 0;
+        margin-top: 7rem;
+        margin-bottom: 3rem;
+    }
+
+    @include xs {
+        margin: 0;
+    }
+    
+    
 }

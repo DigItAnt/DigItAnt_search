@@ -1,0 +1,17 @@
+@import '../../../mixins.scss';
+
+#left-bar{
+    background: #14171b;
+    color: white;
+    width: 30%;
+
+    padding: 2rem;
+
+    @include xs {
+        display: none !important;
+    }
+}
+
+#home-content {
+    padding: 2rem;
+}

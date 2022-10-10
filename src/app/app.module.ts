@@ -10,18 +10,28 @@ import { AppComponent } from './app.component';
 import {ToolbarModule} from 'primeng/toolbar';
 import {ButtonModule} from 'primeng/button';
 import {AutoCompleteModule} from 'primeng/autocomplete';
+import {MenubarModule} from 'primeng/menubar';
+import {BreadcrumbModule} from 'primeng/breadcrumb';
+
+
 
 //SHARED COMPONENTS
 import { NavbarComponent } from './shared/navbar/navbar.component';
-import { HomeComponent } from './views/home/home.component';
 import { MainComponent } from './shared/main/main.component';
+import { FooterComponent } from './shared/footer/footer.component';
+
+//VIEWS
+import { HomeComponent } from './views/home/home.component';
+import { BreadcrumbComponent } from './shared/breadcrumb/breadcrumb.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     NavbarComponent,
     HomeComponent,
-    MainComponent
+    MainComponent,
+    FooterComponent,
+    BreadcrumbComponent
   ],
   imports: [
     BrowserModule,
@@ -29,7 +39,9 @@ import { MainComponent } from './shared/main/main.component';
     AppRoutingModule,
     ToolbarModule,
     ButtonModule,
-    AutoCompleteModule
+    AutoCompleteModule,
+    MenubarModule,
+    BreadcrumbModule
   ],
   providers: [],
   bootstrap: [AppComponent]

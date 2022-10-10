@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@100;300;400;500;700;800&display=swap');
+@import 'mixins.scss';
+
 
 body,
 app-root {
@@ -6,7 +8,19 @@ app-root {
     flex-direction: column;
     min-height: 100vh;
     font-size: 16px;
-    overflow: hidden;
+    overflow: hidden !important;
+
+    @include sm {
+        overflow: auto !important;
+    }
+
+    @include md {
+        overflow: auto !important;
+    }
+
+    @include xs {
+        overflow: auto !important;
+    }
 
 }
 
@@ -20,8 +34,10 @@ app-root {
 //NAVBAR
 #navbar {
     .p-toolbar {
-        padding: 1.25rem 4rem !important;
+        padding: .5rem 10% !important;
         border-radius: 0 !important;
+        position: sticky !important;
+        top: 0;
     }
 
     .p-inputgroup .p-inputwrapper>.p-component{
@@ -33,15 +49,85 @@ app-root {
         font-weight: 400;
     }
 
-    #navbar-logo {
-        font-weight: 600;
-    }
-
     .p-button.p-button-secondary.p-button-text.active {
         
         background-color: #64748B;
         color: white;
         border-color: #64748B;
         
+    }
+
+    .p-menubar {
+        flex-direction: row-reverse !important;
+        border-radius: 0 !important;
+
+       /*  @include xs {
+            display: flex !important;
+        } */
+
+        @include md {
+            position: fixed !important;
+            top: 0 !important;
+            width: 100%;
+        }
+    
+        @include sm {
+            position: fixed !important;
+            top: 0 !important;
+            width: 100%;
+        }
+
+        .p-menubar-end {
+            margin-left: 0 !important;
+            margin-right: auto !important;
+        }
+    }
+}
+
+//HOME
+app-home{
+    display: flex !important;
+}
+
+.p-breadcrumb {
+    border-radius: 0 !important;
+    position: sticky !important;
+
+    @include md {
+        position: fixed !important;
+        top: 4rem !important;
+        width: 100%;
+    }
+
+    @include sm {
+        position: fixed !important;
+        top: 4rem !important;
+        width: 100%;
+    }
+}
+
+app-footer {
+    .p-toolbar {
+        border-radius: 0 !important;
+        @include md {
+            position: fixed !important;
+            bottom: 0 !important;
+            width: 100%;
+            z-index: 4;
+            padding: .3rem;
+        }
+    
+        @include sm {
+            position: fixed !important;
+            bottom: 0 !important;
+            width: 100%;
+            z-index: 4;
+            padding: .3rem;
+
+        }
+
+        @include xs {
+            padding: .3rem;
+        }
     }
 }

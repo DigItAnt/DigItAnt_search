@@ -1,0 +1,9 @@
+@import '../../../mixins.scss';
+
+.footer-images{
+    @include xs {
+        .unive {
+            width: 60px;
+        }
+    }
+}
