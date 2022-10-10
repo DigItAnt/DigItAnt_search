@@ -109,6 +109,7 @@ app-home{
 app-footer {
     .p-toolbar {
         border-radius: 0 !important;
+        padding: .7rem !important;
         @include md {
             position: fixed !important;
             bottom: 0 !important;
