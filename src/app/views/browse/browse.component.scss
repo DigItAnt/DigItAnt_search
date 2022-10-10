@@ -1,0 +1,64 @@
+@import '../../../mixins.scss';
+
+#left-bar{
+    background: #14171b;
+    color: white;
+    width: 30%;
+
+
+    @include xs {
+        display: none !important;
+    }
+
+    ul {
+        display: flex;
+        flex-direction: column;
+        list-style-type: none;
+
+        li{ 
+            color: white;
+            display: flex;
+            font-weight: 800;
+
+            .icon {
+                font-family: 'Font Awesome 5 Free';
+                font-weight: 900;
+            }
+
+            .icon::before{
+                
+                content: '\f111'
+            }
+
+            a {
+                padding: 1.5rem 1.5rem 1.5rem 1rem;
+                color: white;
+                text-decoration: none;
+            }
+        }
+
+        li.active {
+            background: #234b86 !important;
+        }
+
+        li:hover {
+            background: #838fa2 !important;
+
+            .icon {
+                color : #234b86 !important;
+            }
+        }
+
+        li:nth-child(even) {
+            background: #2b2e31;
+        }
+
+        /* li:nth-child(even) {
+            color: blue;
+        } */
+    }
+}
+
+#browse-content {
+    padding: 2rem;
+}

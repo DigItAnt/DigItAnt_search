@@ -19,10 +19,12 @@ import {BreadcrumbModule} from 'primeng/breadcrumb';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { MainComponent } from './shared/main/main.component';
 import { FooterComponent } from './shared/footer/footer.component';
+import { BreadcrumbComponent } from './shared/breadcrumb/breadcrumb.component';
 
 //VIEWS
 import { HomeComponent } from './views/home/home.component';
-import { BreadcrumbComponent } from './shared/breadcrumb/breadcrumb.component';
+import { BrowseComponent } from './views/browse/browse.component';
+import { DateComponent } from './views/browse/date/date.component';
 
 @NgModule({
   declarations: [
@@ -31,7 +33,9 @@ import { BreadcrumbComponent } from './shared/breadcrumb/breadcrumb.component';
     HomeComponent,
     MainComponent,
     FooterComponent,
-    BreadcrumbComponent
+    BreadcrumbComponent,
+    BrowseComponent,
+    DateComponent
   ],
   imports: [
     BrowserModule,

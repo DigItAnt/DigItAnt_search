@@ -17,8 +17,15 @@ export class BreadcrumbComponent implements OnInit {
   ngOnInit(): void {
     this.route.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
-        var snapshot = this.route.routerState.snapshot;
-        this.breadcrumbs_items = snapshot.root.children[0].data['breadcrumb'];
+        let snapshot = this.route.routerState.snapshot;
+        if(snapshot.root.children[0].children[0] != undefined){
+          if(Object.keys(snapshot.root.children[0].children[0].data['breadcrumb']).length > 1){
+            this.breadcrumbs_items = snapshot.root.children[0].children[0].data['breadcrumb']
+          }
+        }
+        else{
+          this.breadcrumbs_items = snapshot.root.children[0].data['breadcrumb'];
+        }
       }
     });
     this.home = {icon: 'pi pi-home', routerLink: '/'};

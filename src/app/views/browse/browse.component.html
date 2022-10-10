@@ -1,0 +1,34 @@
+<div id="left-bar" class="flex flex-column">
+    <ul>
+        <li routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+            <span class="icon"></span>
+            <a routerLink="/browse">All</a>
+        </li>
+        <li routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+            <span class="icon"></span>
+            <a routerLink="/browse/date">By date</a>
+        </li>
+        <li routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+            <span class="icon"></span>
+            <a routerLink="/browse/location">By location</a>
+        </li>
+        <li routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+            <span class="icon"></span>
+            <a routerLink="/browse/word">By greek word</a>
+        </li>
+        <li routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+            <span class="icon"></span>
+            <a routerLink="/browse/type">By type of text</a>
+        </li>
+        <li routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+            <span class="icon"></span>
+            <a routerLink="/browse/theme">By theme</a>
+        </li>
+    </ul>
+</div>
+
+<div id="browse-content" class="flex flex-column flex-1">
+    <router-outlet></router-outlet>
+    <h1 class="mb-5">Lorem Ipsuma</h1>
+    <p class="mt-5">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ipsum nisl, lobortis ut vestibulum ut, feugiat at sem. In eget tristique sapien, vitae vestibulum lorem. Donec eget leo sem. Nulla mollis condimentum metus ut molestie. Vivamus et mi porttitor, sodales magna ac, volutpat neque. Morbi faucibus nibh eu neque semper, eu ornare risus gravida. Pellentesque id hendrerit felis.</p>
+</div>
