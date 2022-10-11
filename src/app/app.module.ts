@@ -12,6 +12,8 @@ import {ButtonModule} from 'primeng/button';
 import {AutoCompleteModule} from 'primeng/autocomplete';
 import {MenubarModule} from 'primeng/menubar';
 import {BreadcrumbModule} from 'primeng/breadcrumb';
+import {CardModule} from 'primeng/card';
+import {PaginatorModule} from 'primeng/paginator';
 
 
 
@@ -19,7 +21,6 @@ import {BreadcrumbModule} from 'primeng/breadcrumb';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { MainComponent } from './shared/main/main.component';
 import { FooterComponent } from './shared/footer/footer.component';
-import { BreadcrumbComponent } from './shared/breadcrumb/breadcrumb.component';
 
 //VIEWS
 import { HomeComponent } from './views/home/home.component';
@@ -33,7 +34,6 @@ import { DateComponent } from './views/browse/date/date.component';
     HomeComponent,
     MainComponent,
     FooterComponent,
-    BreadcrumbComponent,
     BrowseComponent,
     DateComponent
   ],
@@ -45,7 +45,9 @@ import { DateComponent } from './views/browse/date/date.component';
     ButtonModule,
     AutoCompleteModule,
     MenubarModule,
-    BreadcrumbModule
+    BreadcrumbModule,
+    CardModule,
+    PaginatorModule
   ],
   providers: [],
   bootstrap: [AppComponent]

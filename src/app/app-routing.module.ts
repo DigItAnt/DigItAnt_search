@@ -12,9 +12,10 @@ const routes: Routes = [
       breadcrumb : [
         {
           label : 'Home',
-          url: '',
+          routerLink: '',
           active: true,
-          class: 'breadcrumb-item active'
+          class: 'breadcrumb-item active',
+          target: '_self'
         }
       ]
     }
@@ -26,12 +27,14 @@ const routes: Routes = [
       breadcrumb : [
         {
           label : 'Browse',
-          url: '/browse',
+          routerLink: '/browse',
           active: true,
-          class: 'breadcrumb-item active'
+          class: 'breadcrumb-item active',
+          target: '_self'
         }
       ]
-    },children : [
+    },
+    children : [
       {
         path: 'date',
         component: DateComponent,
@@ -39,15 +42,17 @@ const routes: Routes = [
           breadcrumb : [
             {
               label : 'Browse',
-              url: '/browse',
+              routerLink: '/browse',
               active: false,
-              class: 'breadcrumb-item'
+              class: 'breadcrumb-item',
+              target: '_self'
             },
             {
               label : 'Date',
-              url: '/browse/date',
+              routerLink: '/browse/date',
               active: true,
-              class: 'breadcrumb-item'
+              class: 'breadcrumb-item',
+              target: '_self'
             }
           ]
         },

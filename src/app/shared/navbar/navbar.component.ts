@@ -24,15 +24,19 @@ export class NavbarComponent implements OnInit {
     this.menu_items = [
       {
         label: 'Home',
+        routerLink : ''
       },
       {
-        label: 'Browse',        
+        label: 'Browse',
+        routerLink : '/browse'        
       },
       {
-        label: 'Search',        
+        label: 'Search',   
+        routerLink : '/search'     
       },
       {
-        label: 'References',        
+        label: 'References',    
+        routerLink : '/references'    
       }
     ];
   }
