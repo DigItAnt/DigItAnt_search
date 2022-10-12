@@ -54,7 +54,6 @@ export class BrowseComponent implements OnInit, OnDestroy {
 
   pagination(event:any){
     console.log(event);
-    let page = event.page;
     let first = event.first;
 
     if(first <= this.text_items.length){

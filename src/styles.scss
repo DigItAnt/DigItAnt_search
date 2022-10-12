@@ -86,9 +86,15 @@ app-root {
 
 //HOME
 app-home,
-app-browse{
+app-browse,
+app-date,
+app-subdate{
     display: flex !important;
     flex: 1 1 auto !important;
+}
+
+app-subdate{
+    flex-direction: column;
 }
 
 .p-breadcrumb {
