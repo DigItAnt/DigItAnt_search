@@ -14,8 +14,10 @@ import {MenubarModule} from 'primeng/menubar';
 import {BreadcrumbModule} from 'primeng/breadcrumb';
 import {CardModule} from 'primeng/card';
 import {PaginatorModule} from 'primeng/paginator';
+import {BadgeModule} from 'primeng/badge';
 
-
+//LEAFLET
+import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 
 //SHARED COMPONENTS
 import { NavbarComponent } from './shared/navbar/navbar.component';
@@ -27,6 +29,8 @@ import { HomeComponent } from './views/home/home.component';
 import { BrowseComponent } from './views/browse/browse.component';
 import { DateComponent } from './views/browse/date/date.component';
 import { SubdateComponent } from './views/browse/date/subdate/subdate.component';
+import { LocationComponent } from './views/browse/location/location.component';
+import { SublocationComponent } from './views/browse/location/sublocation/sublocation.component';
 
 @NgModule({
   declarations: [
@@ -37,7 +41,9 @@ import { SubdateComponent } from './views/browse/date/subdate/subdate.component'
     FooterComponent,
     BrowseComponent,
     DateComponent,
-    SubdateComponent
+    SubdateComponent,
+    LocationComponent,
+    SublocationComponent
   ],
   imports: [
     BrowserModule,
@@ -49,7 +55,9 @@ import { SubdateComponent } from './views/browse/date/subdate/subdate.component'
     MenubarModule,
     BreadcrumbModule,
     CardModule,
-    PaginatorModule
+    PaginatorModule,
+    LeafletModule,
+    BadgeModule
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -20,6 +20,7 @@
             display: flex;
             font-weight: 800;
             cursor: pointer;
+            user-select: none;
 
             .icon {
                 font-family: 'Font Awesome 5 Free';

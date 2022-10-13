@@ -55,9 +55,12 @@ export class BrowseComponent implements OnInit, OnDestroy {
   pagination(event:any){
     console.log(event);
     let first = event.first;
+    let rows = event.rows;
 
-    if(first <= this.text_items.length){
-      this.pagination_items = this.text_items.slice(first, first+5)
+    if(first != rows && first < rows){
+      this.pagination_items = this.text_items.slice(first, rows)
+    }else{
+      this.pagination_items = this.text_items.slice(first, first + rows)
     }
   }
 

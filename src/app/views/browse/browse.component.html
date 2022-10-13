@@ -4,23 +4,23 @@
             <span class="icon"></span>
             <a >All</a>
         </li>
-        <li routerLink="/browse/date" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+        <li routerLink="/browse/date" routerLinkActive="active"  class="pl-4 align-items-center">
             <span class="icon"></span>
             <a >By date</a>
         </li>
-        <li routerLink="/browse/location" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+        <li routerLink="/browse/location" routerLinkActive="active"  class="pl-4 align-items-center">
             <span class="icon"></span>
             <a >By location</a>
         </li>
-        <li routerLink="/browse/word" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+        <li routerLink="/browse/word" routerLinkActive="active"  class="pl-4 align-items-center">
             <span class="icon"></span>
             <a >By greek word</a>
         </li>
-        <li  routerLink="/browse/type" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+        <li  routerLink="/browse/type" routerLinkActive="active"  class="pl-4 align-items-center">
             <span class="icon"></span>
             <a>By type of text</a>
         </li>
-        <li routerLink="/browse/theme" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+        <li routerLink="/browse/theme" routerLinkActive="active"  class="pl-4 align-items-center">
             <span class="icon"></span>
             <a >By theme</a>
         </li>
@@ -55,7 +55,7 @@
             </div>
         </div>
     </div>
-    <p-paginator [rows]="5" [totalRecords]="text_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true"></p-paginator>
+    <p-paginator [rows]="5" [totalRecords]="text_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
     
 </div>
 

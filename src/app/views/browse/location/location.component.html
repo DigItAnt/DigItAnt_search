@@ -1,39 +1,37 @@
-<div id="date-container" class="flex flex-column flex-auto">
-    
-    <div class="flex flex-row align-items-center horizontal-list m-3">
+<div id="location-container" class="flex flex-column flex-auto w-full">
+    <div style="height: 400px;"
+            leaflet 
+            [leafletOptions]="options"
+            [leafletLayers]="layers"
+            (leafletClick)="onClickMap($event)">
+        </div>
+    <div class="flex flex-1 flex-row align-items-center horizontal-list m-3">
+        
         <ul class="flex-wrap">
-            <li routerLink="-6" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+            <li routerLink="venetum" routerLinkActive="active" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>6th century BC</a>
+                <a>Venetum <b>(223)</b></a>
+                
             </li>
-            <li routerLink="-5" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+            <li routerLink="florence" routerLinkActive="active" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>5th century BC</a>
+                <a>Florence <b>(40)</b></a>
+                
             </li>
-            <li routerLink="-4" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+            <li routerLink="rome" routerLinkActive="active" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>4th century BC</a>
+                <a>Rome <b>(4)</b></a>
+                
             </li>
-            <li routerLink="-3" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
+            <li routerLink="falisc" routerLinkActive="active" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>3rd century BC</a>
-            </li>
-            <li  routerLink="-2" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
-                <span class="icon"></span>
-                <a>2nd century BC</a>
-            </li>
-            <li routerLink="-1" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
-                <span class="icon"></span>
-                <a>1st century BC</a>
-            </li>
-            <li routerLink="1" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
-                <span class="icon"></span>
-                <a>1st century AD</a>
+                <a>Falisc <b>(12)</b></a>
+                
             </li>
         </ul>
     </div>
 
-    <div class="flex flex-column flex-1" *ngIf="current_route == '/browse/date'">
+    <div class="flex flex-column flex-1" *ngIf="current_route == '/browse/location'">
         <div class="flex flex-column flex-auto text-item-container">
             <div class="flex flex-row text-item  m-3" *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">
             
@@ -66,7 +64,7 @@
         <p-paginator [rows]="5" [totalRecords]="text_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
     </div>
 
-    <div class="flex flex-row flex-1" *ngIf="current_route != '/browse/date'">
+    <div class="flex flex-row flex-1" *ngIf="current_route != '/browse/location'">
         <router-outlet></router-outlet>
     </div>
     

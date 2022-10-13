@@ -47,7 +47,7 @@ export class DateComponent implements OnInit, OnDestroy {
       );
     }
 
-    this.pagination_items = this.text_items.slice(0, 4);
+    this.pagination_items = this.text_items.slice(0, 5);
   }
 
   ngOnDestroy(): void {
@@ -60,11 +60,14 @@ export class DateComponent implements OnInit, OnDestroy {
   }
 
   pagination(event:any){
-    //console.log(event); console.log(event)
+    console.log(event);
     let first = event.first;
+    let rows = event.rows;
 
-    if(first <= this.text_items.length){
-      this.pagination_items = this.text_items.slice(first, first+4)
+    if(first != rows && first < rows){
+      this.pagination_items = this.text_items.slice(first, rows)
+    }else{
+      this.pagination_items = this.text_items.slice(first, first + rows)
     }
   }
 

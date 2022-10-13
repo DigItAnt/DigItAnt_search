@@ -1,4 +1,8 @@
-#date-container {
+#location-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow-y: auto;
     .horizontal-list{
         border-top: 2px solid #dee2e6;
         border-bottom: 2px solid #dee2e6;
@@ -59,9 +63,9 @@
     }
 
     .text-item-container {
-        flex: 1 1 auto;
+        /* flex: 1 1 auto;
         overflow-y: auto;
-        height: 100px;
+        height: 100px; */
     }
     
     .text-item {
