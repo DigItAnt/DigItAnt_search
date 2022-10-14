@@ -1,31 +1,34 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, NavigationEnd, NavigationStart, Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { Router, NavigationEnd, NavigationStart, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 
-import { DateComponent } from '../date.component';
-
 @Component({
-  selector: 'app-subdate',
-  templateUrl: './subdate.component.html',
-  styleUrls: ['./subdate.component.scss']
+  selector: 'app-word',
+  templateUrl: './word.component.html',
+  styleUrls: ['./word.component.scss']
 })
-export class SubdateComponent implements OnInit, OnDestroy {
+export class WordComponent implements OnInit {
 
   current_route: string = '';
-  route_subscription: Subscription = new Subscription();
+  route_subscription: Subscription = new Subscription();  
   activated_route_subscription: Subscription = new Subscription();
+
   text_items: any[] = [];
   pagination_items: any[] = [];
   filtered_items : any[] = [];
-  century_array: number[] = [-6, -5, -4, -3, -2, -1, 1];
+
+  century_array : number[] = [-6, -5, -4, -3, -2, -1, 1];
+  alphabet_array : string[] = ["*", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "X", "Y", "Z"];
 
   first : number = 0;
   rows : number = 0;
+  places_array: string[] = ['Venetum', 'Florence', 'Rome', 'Falisc'];
 
   constructor(private route: Router, private activated_route: ActivatedRoute) { }
 
   ngOnInit(): void {
     this.route_subscription = this.route.events.subscribe(event => {
+      console.log(event)
       if (event instanceof NavigationEnd) {
         this.checkCurrentRoute();
       }
@@ -42,7 +45,7 @@ export class SubdateComponent implements OnInit, OnDestroy {
         {
           id: 'ItAnt' + i,
           title: 'Lorem ipsum' + i,
-          place: 'Corynth',
+          place: this.places_array[Math.floor(Math.random() * this.places_array.length)],
           date: this.century_array[Math.floor(Math.random() * this.century_array.length)],
           label: 'ItAnt ' + i,
           value: 'ItAnt ' + i
@@ -50,11 +53,11 @@ export class SubdateComponent implements OnInit, OnDestroy {
       );
     }
 
-    this.pagination_items = this.text_items.slice(0, 5);
+    this.pagination_items = this.text_items.slice(0, 4);
 
     this.activated_route_subscription = this.activated_route.params.subscribe(event => {
       if (event['id'] != undefined) {
-        this.filterByDate(parseInt(event['id']))
+        this.filterByPlace(event['id'])
       }
     })
 
@@ -83,9 +86,9 @@ export class SubdateComponent implements OnInit, OnDestroy {
   }
 
 
-  filterByDate(params : number){
+  filterByPlace(params : string){
     this.filtered_items = this.text_items.filter(x => {
-      return x.date == params;
+      return x.place.toLowerCase() == params;
     });
 
 
@@ -97,4 +100,5 @@ export class SubdateComponent implements OnInit, OnDestroy {
       this.pagination_items = this.filtered_items.slice(0, 5)
     }
   }
+
 }

@@ -1,4 +1,4 @@
-#date-container {
+#word-container {
     .horizontal-list{
         border-top: 2px solid #dee2e6;
         border-bottom: 2px solid #dee2e6;
@@ -21,8 +21,6 @@
                 .icon {
                     font-family: 'Font Awesome 5 Free';
                     font-weight: 900;
-
-                    font-size: .75rem;
                 }
     
                 .icon::before{
@@ -30,8 +28,12 @@
                     content: '\f111'
                 }
     
-                a {
+                a { 
+                    width: 1.6rem;
+                    text-align: center;
+                    font-weight: 700;
                     padding: 0.5rem;
+                    border-radius: 5px;
                     
                 }
     
@@ -41,10 +43,11 @@
             }
     
             li.active {
-                color: #234b86 !important;
+                
                 a {
-                    color: #234b86 !important;
-                    text-decoration: underline;
+                    background-color: #234b86 !important;
+                    color: white !important;
+                    text-decoration: none !important;
                 }
             }
     

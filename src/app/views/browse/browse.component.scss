@@ -64,6 +64,16 @@
 #browse-content {
     //padding: 2rem;
 
+    .horizontal-list{
+        border-top: 2px solid #dee2e6;
+        border-bottom: 2px solid #dee2e6;
+        border-left: transparent;
+        border-right: transparent;
+        border-style: dashed;
+
+        color: #64748B;
+    }
+
     .text-item-container {
         flex: 1 1 auto;
         overflow-y: auto;

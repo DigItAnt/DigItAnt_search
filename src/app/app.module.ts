@@ -28,9 +28,8 @@ import { FooterComponent } from './shared/footer/footer.component';
 import { HomeComponent } from './views/home/home.component';
 import { BrowseComponent } from './views/browse/browse.component';
 import { DateComponent } from './views/browse/date/date.component';
-import { SubdateComponent } from './views/browse/date/subdate/subdate.component';
 import { LocationComponent } from './views/browse/location/location.component';
-import { SublocationComponent } from './views/browse/location/sublocation/sublocation.component';
+import { WordComponent } from './views/browse/word/word.component';
 
 @NgModule({
   declarations: [
@@ -41,9 +40,8 @@ import { SublocationComponent } from './views/browse/location/sublocation/subloc
     FooterComponent,
     BrowseComponent,
     DateComponent,
-    SubdateComponent,
     LocationComponent,
-    SublocationComponent
+    WordComponent,
   ],
   imports: [
     BrowserModule,

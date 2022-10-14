@@ -14,6 +14,7 @@ export class LocationComponent implements OnInit, OnDestroy {
   route_subscription: Subscription = new Subscription();
   text_items: any[] = [];
   pagination_items: any[] = [];
+  filtered_items : any[] = [];
 
   century_array: number[] = [-6, -5, -4, -3, -2, -1, 1];
   places_array: string[] = ['Venetum', 'Florence', 'Rome', 'Falisc'];
@@ -23,26 +24,27 @@ export class LocationComponent implements OnInit, OnDestroy {
 
   overlays: any[] = [];
 
+  first : number = 0;
+  rows : number = 0;
 
 
-  constructor(private route: Router, private activated_route: ActivatedRoute, private zone : NgZone) { }
+
+  constructor(private route: Router, private activated_route : ActivatedRoute, private zone : NgZone) { }
 
   ngOnInit(): void {
-    this.checkCurrentRoute();
+    
 
     this.route_subscription = this.route.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
-        this.checkCurrentRoute();
+        this.checkCurrentRoute(event);
       }
 
-      if (event instanceof NavigationStart) {
-        console.log(event)
-      }
+     
     });
 
     this.options = {
       layers: [
-        tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, minZoom: 5, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' })
+        tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 8, minZoom: 5, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' })
       ],
       zoom: 5,
       center: latLng(42.61, 12.521472473398102)
@@ -80,7 +82,8 @@ export class LocationComponent implements OnInit, OnDestroy {
       );
     }
 
-    this.pagination_items = this.text_items.slice(0, 5);
+    this.checkCurrentRoute();
+
   }
 
   navigateTo(path : string){
@@ -93,9 +96,24 @@ export class LocationComponent implements OnInit, OnDestroy {
     this.route_subscription.unsubscribe();
   }
 
-  checkCurrentRoute() {
+  checkCurrentRoute(event? : any) {
     this.current_route = this.route.url;
-
+    let splitted_url = [];
+    let index = '';
+    
+    if(event!=undefined){
+      splitted_url = event.urlAfterRedirects.split('/')
+    }else{
+      splitted_url = this.current_route.split('/');
+    }
+    
+    index = splitted_url[splitted_url.length - 1];
+    if(index != 'all'){
+      this.filterByPlace(splitted_url[splitted_url.length-1]);
+    }else{
+      this.filterByPlace();
+      
+    }
   }
 
   onClickMap(evt: LeafletMouseEvent) {
@@ -104,13 +122,34 @@ export class LocationComponent implements OnInit, OnDestroy {
 
   pagination(event: any) {
     console.log(event);
-    let first = event.first;
-    let rows = event.rows;
+    this.first = event.first;
+    this.rows = event.rows;
 
-    if (first != rows && first < rows) {
-      this.pagination_items = this.text_items.slice(first, rows)
+    if (this.first != this.rows && this.first < this.rows) {
+      this.pagination_items = this.filtered_items.slice(this.first, this.rows)
     } else {
-      this.pagination_items = this.text_items.slice(first, first + rows)
+      this.pagination_items = this.filtered_items.slice(this.first, this.first + this.rows)
+    }
+  }
+
+
+  filterByPlace(params? : string){
+    if(params){
+      this.filtered_items = this.text_items.filter(x => {
+        return x.place.toLowerCase() == params;
+      });
+    }else{
+      this.filtered_items = this.text_items;
+    }
+    
+
+
+    if (this.first != this.rows && this.first < this.rows) {
+      this.pagination_items = this.filtered_items.slice(this.first, this.rows)
+    } else if(this.rows != 0 && this.first != 0) {
+      this.pagination_items = this.filtered_items.slice(this.first, this.first + this.rows)
+    }else{
+      this.pagination_items = this.filtered_items.slice(0, 5)
     }
   }
 
