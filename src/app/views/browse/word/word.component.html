@@ -1,48 +1,99 @@
 <div id="word-container" class="flex flex-column flex-auto">
     
-    <div class="flex flex-row align-items-center horizontal-list m-3">
+    <div class="flex flex-row align-items-center horizontal-list m-3" *ngIf="!filtered_mode_by_word">
         <ul class="flex-wrap">
-            <li [routerLink]="letter" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-1 py-2 align-items-center" *ngFor="let letter of alphabet_array">
-                <!-- <span class="icon"></span> -->
-                <a>{{letter == '*' ? '&#10043;' : letter}}</a>
+            <li [routerLink]="'../'+letter" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-1 py-2 align-items-center" *ngFor="let letter of alphabet_array">
+                <a>{{letter == 'all' ? '&#10043;' : letter | uppercase}}</a>
             </li>
         </ul>
     </div>
 
-    <div class="flex flex-column flex-1" *ngIf="current_route == '/browse/date'">
-        <div class="flex flex-column flex-auto text-item-container">
-            <div class="flex flex-row text-item  m-2" *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">
-            
-                <div class="flex text-item-id p-2">
-                    {{item.id}}
+    <div class="flex flex-row align-items-center horizontal-list m-3" *ngIf="filtered_mode_by_word">
+        <button pButton type="button" class="back-button m-3" [routerLink]="'../'+previous_path">
+            <i class="fas fa-chevron-left"></i> 
+            <span class="ml-3">{{'Back to word list' | uppercase}}</span>
+        </button>
+        <div class="separator mx-3"></div>
+        <div class="occurrences">
+            There are <span class="enphatize">{{current_occurences}}</span> occurrences of <span class="enphatize">{{current_word}}</span>
+        </div>
+    </div>
+
+    <div class="flex flex-column flex-auto" *ngIf="!filtered_mode_by_word">
+        <div class="flex flex-column flex-auto text-item-container mt-3 ml-3 mb-3 pr-3">
+            <ul class="flex flex-column word-list">
+                <div class="flex flex-none" *ngFor="let item of pagination_items">
+                    <li class="m-2" [routerLink]="'../'+item.label.toLowerCase()" (click)="saveTempOccurrences(item.count)">
+                        <span class="icon"></span>
+                        <span class="ml-2">{{item.label}}</span>
+                        <span class="ml-2 counter">({{item.count}})</span>
+                    </li>
                 </div>
-        
-                <div class="text-item-preview p-2 ml-5">
-                    
-                    <div class="text-item-preview-top">
-                        {{item.title}}
-                    </div>
-        
-                    <div class="text-item-preview-bottom flex flex-row mt-3">
-                        <div class="flex flex-row align-items-baseline">
-                            <i class="far fa-calendar-alt"></i>
-                            <span class="ml-2">{{item.date}}</span>
-                        </div>
-                        <div class="flex flex-row ml-5 align-items-baseline">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span class="ml-2">{{item.place}}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+               
+            </ul>
         </div>
 
-        
+        <p-paginator class="sticky bottom-0" [rows]="15" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[17,34,45]"></p-paginator>
 
     </div>
 
-    <div class="flex flex-row flex-1" *ngIf="current_route != '/browse/date'">
-        <router-outlet></router-outlet>
+    <div id="filtered-words" class="flex flex-column flex-1" *ngIf="filtered_mode_by_word">
+        <div class="flex flex-column flex-1">
+            <div class="flex flex-column flex-auto text-item-container">
+                <div class="flex flex-row text-item m-2 " *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">
+                
+                    <div class="flex text-item-id p-2">
+                        {{item.id}}
+                    </div>
+            
+                    <div class="text-item-preview flex-1 ml-3 p-2">
+                        
+                        <div class="text-item-preview-top">
+                            {{item.title}}
+                        </div>
+            
+                        <div class="text-item-preview-bottom flex flex-column justify-content-between mt-3">
+                            <div class="flex flex-row align-items-baseline">
+                                <i class="far fa-calendar-alt"></i>
+                                <span class="ml-2">{{item.date}}</span>
+                            </div>
+                            <div class="flex flex-row align-items-baseline">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span class="ml-2">{{item.place}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-item-preview-transcription">
+                        <div class=" ml-3 p-2">
+                            <div class="text-item-preview-top">
+                                transcr_type
+                            </div>
+                            <div class="text-item-preview-bottom flex flex-column justify-content-between mt-3">
+                                <div class="flex flex-row align-items-baseline">
+                                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc venenatis vitae est a pretium. Integer commodo quis purus sed consequat. Sed ullamcorper ante et lacus la</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- <div class=" ml-3 p-2">
+                            <div class="text-item-preview-top">
+                                transcr_type
+                            </div>
+                            <div class="text-item-preview-bottom flex flex-column justify-content-between mt-3">
+                                <div class="flex flex-row align-items-baseline">
+                                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc venenatis vitae est a pretium. Integer commodo quis purus sed consequat. Sed ullamcorper ante et lacus la</p>
+                                </div>
+                            </div>
+                        </div> -->
+                    </div>
+                    
+                </div>
+            </div>
+            
+        
+        </div>
+        <p-paginator [rows]="5" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator> <!--  -->
     </div>
     
 </div>

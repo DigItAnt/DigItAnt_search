@@ -63,7 +63,7 @@
 
         
 
-        <p-paginator #a [rows]="5" [totalRecords]="text_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
+        <p-paginator [rows]="5" [totalRecords]="text_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
     </div>
 
     <div id="date-filtered-container" class="flex flex-column flex-1" *ngIf="current_route != '/browse/date'">
@@ -98,7 +98,7 @@
             
         
         </div>
-        <p-paginator #b [rows]="5" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
+        <p-paginator [rows]="5" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
         
     </div>
     
