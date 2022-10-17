@@ -62,6 +62,29 @@ export class ThemeComponent implements OnInit {
       this.themes_array.push(object)
     })
 
+    this.themes_array[6]['items'] = [
+      {
+        label : "Arg"+Math.floor(Math.random() * this.places_array.length),
+        count : Math.floor(Math.random() * this.places_array.length)
+      },
+      {
+        label : "Arg"+Math.floor(Math.random() * this.places_array.length),
+        count : Math.floor(Math.random() * this.places_array.length)
+      },
+      {
+        label : "Arg"+Math.floor(Math.random() * this.places_array.length),
+        count : Math.floor(Math.random() * this.places_array.length)
+      },
+      {
+        label : "Arg"+Math.floor(Math.random() * this.places_array.length),
+        count : Math.floor(Math.random() * this.places_array.length)
+      },
+      {
+        label : "Arg"+Math.floor(Math.random() * this.places_array.length),
+        count : Math.floor(Math.random() * this.places_array.length)
+      }
+    ]
+
 
     this.activated_route_subscription = this.activated_route.params.subscribe(event => {
       if (event['id'] != undefined) {

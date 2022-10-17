@@ -104,6 +104,47 @@ app-sublocation{
     flex-direction: column;
 }
 
+app-theme {
+
+    p-panel {
+        margin-top: 0.2rem !important;
+        .p-panel-icons-end{
+            margin: 0 !important;
+        }
+        .p-panel-title {
+            display: none !important;
+        }
+        .p-panel-header{
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+        }
+
+        .p-panel-content {
+            padding: 0.5rem !important;
+            margin-left: -4rem !important;
+            border: 0 !important;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            font-weight: 700;
+
+            ul{
+                flex-direction: column !important;
+
+                li {
+                    margin: .5rem 0 !important;
+                }
+
+                li.sublink:hover{
+                    color: #234b86 !important;
+                    .icon {
+                        color : #234b86 !important;
+                    }
+                }
+            }
+        }
+    }
+}
+
 .p-breadcrumb {
     border-radius: 0 !important;
     position: sticky !important;

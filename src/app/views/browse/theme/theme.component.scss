@@ -98,8 +98,7 @@
                 font-weight: 400;
                 align-items: center;
                 cursor: pointer;
-                
-    
+                    
                 .icon {
                     font-family: 'Font Awesome 5 Free';
                     font-weight: 900;
@@ -139,7 +138,7 @@
                 }
             }
     
-            li:hover {
+            li.link-theme:hover {
                 
                 
                 color: #234b86 !important;
@@ -147,6 +146,14 @@
                     color : #234b86 !important;
                 }
             }
+
+            li.link-subtheme:hover{
+                color: #234b86 !important;
+                .icon {
+                    color : #234b86 !important;
+                }
+            }
+
            
         } 
     }

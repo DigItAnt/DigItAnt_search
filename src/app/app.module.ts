@@ -15,6 +15,8 @@ import {BreadcrumbModule} from 'primeng/breadcrumb';
 import {CardModule} from 'primeng/card';
 import {PaginatorModule} from 'primeng/paginator';
 import {BadgeModule} from 'primeng/badge';
+import {PanelModule} from 'primeng/panel';
+
 
 //LEAFLET
 import { LeafletModule } from '@asymmetrik/ngx-leaflet';
@@ -59,7 +61,8 @@ import { ThemeComponent } from './views/browse/theme/theme.component';
     CardModule,
     PaginatorModule,
     LeafletModule,
-    BadgeModule
+    BadgeModule,
+    PanelModule
   ],
   providers: [],
   bootstrap: [AppComponent]

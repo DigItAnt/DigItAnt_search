@@ -19,11 +19,32 @@
         <div class="flex flex-column flex-auto text-item-container mt-3 ml-3 mb-3 pr-3">
             <ul class="flex flex-column word-list">
                 <div class="flex flex-none" *ngFor="let item of pagination_items">
-                    <li class="m-2" [routerLink]="'../'+item.label.toLowerCase()" (click)="saveTempOccurrences(item.count)">
+                    <li *ngIf="item.items == undefined" class="link-theme m-2" [routerLink]="'../'+item.label.toLowerCase()" (click)="saveTempOccurrences(item.count)">
                         <span class="icon"></span>
                         <span class="ml-2">{{item.label}}</span>
                         <span class="ml-2 counter">({{item.count}})</span>
                     </li>
+
+                    <div class="flex align-items-start" *ngIf="item.items != undefined">
+                        <li class="flex flex-row align-items-start m-2 link-subtheme" >
+                            <div class="flex flex-row align-items-center">
+                                <span class="icon" [routerLink]="'../'+item.label.toLowerCase()" (click)="saveTempOccurrences(item.count)"></span>
+                                <span class="ml-2">{{item.label}}</span>
+                                <span class="ml-2 counter">({{item.count}})</span>
+                            </div>
+                        </li>
+                        <p-panel [expandIcon]="'far fa-plus-square'" [collapseIcon]="'far fa-minus-square'" header="Title" [collapsed]="true" [toggleable]="true">
+                            <ul>
+                                <li class="sublink" [routerLink]="'../'+sub_theme.label.toLowerCase()" (click)="saveTempOccurrences(sub_theme.count)" *ngFor="let sub_theme of item.items">
+                                    <span class="icon" ></span>
+                                    <span class="ml-2">{{sub_theme.label}}</span>
+                                    <span class="ml-2 counter">({{sub_theme.count}})</span>
+                                </li>
+                            </ul>
+                        </p-panel>
+                    </div>
+                   
+                    
                 </div>
                
             </ul>
