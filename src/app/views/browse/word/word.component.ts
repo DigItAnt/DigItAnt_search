@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router, NavigationEnd, NavigationStart, ActivatedRoute } from '@angular/router';
+import { Paginator } from 'primeng/paginator';
 import { last, Subscription } from 'rxjs';
 
 import * as data from '../../../../assets/mock/words.json'
@@ -13,6 +14,7 @@ export class WordComponent implements OnInit {
 
   current_word: string = '';
   current_occurences : number = 0;
+  current_page_template : string = '';
   route_subscription: Subscription = new Subscription();  
   activated_route_subscription: Subscription = new Subscription();
 
@@ -31,6 +33,8 @@ export class WordComponent implements OnInit {
   filtered_mode_by_letter : boolean = false;
   filtered_mode_by_word : boolean = false;
   previous_path : string = '';
+
+  @ViewChild('paginator', { static: true }) paginator: Paginator | undefined
 
 
   constructor(private route: Router, private activated_route: ActivatedRoute) { }

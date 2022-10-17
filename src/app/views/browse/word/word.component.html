@@ -33,7 +33,7 @@
             </ul>
         </div>
 
-        <p-paginator class="sticky bottom-0" [rows]="15" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[17,34,45]"></p-paginator>
+        <p-paginator #paginator_letter class="sticky bottom-0" [first]="first" [rows]="rows" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[17,34,45]"></p-paginator><!--  [rowsPerPageOptions]="[17,34,45]" -->
 
     </div>
 
@@ -82,7 +82,7 @@
             
         
         </div>
-        <p-paginator [rows]="5" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator> <!--  -->
+        <p-paginator [rows]="5" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[17,34,45]" ></p-paginator> <!-- [rowsPerPageOptions]="[5,10,15]" -->
     </div>
     
 </div>
