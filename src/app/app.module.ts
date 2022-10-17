@@ -30,6 +30,8 @@ import { BrowseComponent } from './views/browse/browse.component';
 import { DateComponent } from './views/browse/date/date.component';
 import { LocationComponent } from './views/browse/location/location.component';
 import { WordComponent } from './views/browse/word/word.component';
+import { TypeComponent } from './views/browse/type/type.component';
+import { ThemeComponent } from './views/browse/theme/theme.component';
 
 @NgModule({
   declarations: [
@@ -42,6 +44,8 @@ import { WordComponent } from './views/browse/word/word.component';
     DateComponent,
     LocationComponent,
     WordComponent,
+    TypeComponent,
+    ThemeComponent,
   ],
   imports: [
     BrowserModule,

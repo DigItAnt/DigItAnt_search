@@ -1,13 +1,13 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Router, NavigationEnd, NavigationStart, ActivatedRoute, RoutesRecognized } from '@angular/router';
-import { Subscription, take } from 'rxjs';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-date',
-  templateUrl: './date.component.html',
-  styleUrls: ['./date.component.scss']
+  selector: 'app-type',
+  templateUrl: './type.component.html',
+  styleUrls: ['./type.component.scss']
 })
-export class DateComponent implements OnInit, OnDestroy {
+export class TypeComponent implements OnInit {
 
   current_route: string = '';
   activated_route_subscription: Subscription = new Subscription();
@@ -15,6 +15,7 @@ export class DateComponent implements OnInit, OnDestroy {
   pagination_items: any[] = [];
   filtered_items : any[] = [];
   century_array: number[] = [-6, -5, -4, -3, -2, -1, 1];
+  type_array : string[] = ['funerary', 'honorific', 'oracle', 'heroes', 'sacrifical_regulation']
 
   first : number = 0;
   rows : number = 0;
@@ -33,6 +34,7 @@ export class DateComponent implements OnInit, OnDestroy {
           title: 'Lorem ipsum' + i,
           place: 'Corynth',
           date: this.century_array[Math.floor(Math.random() * this.century_array.length)],
+          type: this.type_array[Math.floor(Math.random() * this.type_array.length)],
           label: 'ItAnt ' + i,
           value: 'ItAnt ' + i
         }
@@ -49,7 +51,7 @@ export class DateComponent implements OnInit, OnDestroy {
           this.first = 0;
           this.rows = 5;
 
-          this.filterByDate();
+          this.filterByType();
         }else{
           this.all_date_mode = false;
           this.specific_date_mode = true;
@@ -57,7 +59,7 @@ export class DateComponent implements OnInit, OnDestroy {
           this.first = 0;
           this.rows = 5;
 
-          this.filterByDate(parseInt(event['id']))
+          this.filterByType(event['id'])
         }
         
         
@@ -89,10 +91,10 @@ export class DateComponent implements OnInit, OnDestroy {
   }
 
 
-  filterByDate(params? : number){
+  filterByType(params? : string){
     if(params){
       this.filtered_items = this.text_items.filter(x => {
-        return x.date == params;
+        return x.type == params;
       });
     }else{
       this.filtered_items = this.text_items;

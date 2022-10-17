@@ -1,14 +1,10 @@
-<div id="word-container" class="flex flex-column flex-auto">
+<div id="theme-container" class="flex flex-column flex-auto">
     
-    <div class="flex flex-row align-items-center horizontal-list m-3" *ngIf="!filtered_mode_by_word">
-        <ul class="flex-wrap">
-            <li [routerLink]="'../'+letter" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-1 py-2 align-items-center" *ngFor="let letter of alphabet_array">
-                <a>{{letter == 'all' ? '&#10043;' : letter | uppercase}}</a>
-            </li>
-        </ul>
+    <div class="flex flex-row align-items-center horizontal-list m-3" *ngIf="all_themes_mode">
+        <p class="py-5">To orient yourself and to consult the conceptual “Themes” analysed in the CGRN, please click here.</p>
     </div>
 
-    <div class="flex flex-row align-items-center horizontal-list m-3" *ngIf="filtered_mode_by_word">
+    <div class="flex flex-row align-items-center horizontal-list m-3" *ngIf="filtered_by_theme_mode">
         <button pButton type="button" class="back-button m-3" [routerLink]="'../all'">
             <i class="fas fa-chevron-left"></i> 
             <span class="ml-3">{{'Back to word list' | uppercase}}</span>
@@ -19,7 +15,7 @@
         </div>
     </div>
 
-    <div class="flex flex-column flex-auto" *ngIf="!filtered_mode_by_word">
+    <div class="flex flex-column flex-auto" *ngIf="all_themes_mode">
         <div class="flex flex-column flex-auto text-item-container mt-3 ml-3 mb-3 pr-3">
             <ul class="flex flex-column word-list">
                 <div class="flex flex-none" *ngFor="let item of pagination_items">
@@ -33,11 +29,11 @@
             </ul>
         </div>
 
-        <p-paginator #paginator_letter class="sticky bottom-0" [first]="first" [rows]="rows" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[17,34,45]"></p-paginator><!--  [rowsPerPageOptions]="[17,34,45]" -->
+        <p-paginator class="sticky bottom-0" [first]="first" [rows]="rows" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[17,34,45]"></p-paginator><!--  [rowsPerPageOptions]="[17,34,45]" -->
 
     </div>
 
-    <div id="filtered-words" class="flex flex-column flex-1" *ngIf="filtered_mode_by_word">
+    <div id="filtered-words" class="flex flex-column flex-1" *ngIf="filtered_by_theme_mode">
         <div class="flex flex-column flex-1">
             <div class="flex flex-column flex-auto text-item-container">
                 <div class="flex flex-row text-item m-2 " *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">

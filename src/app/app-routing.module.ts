@@ -3,6 +3,8 @@ import { RouterModule, Routes } from '@angular/router';
 import { BrowseComponent } from './views/browse/browse.component';
 import { DateComponent } from './views/browse/date/date.component';
 import { LocationComponent } from './views/browse/location/location.component';
+import { ThemeComponent } from './views/browse/theme/theme.component';
+import { TypeComponent } from './views/browse/type/type.component';
 import { WordComponent } from './views/browse/word/word.component';
 import { HomeComponent } from './views/home/home.component';
 
@@ -41,6 +43,22 @@ const routes: Routes = [
         path: 'word/:id',
         component: WordComponent
       },
+      {
+        path: 'type',
+        redirectTo: 'type/all',
+      },
+      {
+        path: 'type/:id',
+        component: TypeComponent
+      },
+      {
+        path: 'theme',
+        redirectTo: 'theme/all',
+      },
+      {
+        path: 'theme/:id',
+        component: ThemeComponent
+      }
     ]
   },
   /* { path: '**', component: PageNotFoundComponent } */

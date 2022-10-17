@@ -1,37 +1,38 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { Router, NavigationEnd, NavigationStart, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Paginator } from 'primeng/paginator';
-import { last, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 
-import * as data from '../../../../assets/mock/words.json'
+//import * as data from '../../../../assets/mock/words.json'
+
 
 @Component({
-  selector: 'app-word',
-  templateUrl: './word.component.html',
-  styleUrls: ['./word.component.scss']
+  selector: 'app-theme',
+  templateUrl: './theme.component.html',
+  styleUrls: ['./theme.component.scss']
 })
-export class WordComponent implements OnInit {
+export class ThemeComponent implements OnInit {
 
   current_word: string = '';
-  current_occurences : number = 0;
+  current_occurences : string = '';
   current_page_template : string = '';
   route_subscription: Subscription = new Subscription();  
   activated_route_subscription: Subscription = new Subscription();
 
-  word_items: any[] = [];
   text_items : any[] = [];
   pagination_items: any[] = [];
   filtered_items : any[] = [];
 
-  century_array : number[] = [-6, -5, -4, -3, -2, -1, 1];
-  alphabet_array : string[] = ["all", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+  theme_items : any[] = ["Adornment", "Animal", "Animal", "Animal", "Animal", "Animal", "Area", "Authority", "Bakery", "Childbirth", "Clothing", "Cult", "personnel", "Dairy", "Death", "Deities", "and", "heroes", "Epithet", "Ethnicity", "Festival", "Group", "Individual", "Liquid", "Meal", "Menstruation", "Month", "Object", "Object", "Offering", "Official", "Oracle", "Plants", "and", "seeds", "Portion", "Prayer", "Punishment", "Purity", "and", "Purification", "Sacrificial", "performance", "Sexual", "relations", "Speech", "act", "Structure"];
 
+  century_array : number[] = [-6, -5, -4, -3, -2, -1, 1];
+  themes_array : any[] = []
   first : number = 0;
   rows : number = 0;
   places_array: string[] = ['Venetum', 'Florence', 'Rome', 'Falisc'];
 
-  filtered_mode_by_letter : boolean = false;
-  filtered_mode_by_word : boolean = false;
+  all_themes_mode : boolean = false;
+  filtered_by_theme_mode : boolean = false;
   previous_path : string = '';
 
   @ViewChild('paginator', { static: true }) paginator: Paginator | undefined
@@ -47,54 +48,44 @@ export class WordComponent implements OnInit {
           title: 'Lorem ipsum' + i,
           place: this.places_array[Math.floor(Math.random() * this.places_array.length)],
           date: this.century_array[Math.floor(Math.random() * this.century_array.length)],
+          theme: this.theme_items[Math.floor(Math.random() * this.century_array.length)],
           label: 'ItAnt ' + i,
           value: 'ItAnt ' + i
         }
       );
     }    
 
-    
-    this.word_items = (data as any).default;
+    this.theme_items.forEach( theme_label => {
+      let object : any = {};
+      object['label'] = theme_label;
+      object['count'] = Math.floor(Math.random() * this.century_array.length)
+      this.themes_array.push(object)
+    })
 
-    this.word_items = this.word_items.sort(function(a, b){
-      if(a.label < b.label){return -1;}
-      if(a.label > b.label){return 1;}
-      return 0;
-    });
 
     this.activated_route_subscription = this.activated_route.params.subscribe(event => {
       if (event['id'] != undefined) {
         this.previous_path = '';
         this.current_word = '';
         if(event['id'] == 'all'){
-          this.filtered_mode_by_letter = false;
-          this.filtered_mode_by_word = false;
+          this.all_themes_mode = true;
+          this.filtered_by_theme_mode = false;
     
-        }else if(event['id'].length == 1){
-          this.filtered_mode_by_letter = true;
-          this.filtered_mode_by_word = false;
-    
-        }else if(event['id'].length > 1){
-          this.filtered_mode_by_letter = false;
-          this.filtered_mode_by_word = true;
+        }else{
+          this.all_themes_mode = false;
+          this.filtered_by_theme_mode = true;
         }
         
-        if(!this.filtered_mode_by_letter && !this.filtered_mode_by_word){
+        if(this.all_themes_mode){
           this.first = 0;
           this.rows = 17;
           this.getAllData();
-        }
-
-        else if(this.filtered_mode_by_letter){
-          this.first = 0;
-          this.rows = 17;
-          this.filterByLetter(event['id'])
-        }else if(this.filtered_mode_by_word){
+        }else{
           this.first = 0;
           this.rows = 5;
           this.previous_path = event['id'][0].toLowerCase();
           this.current_word = event['id'].toLowerCase();
-          this.filterByWord(event['id']);
+          this.filterByTheme(event['id']);
         }
       }
     })
@@ -108,7 +99,7 @@ export class WordComponent implements OnInit {
     this.activated_route_subscription.unsubscribe();
   }
 
-  saveTempOccurrences(count : number){
+  saveTempOccurrences(count : string){
     this.current_occurences = count;
   }
 
@@ -124,33 +115,24 @@ export class WordComponent implements OnInit {
     } else if(this.rows != 0 && this.first != 0) {
       this.pagination_items = this.filtered_items.slice(this.first, this.first + this.rows)
     }else{
-      if(!this.filtered_mode_by_letter && !this.filtered_mode_by_word){
+      if(!this.all_themes_mode && !this.filtered_by_theme_mode){
         this.pagination_items = this.filtered_items.slice(0, 17)
-      }else if(this.filtered_mode_by_letter){
+      }else if(this.all_themes_mode){
         this.pagination_items = this.filtered_items.slice(0, 17)
-      }else if(this.filtered_mode_by_word){
+      }else if(this.filtered_by_theme_mode){
         this.pagination_items = this.filtered_items.slice(0, 5)
       }
     }
   }
 
   getAllData(){
-    this.filtered_items = this.word_items;
+    this.filtered_items = this.themes_array;
 
     this.pagination();
   }
 
-  filterByLetter(params : string){
-    
-    this.filtered_items = this.word_items.filter(x => {
-      return x.label.toLowerCase()[0] == params;
-    });
-    
-    this.pagination();
 
-  }
-
-  filterByWord(params : string){
+  filterByTheme(params : string){
 
     let min = Math.floor(Math.random() * (450 - 0 + 1)) + 0;
     let max = Math.floor(Math.random() * (466 - min + 1)) + (min);
