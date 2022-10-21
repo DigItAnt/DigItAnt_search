@@ -6,62 +6,14 @@
         border-right: transparent;
         border-style: dashed;
         user-select: none;
+
+        a{
+            text-decoration: none;
+            color: unset;
+        }
+        
     
-        ul {
-            display: flex;
-            flex-direction: row;
-            list-style-type: none;
-    
-            li{ 
-                color: #64748B;
-                display: flex;
-                font-weight: 400;
-                cursor: pointer;
-                
-    
-                .icon {
-                    font-family: 'Font Awesome 5 Free';
-                    font-weight: 900;
-                }
-    
-                .icon::before{
-                    
-                    content: '\f111'
-                }
-    
-                a { 
-                    width: 1.75rem;
-                    text-align: center;
-                    font-weight: 700;
-                    padding: 0.5rem;
-                    border-radius: 5px;
-                    
-                }
-    
-                a:hover{
-                    text-decoration: underline;
-                }
-            }
-    
-            li.active {
-                
-                a {
-                    background-color: #234b86 !important;
-                    color: white !important;
-                    text-decoration: none !important;
-                }
-            }
-    
-            li:hover {
-                
-                
-                color: #234b86 !important;
-                .icon {
-                    color : #234b86 !important;
-                }
-            }
-           
-        }   
+        
     }
 
     .back-button {
@@ -116,11 +68,11 @@
                 }
     
                 a { 
-                    width: 1.75rem;
                     text-align: center;
                     font-weight: 700;
                     padding: 0.5rem;
                     border-radius: 5px;
+                    color: unset;
                     
                 }
     
@@ -163,6 +115,8 @@
         border: 5px solid transparent;
         background: #f1f1f1;
         cursor: pointer;
+        color: unset;
+
 
         .text-item-id {
             
@@ -174,8 +128,8 @@
 
     .text-item:hover {
         border-color: #234b86;
-        
     }
+
 
     .text-item-preview-top {
         font-weight: 900;

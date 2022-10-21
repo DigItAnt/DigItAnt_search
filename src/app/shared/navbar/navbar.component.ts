@@ -24,7 +24,7 @@ export class NavbarComponent implements OnInit {
     this.menu_items = [
       {
         label: 'Home',
-        routerLink : ''
+        routerLink : '/'
       },
       {
         label: 'Browse',

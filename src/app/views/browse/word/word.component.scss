@@ -35,6 +35,8 @@
                     font-weight: 700;
                     padding: 0.5rem;
                     border-radius: 5px;
+                    color: unset;
+                    text-decoration: none;
                     
                 }
     
@@ -70,6 +72,10 @@
         font-family: 'M PLUS Rounded 1c', sans-serif;
         font-weight: 700;
         padding: 0.5rem 1rem;
+
+        a{  color: unset;
+            text-decoration: none;
+        }
     }
 
     .occurrences{
@@ -93,7 +99,7 @@
             list-style-type: none;
     
             li{ 
-                color: #14171b;
+                
                 display: flex;
                 font-weight: 400;
                 align-items: center;
@@ -104,6 +110,7 @@
                     font-family: 'Font Awesome 5 Free';
                     font-weight: 900;
                     font-size: .5rem;
+                    color: #64748B;
                 }
     
                 .icon::before{
@@ -117,16 +124,20 @@
                 }
     
                 a { 
-                    width: 1.75rem;
+                    /* width: 1.75rem; */
                     text-align: center;
                     font-weight: 700;
                     padding: 0.5rem;
                     border-radius: 5px;
+
+                    color: #14171b;
+                    text-decoration: none;
                     
                 }
     
                 a:hover{
-                    text-decoration: underline;
+                    color: #234b86 !important;
+                    text-decoration: none;
                 }
             }
     
@@ -152,6 +163,8 @@
     }
     
     .text-item {
+        text-decoration: none;
+        color: unset;
         padding: 1rem;
         border: 5px solid transparent;
         background: #f1f1f1;

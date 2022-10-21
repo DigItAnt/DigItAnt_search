@@ -13,22 +13,22 @@
         <ul class="flex-wrap">
             <li routerLink="../venetum" routerLinkActive="active" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>Venetum <b>(223)</b></a>
+                <a (click)="$event.preventDefault()" href="../venetum">Venetum <span class="counter">(223)</span></a>
                 
             </li>
             <li routerLink="../florence" routerLinkActive="active" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>Florence <b>(40)</b></a>
+                <a (click)="$event.preventDefault()" href="../florence">Florence <span class="counter">(40)</span></a>
                 
             </li>
             <li routerLink="../rome" routerLinkActive="active" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>Rome <b>(4)</b></a>
+                <a (click)="$event.preventDefault()" href="../rome">Rome <span class="counter">(12)</span></a>
                 
             </li>
             <li routerLink="../falisc" routerLinkActive="active" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>Falisc <b>(12)</b></a>
+                <a (click)="$event.preventDefault()" href="../falisc">Falisc <span class="counter">(35)</span></a>
                 
             </li>
         </ul>
@@ -36,7 +36,7 @@
 
     <div id="location-total-container" class="flex flex-column flex-1" *ngIf="current_route == '/browse/location'">
         <div class="flex flex-column flex-auto text-item-container">
-            <div class="flex flex-row text-item  m-2" *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">
+            <a class="flex flex-row text-item m-2 no-underline" *ngFor="let item of pagination_items" [href]="'/file/'+item.id" [routerLink]="['/file/'+item.id]">
             
                 <div class="flex text-item-id p-2">
                     {{item.id}}
@@ -59,12 +59,12 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
 
         
 
-        <p-paginator class="sticky bottom-0" [rows]="5" [totalRecords]="text_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
+        <p-paginator #location_general_paginator class="sticky bottom-0" [rows]="5" [totalRecords]="text_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
     </div>
 
     <div id="location-filtered-container" class="flex flex-column flex-1" *ngIf="current_route != '/browse/location'">
@@ -72,7 +72,7 @@
 
         <div class="flex flex-column flex-1">
             <div class="flex flex-column flex-auto text-item-container">
-                <div class="flex flex-row text-item m-2 " *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">
+                <a class="flex flex-row text-item m-2 no-underline" *ngFor="let item of pagination_items" [href]="'/file/'+item.id" [routerLink]="['/file/'+item.id]">
                 
                     <div class="flex text-item-id p-2">
                         {{item.id}}
@@ -95,12 +95,12 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
             
         
         </div>
-        <p-paginator class="sticky bottom-0" [rows]="5" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
+        <p-paginator #location_filtered_paginator class="sticky bottom-0" [rows]="5" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
         
     </div>
     

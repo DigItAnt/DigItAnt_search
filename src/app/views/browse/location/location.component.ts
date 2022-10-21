@@ -1,6 +1,6 @@
 import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
-import { Router, ActivatedRoute, NavigationEnd, NavigationStart } from '@angular/router';
-import { circle, latLng, LeafletMouseEvent, marker, polygon, tileLayer } from 'leaflet';
+import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
+import { circle, latLng, LeafletMouseEvent, polygon, tileLayer} from 'leaflet';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -53,18 +53,18 @@ export class LocationComponent implements OnInit, OnDestroy {
 
     this.layers = [
       polygon([[45.8, 11.91], [45.19, 11.92], [45.19, 12.51], [45.55, 12.70]]).on('click', event => {
-        this.navigateTo('./venetum');
+        this.navigateTo('../venetum');
       }),
 
       circle([ 41.92, 12.31 ], { radius: 50000 }).on('click', event => {
-        this.navigateTo('./rome');
+        this.navigateTo('../rome');
       }),
       circle([ 43.77, 11.25 ], { radius: 30000 }).on('click', event => {
-        this.navigateTo('./florence');      
+        this.navigateTo('../florence');      
       }),
 
       circle([ 41.35, 15.09 ], { radius: 30000 }).on('click', event => {
-        this.navigateTo('./falisc');
+        this.navigateTo('../falisc');
       }),
     ];
 
@@ -88,6 +88,7 @@ export class LocationComponent implements OnInit, OnDestroy {
 
   navigateTo(path : string){
     this.zone.run( ()=> {
+      console.log()
       this.route.navigate([path], { relativeTo: this.activated_route });
     });
   }

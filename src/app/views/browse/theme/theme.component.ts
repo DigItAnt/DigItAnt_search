@@ -41,19 +41,7 @@ export class ThemeComponent implements OnInit {
   constructor(private route: Router, private activated_route: ActivatedRoute) { }
 
   ngOnInit(): void {
-    for (let i = 0; i < 467; i++) {
-      this.text_items.push(
-        {
-          id: 'ItAnt' + i,
-          title: 'Lorem ipsum' + i,
-          place: this.places_array[Math.floor(Math.random() * this.places_array.length)],
-          date: this.century_array[Math.floor(Math.random() * this.century_array.length)],
-          theme: this.theme_items[Math.floor(Math.random() * this.century_array.length)],
-          label: 'ItAnt ' + i,
-          value: 'ItAnt ' + i
-        }
-      );
-    }    
+    
 
     this.theme_items.forEach( theme_label => {
       let object : any = {};
@@ -61,6 +49,20 @@ export class ThemeComponent implements OnInit {
       object['count'] = Math.floor(Math.random() * this.century_array.length)
       this.themes_array.push(object)
     })
+
+    for (let i = 0; i < 467; i++) {
+      this.text_items.push(
+        {
+          id: 'ItAnt' + i,
+          title: 'Lorem ipsum' + i,
+          place: this.places_array[Math.floor(Math.random() * this.places_array.length)],
+          date: this.century_array[Math.floor(Math.random() * this.century_array.length)],
+          theme: this.theme_items[Math.floor(Math.random() * this.themes_array.length)],
+          label: 'ItAnt ' + i,
+          value: 'ItAnt ' + i
+        }
+      );
+    }    
 
     this.themes_array[6]['items'] = [
       {

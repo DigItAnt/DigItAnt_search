@@ -7,6 +7,7 @@ import { ThemeComponent } from './views/browse/theme/theme.component';
 import { TypeComponent } from './views/browse/type/type.component';
 import { WordComponent } from './views/browse/word/word.component';
 import { HomeComponent } from './views/home/home.component';
+import { SearchComponent } from './views/search/search.component';
 
 const routes: Routes = [
   {
@@ -61,6 +62,10 @@ const routes: Routes = [
       }
     ]
   },
+  {
+    path: 'search',
+    component: SearchComponent
+  }
   /* { path: '**', component: PageNotFoundComponent } */
 ];
 

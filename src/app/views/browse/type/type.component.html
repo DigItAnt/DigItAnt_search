@@ -4,27 +4,27 @@
         <ul class="flex-wrap">
             <li routerLink="../funerary" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>funerary</a>
+                <a (click)="$event.preventDefault()" href="browse/type/funerary">funerary</a>
                 <span class="ml-2 counter">(123)</span>
             </li>
             <li routerLink="../honorific" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>honorific</a>
+                <a (click)="$event.preventDefault()" href="browse/type/honorific">honorific</a>
                 <span class="ml-2 counter">(123)</span>
             </li>
             <li routerLink="../oracle" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>oracle</a>
+                <a (click)="$event.preventDefault()" href="browse/type/oracle">oracle</a>
                 <span class="ml-2 counter">(123)</span>
             </li>
             <li routerLink="../heroes" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>heroes</a>
+                <a (click)="$event.preventDefault()" href="browse/type/heroes">heroes</a>
                 <span class="ml-2 counter">(123)</span>
             </li>
             <li  routerLink="../sacrifical_regulation" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>sacrifical_regulation</a>
+                <a (click)="$event.preventDefault()" href="browse/type/sacrifical_regulation">sacrifical_regulation</a>
                 <span class="ml-2 counter">(123)</span>
             </li>
         </ul>
@@ -32,7 +32,7 @@
 
     <div id="date-total-container" class="flex flex-column flex-1" *ngIf="all_date_mode">
         <div class="flex flex-column flex-auto text-item-container">
-            <div class="flex flex-row text-item  m-2" *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">
+            <a (click)="$event.preventDefault()" [href]="'/file/'+item.id" class="flex flex-row text-item no-underline  m-2" *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">
             
                 <div class="flex text-item-id p-2">
                     {{item.id}}
@@ -55,19 +55,19 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
 
         
 
-        <p-paginator [rows]="rows" [first]="first" [totalRecords]="text_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
+        <p-paginator #type_general_paginator [rows]="rows" [first]="first" [totalRecords]="text_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
     </div>
 
     <div id="date-filtered-container" class="flex flex-column flex-1" *ngIf="specific_date_mode">
         <!-- <router-outlet></router-outlet> -->
         <div class="flex flex-column flex-1">
             <div class="flex flex-column flex-auto text-item-container">
-                <div class="flex flex-row text-item m-2 " *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">
+                <a class="flex flex-row text-item m-2 no-underline" *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">
                 
                     <div class="flex text-item-id p-2">
                         {{item.id}}
@@ -90,12 +90,12 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
             
         
         </div>
-        <p-paginator [rows]="rows" [first]="first" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
+        <p-paginator #type_filtered_paginator [rows]="rows" [first]="first" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
         
     </div>
     

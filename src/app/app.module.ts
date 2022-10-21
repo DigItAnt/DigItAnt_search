@@ -16,7 +16,11 @@ import {CardModule} from 'primeng/card';
 import {PaginatorModule} from 'primeng/paginator';
 import {BadgeModule} from 'primeng/badge';
 import {PanelModule} from 'primeng/panel';
-
+import {InputTextModule} from 'primeng/inputtext';
+import {ToggleButtonModule} from 'primeng/togglebutton';
+import {TooltipModule} from 'primeng/tooltip';
+import {RadioButtonModule} from 'primeng/radiobutton';
+import {DropdownModule} from 'primeng/dropdown';
 
 //LEAFLET
 import { LeafletModule } from '@asymmetrik/ngx-leaflet';
@@ -34,6 +38,8 @@ import { LocationComponent } from './views/browse/location/location.component';
 import { WordComponent } from './views/browse/word/word.component';
 import { TypeComponent } from './views/browse/type/type.component';
 import { ThemeComponent } from './views/browse/theme/theme.component';
+import { SearchComponent } from './views/search/search.component';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -48,6 +54,7 @@ import { ThemeComponent } from './views/browse/theme/theme.component';
     WordComponent,
     TypeComponent,
     ThemeComponent,
+    SearchComponent,
   ],
   imports: [
     BrowserModule,
@@ -62,7 +69,13 @@ import { ThemeComponent } from './views/browse/theme/theme.component';
     PaginatorModule,
     LeafletModule,
     BadgeModule,
-    PanelModule
+    PanelModule,
+    InputTextModule,
+    ToggleButtonModule,
+    TooltipModule,
+    RadioButtonModule,
+    ReactiveFormsModule,
+    DropdownModule
   ],
   providers: [],
   bootstrap: [AppComponent]

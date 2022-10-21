@@ -2,27 +2,27 @@
     <ul>
         <li routerLink="/browse" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
             <span class="icon"></span>
-            <a >All</a>
+            <a class="flex-1" (click)="$event.preventDefault()" href="/browse">All</a>
         </li>
         <li routerLink="/browse/date" routerLinkActive="active"  class="pl-4 align-items-center">
             <span class="icon"></span>
-            <a >By date</a>
+            <a class="flex-1" (click)="$event.preventDefault()" href="/browse/date">By date</a>
         </li>
         <li routerLink="/browse/location" routerLinkActive="active"  class="pl-4 align-items-center">
             <span class="icon"></span>
-            <a >By location</a>
+            <a class="flex-1" (click)="$event.preventDefault()" href="/browse/location">By location</a>
         </li>
         <li routerLink="/browse/word" routerLinkActive="active"  class="pl-4 align-items-center">
             <span class="icon"></span>
-            <a >By word</a>
+            <a class="flex-1" (click)="$event.preventDefault()" href="/browse/word">By word</a>
         </li>
         <li  routerLink="/browse/type" routerLinkActive="active"  class="pl-4 align-items-center">
             <span class="icon"></span>
-            <a>By type of text</a>
+            <a class="flex-1" (click)="$event.preventDefault()" href="/browse/type">By type of text</a>
         </li>
         <li routerLink="/browse/theme" routerLinkActive="active"  class="pl-4 align-items-center">
             <span class="icon"></span>
-            <a >By theme</a>
+            <a class="flex-1" (click)="$event.preventDefault()" href="/browse/theme">By theme</a>
         </li>
     </ul>
 </div>
@@ -60,7 +60,7 @@
             </div>
         </div>
     </div>
-    <p-paginator [rows]="5" [totalRecords]="text_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
+    <p-paginator #browse_general_paginator [rows]="5" [totalRecords]="text_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
     
 </div>
 

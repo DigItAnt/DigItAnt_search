@@ -4,38 +4,38 @@
         <ul class="flex-wrap">
             <li routerLink="../-6" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>6th century BC</a>
+                <a (click)="$event.preventDefault()" href="/browse/date/-6">6th century BC</a>
             </li>
             <li routerLink="../-5" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>5th century BC</a>
+                <a (click)="$event.preventDefault()" href="/browse/date/-5">5th century BC</a>
             </li>
             <li routerLink="../-4" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>4th century BC</a>
+                <a (click)="$event.preventDefault()" href="/browse/date/-4">4th century BC</a>
             </li>
             <li routerLink="../-3" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>3rd century BC</a>
+                <a (click)="$event.preventDefault()" href="/browse/date/-3">3rd century BC</a>
             </li>
             <li  routerLink="../-2" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>2nd century BC</a>
+                <a (click)="$event.preventDefault()" href="/browse/date/-2">2nd century BC</a>
             </li>
             <li routerLink="../-1" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>1st century BC</a>
+                <a (click)="$event.preventDefault()" href="/browse/date/-1">1st century BC</a>
             </li>
             <li routerLink="../1" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}" class="pl-4 align-items-center">
                 <span class="icon"></span>
-                <a>1st century AD</a>
+                <a (click)="$event.preventDefault()" href="/browse/date/1">1st century AD</a>
             </li>
         </ul>
     </div>
 
     <div id="date-total-container" class="flex flex-column flex-1" *ngIf="all_date_mode">
         <div class="flex flex-column flex-auto text-item-container">
-            <div class="flex flex-row text-item  m-2" *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">
+            <a class="flex flex-row text-item m-2 no-underline" *ngFor="let item of pagination_items" [href]="'/file/'+item.id" [routerLink]="['/file/'+item.id]">
             
                 <div class="flex text-item-id p-2">
                     {{item.id}}
@@ -58,19 +58,19 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
 
         
 
-        <p-paginator [rows]="rows" [first]="first" [totalRecords]="text_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
+        <p-paginator #date_general_paginator [rows]="rows" [first]="first" [totalRecords]="text_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
     </div>
 
     <div id="date-filtered-container" class="flex flex-column flex-1" *ngIf="specific_date_mode">
         <!-- <router-outlet></router-outlet> -->
         <div class="flex flex-column flex-1">
             <div class="flex flex-column flex-auto text-item-container">
-                <div class="flex flex-row text-item m-2 " *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">
+                <a class="flex flex-row text-item m-2 no-underline" *ngFor="let item of pagination_items" [href]="'/file/'+item.id" [routerLink]="['/file/'+item.id]">
                 
                     <div class="flex text-item-id p-2">
                         {{item.id}}
@@ -93,12 +93,12 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
             
         
         </div>
-        <p-paginator [rows]="rows" [first]="first" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
+        <p-paginator #date_filtered_paginator [rows]="rows" [first]="first" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]"></p-paginator>
         
     </div>
     

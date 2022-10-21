@@ -61,9 +61,7 @@ app-root {
         flex-direction: row-reverse !important;
         border-radius: 0 !important;
 
-       /*  @include xs {
-            display: flex !important;
-        } */
+        z-index: 99999;
 
         @include md {
             position: fixed !important;
@@ -93,7 +91,8 @@ app-location,
 app-sublocation,
 app-word,
 app-type,
-app-theme{
+app-theme,
+app-search{
     display: flex !important;
     flex: 1 1 auto !important;
     position: relative !important;
@@ -107,7 +106,6 @@ app-sublocation{
 app-theme {
 
     p-panel {
-        margin-top: 0.2rem !important;
         .p-panel-icons-end{
             margin: 0 !important;
         }
@@ -118,11 +116,17 @@ app-theme {
             padding: 0 !important;
             border: 0 !important;
             background: transparent !important;
+            margin-top: 0.2rem !important;
+
+        }
+
+        .p-toggleable-content{
+            margin-left: -4rem !important;
         }
 
         .p-panel-content {
             padding: 0.5rem !important;
-            margin-left: -4rem !important;
+            
             border: 0 !important;
             font-family: 'M PLUS Rounded 1c', sans-serif;
             font-weight: 700;
@@ -132,6 +136,7 @@ app-theme {
 
                 li {
                     margin: .5rem 0 !important;
+                    
                 }
 
                 li.sublink:hover{
@@ -145,27 +150,105 @@ app-theme {
     }
 }
 
-.p-breadcrumb {
-    border-radius: 0 !important;
-    position: sticky !important;
+app-search {
+    
+    p-togglebutton {
+        
+        .p-button {
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+            height: 100% !important;
+            border-left: 0 !important;
+        }
 
-    @include md {
-        position: fixed !important;
-        top: 4rem !important;
-        width: 100%;
+        .p-button:focus {
+            box-shadow: none !important;
+        }
+
+        .omega {
+            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            font-weight: 700 !important;
+            color: white(0, 0, 0, 0.452) !important;
+            font-size: 1.5rem !important;
+        }
+
+        .omega::before{
+            
+            content: '\03a9' !important;
+        }
+
+        .latin {
+            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            font-weight: 700 !important;
+            color: white(0, 0, 0, 0.452) !important;
+            font-size: 1.5rem !important;
+        }
+
+        .latin::before{
+            
+            content: 'Ab' !important;
+        }
+
+
+        .p-button-icon-only {
+            padding: 0 !important;
+        }
     }
 
-    @include sm {
-        position: fixed !important;
-        top: 4rem !important;
-        width: 100%;
+    input {
+        outline: 0 none;
+        outline-offset: 0;
+        box-shadow: none !important;
+        border-color: none !important;
+        font-family: 'M PLUS Rounded 1c', sans-serif !important;
+        font-weight: 400 !important;
     }
+
+    #text-radio-button {
+    
+
+        .field-radiobutton > label{
+            font-weight: 400 !important;
+        }
+    }
+
+    p-dropdown {
+        
+
+        .p-dropdown {
+            width: 100% !important;
+        }
+
+        .p-dropdown-label{
+            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            font-weight: 400 !important;
+        }
+
+        .p-dropdown-items {
+            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            font-weight: 400 !important;
+        }
+
+        .counter {
+            font-weight: 900;
+            color: #234b86 !important;
+        }
+    }
+}
+
+.p-dropdown-panel {
+    font-family: 'M PLUS Rounded 1c', sans-serif !important;
+    font-weight: 400 !important;
 }
 
 app-footer {
     .p-toolbar {
         border-radius: 0 !important;
         padding: .7rem !important;
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        width: 100%;
         @include md {
             position: fixed !important;
             bottom: 0 !important;

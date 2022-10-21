@@ -34,7 +34,8 @@
     
                 a {
                     padding: 1rem;
-                    
+                    text-decoration: none;
+                    color: unset;
                 }
     
                 a:hover{
@@ -61,12 +62,6 @@
            
         }   
     }
-
-    .text-item-container {
-        /* flex: 1 1 auto;
-        overflow-y: auto;
-        height: 100px; */
-    }
     
     .text-item {
         padding: 1rem;
@@ -86,8 +81,17 @@
         
     }
 
+    .text-item-preview {
+        color: #14171b;
+    }
+
     .text-item-preview-top {
         font-weight: 900;
+    }
+
+    .counter {
+        font-weight: 900;
+        color: #234b86 !important;
     }
 }
 

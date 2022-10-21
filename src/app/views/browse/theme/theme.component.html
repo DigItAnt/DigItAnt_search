@@ -6,8 +6,10 @@
 
     <div class="flex flex-row align-items-center horizontal-list m-3" *ngIf="filtered_by_theme_mode">
         <button pButton type="button" class="back-button m-3" [routerLink]="'../all'">
-            <i class="fas fa-chevron-left"></i> 
-            <span class="ml-3">{{'Back to word list' | uppercase}}</span>
+            <a class="no-underline" (click)="$event.preventDefault()" [href]="'/browse/theme/all'">
+                <i class="fas fa-chevron-left"></i> 
+                <span class="ml-3">{{'Back to word list' | uppercase}}</span>
+            </a>
         </button>
         <div class="separator mx-3"></div>
         <div class="occurrences">
@@ -20,28 +22,36 @@
             <ul class="flex flex-column word-list">
                 <div class="flex flex-none" *ngFor="let item of pagination_items">
                     <li *ngIf="item.items == undefined" class="link-theme m-2" [routerLink]="'../'+item.label.toLowerCase()" (click)="saveTempOccurrences(item.count)">
-                        <span class="icon"></span>
-                        <span class="ml-2">{{item.label}}</span>
-                        <span class="ml-2 counter">({{item.count}})</span>
+                        <a class="flex align-items-center no-underline" (click)="$event.preventDefault()" [href]="'browse/theme/'+item.label.toLowerCase()" >
+                            <span class="icon"></span>
+                            <span class="ml-2 font-normal">{{item.label}}</span>
+                            <span class="ml-2 counter">({{item.count}})</span>
+                        </a>
                     </li>
 
                     <div class="flex align-items-start" *ngIf="item.items != undefined">
-                        <li class="flex flex-row align-items-start m-2 link-subtheme" >
-                            <div class="flex flex-row align-items-center">
-                                <span class="icon" [routerLink]="'../'+item.label.toLowerCase()" (click)="saveTempOccurrences(item.count)"></span>
-                                <span class="ml-2">{{item.label}}</span>
+                        <li class="flex flex-row align-items-start m-2 link-subtheme"[routerLink]="'../'+item.label.toLowerCase()"  (click)="saveTempOccurrences(item.count)">
+                            <a class="flex align-items-center no-underline" (click)="$event.preventDefault()" [href]="'browse/theme/'+item.label.toLowerCase()" >
+                                <span class="icon" ></span>
+                                <span class="ml-2 font-normal">{{item.label}}</span>
                                 <span class="ml-2 counter">({{item.count}})</span>
-                            </div>
+                            </a>
                         </li>
-                        <p-panel [expandIcon]="'far fa-plus-square'" [collapseIcon]="'far fa-minus-square'" header="Title" [collapsed]="true" [toggleable]="true">
-                            <ul>
-                                <li class="sublink" [routerLink]="'../'+sub_theme.label.toLowerCase()" (click)="saveTempOccurrences(sub_theme.count)" *ngFor="let sub_theme of item.items">
-                                    <span class="icon" ></span>
-                                    <span class="ml-2">{{sub_theme.label}}</span>
-                                    <span class="ml-2 counter">({{sub_theme.count}})</span>
-                                </li>
-                            </ul>
-                        </p-panel>
+                        <div class="my-2">
+                            <p-panel [expandIcon]="'far fa-plus-square'" [collapseIcon]="'far fa-minus-square'" header="Title" [collapsed]="true" [toggleable]="true">
+                                <ul>
+                                    <li class="sublink" [routerLink]="'../'+sub_theme.label.toLowerCase()" (click)="saveTempOccurrences(sub_theme.count)" *ngFor="let sub_theme of item.items">
+                                        <a class="flex align-items-center no-underline" (click)="$event.preventDefault()" [href]="'browse/theme/'+sub_theme.label.toLowerCase()" >
+                                            <span class="icon" ></span>
+                                            <span class="ml-2 font-normal">{{sub_theme.label}}</span>
+                                            <span class="ml-2 counter">({{sub_theme.count}})</span>
+                                        </a>
+                                        
+                                    </li>
+                                </ul>
+                            </p-panel>
+                        </div>
+                        
                     </div>
                    
                     
@@ -50,14 +60,14 @@
             </ul>
         </div>
 
-        <p-paginator class="sticky bottom-0" [first]="first" [rows]="rows" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[17,34,45]"></p-paginator><!--  [rowsPerPageOptions]="[17,34,45]" -->
+        <p-paginator #theme_general_paginator class="sticky bottom-0" [first]="first" [rows]="rows" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[17,34,45]"></p-paginator><!--  [rowsPerPageOptions]="[17,34,45]" -->
 
     </div>
 
     <div id="filtered-words" class="flex flex-column flex-1" *ngIf="filtered_by_theme_mode">
         <div class="flex flex-column flex-1">
             <div class="flex flex-column flex-auto text-item-container">
-                <div class="flex flex-row text-item m-2 " *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">
+                <a  (click)="$event.preventDefault()" class="flex flex-row text-item m-2 no-underline " *ngFor="let item of pagination_items" [href]="'file/'+item.id" [routerLink]="['/file/'+item.id]">
                 
                     <div class="flex text-item-id p-2">
                         {{item.id}}
@@ -94,12 +104,12 @@
                         </div>
                     </div>
                     
-                </div>
+                </a>
             </div>
             
         
         </div>
-        <p-paginator [rows]="5" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[17,34,45]" ></p-paginator> <!-- [rowsPerPageOptions]="[5,10,15]" -->
+        <p-paginator #theme_filtered_paginator [rows]="5" [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[17,34,45]" ></p-paginator> <!-- [rowsPerPageOptions]="[5,10,15]" -->
     </div>
     
 </div>

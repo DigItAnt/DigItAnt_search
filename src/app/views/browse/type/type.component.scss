@@ -35,7 +35,9 @@
                     color: #234b86 !important;
                 }
     
-                a {
+                a { 
+                    text-decoration: none;
+                    color: unset;
                     padding: 0.5rem;
                     
                 }
@@ -76,6 +78,7 @@
         border: 5px solid transparent;
         background: #f1f1f1;
         cursor: pointer;
+        color: unset;
 
         .text-item-id {
             color: #234b86;
@@ -87,6 +90,11 @@
     .text-item:hover {
         border-color: #234b86;
         
+    }
+
+    .text-item-preview {
+        text-decoration: none;
+        color: unset;        
     }
 
     .text-item-preview-top {
