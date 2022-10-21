@@ -1,0 +1,107 @@
+@import '../../../mixins.scss';
+
+#left-bar{
+    background: #14171b;
+    color: white;
+    width: 30%;
+
+
+    @include xs {
+        display: none !important;
+    }
+
+    ul {
+        display: flex;
+        flex-direction: column;
+        list-style-type: none;
+
+        li{ 
+            color: white;
+            display: flex;
+            font-weight: 800;
+            cursor: pointer;
+            user-select: none;
+
+            .icon {
+                font-family: 'Font Awesome 5 Free';
+                font-weight: 900;
+            }
+
+            .icon::before{
+                
+                content: '\f111'
+            }
+
+            a {
+                padding: 1.5rem 1.5rem 1.5rem 1rem;
+                color: white;
+                text-decoration: none;
+            }
+        }
+
+        li.active {
+            background: #234b86 !important;
+        }
+
+        li:hover {
+            background: #838fa2 !important;
+
+            .icon {
+                color : #234b86 !important;
+            }
+        }
+
+        li:nth-child(even) {
+            background: #2b2e31;
+        }
+
+        /* li:nth-child(even) {
+            color: blue;
+        } */
+    }
+}
+
+#browse-content {
+    //padding: 2rem;
+
+    .horizontal-list{
+        border-top: 2px solid #dee2e6;
+        border-bottom: 2px solid #dee2e6;
+        border-left: transparent;
+        border-right: transparent;
+        border-style: dashed;
+
+        color: #64748B;
+    }
+
+    .text-item-container {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        height: 100px;
+    }
+    
+    .text-item {
+        padding: 1rem;
+        border: 5px solid transparent;
+        background: #f1f1f1;
+        cursor: pointer;
+
+        .text-item-id {
+            color: #234b86;
+            font-weight: 900;
+        }
+    }
+
+    .text-item:hover {
+        border-color: #234b86;
+        
+    }
+
+    .text-item-preview {
+        color: #14171b;
+    }
+
+    .text-item-preview-top {
+        font-weight: 900;
+    }
+}

@@ -16,10 +16,18 @@
         </div>
         
         <div class="p-toolbar-group-right">
-            <button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}"  pButton pRipple type="button" label="Home" class="p-button-secondary p-button-text"></button>
-            <button routerLink="/browse" routerLinkActive="active"  pButton pRipple type="button" label="Browse" class="p-button-secondary p-button-text"></button>
-            <button routerLink="/search" routerLinkActive="active"  pButton pRipple type="button" label="Search" class="p-button-secondary p-button-text"></button>
-            <button routerLink="/references" routerLinkActive="active"  pButton pRipple type="button" label="References" class="p-button-secondary p-button-text"></button>
+            <a href="/" (click)="$event.preventDefault()">
+                <button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}"  pButton pRipple type="button" label="Home" class="p-button-secondary p-button-text"></button>
+            </a>
+            <a href="/browse" (click)="$event.preventDefault()">
+                <button routerLink="/browse" routerLinkActive="active"  pButton pRipple type="button" label="Browse" class="p-button-secondary p-button-text"></button>
+            </a>
+            <a href="/search" (click)="$event.preventDefault()">
+                <button routerLink="/search" routerLinkActive="active"  pButton pRipple type="button" label="Search" class="p-button-secondary p-button-text"></button>
+            </a>
+            <a href="/abbreviations" (click)="$event.preventDefault()">
+                <button routerLink="/abbreviations" routerLinkActive="active"  pButton pRipple type="button" label="References" class="p-button-secondary p-button-text"></button>
+            </a>
         </div>
     </p-toolbar>
 
