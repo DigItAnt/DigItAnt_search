@@ -61,7 +61,7 @@ app-root {
         flex-direction: row-reverse !important;
         border-radius: 0 !important;
 
-        z-index: 99999;
+        z-index: 1;
 
         @include md {
             position: fixed !important;
@@ -96,7 +96,7 @@ app-search,
 app-references{
     display: flex !important;
     flex: 1 1 auto !important;
-    position: relative !important;
+    //position: relative !important;
 }
 
 app-subdate,
@@ -211,6 +211,13 @@ app-search {
         .field-radiobutton > label{
             font-weight: 400 !important;
         }
+
+
+        
+    }
+
+    .p-radiobutton {
+        position: inherit !important;   
     }
 
     p-dropdown {

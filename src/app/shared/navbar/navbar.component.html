@@ -7,7 +7,7 @@
                 <span class="p-inputgroup-addon">
                     <i class="fas fa-search"></i>
                 </span>
-                <p-autoComplete [placeholder]="'Enter text ID'" [suggestions]="filteredText" (completeMethod)="filterText($event)" [minLength]="0" [virtualScroll]="true" [itemSize]="34" field="label"></p-autoComplete>
+                <p-autoComplete [placeholder]="'Enter text ID'" [autoZIndex]="true" [suggestions]="filteredText" (completeMethod)="filterText($event)" [minLength]="0" [virtualScroll]="true" [itemSize]="34" field="label"></p-autoComplete>
             </div>
         </div>
     
