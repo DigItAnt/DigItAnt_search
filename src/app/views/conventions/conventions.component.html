@@ -1,1 +1,29 @@
-<p>conventions works!</p>
+<div id="left-bar" class="flex flex-column">
+    <ul>
+        <li routerLink="/abbreviations" routerLinkActive="active" class="pl-4 align-items-center">
+            <span class="icon"></span>
+            <a class="flex-1" (click)="$event.preventDefault()" href="/abbreviations">Abbreviations</a>
+        </li>
+        <li routerLink="/bibliography" routerLinkActive="active"  class="pl-4 align-items-center">
+            <span class="icon"></span>
+            <a class="flex-1" (click)="$event.preventDefault()" href="/bibliography">Bibliography</a>
+        </li>
+        <li routerLink="/conventions" routerLinkActive="active"  class="pl-4 align-items-center">
+            <span class="icon"></span>
+            <a class="flex-1" (click)="$event.preventDefault()" href="/conventions">Conventions</a>
+        </li>
+        <li routerLink="/glossary" routerLinkActive="active"  class="pl-4 align-items-center">
+            <span class="icon"></span>
+            <a class="flex-1" (click)="$event.preventDefault()" href="/glossary">Glossary</a>
+        </li>
+        <li  routerLink="/concordances" routerLinkActive="active"  class="pl-4 align-items-center">
+            <span class="icon"></span>
+            <a class="flex-1" (click)="$event.preventDefault()" href="/concordances">Concordances</a>
+        </li>
+    </ul>
+</div>
+
+<div id="home-content" class="flex flex-column flex-1">
+    <h1 class="mb-5">Lorem Ipsum</h1>
+    <p class="mt-5">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ipsum nisl, lobortis ut vestibulum ut, feugiat at sem. In eget tristique sapien, vitae vestibulum lorem. Donec eget leo sem. Nulla mollis condimentum metus ut molestie. Vivamus et mi porttitor, sodales magna ac, volutpat neque. Morbi faucibus nibh eu neque semper, eu ornare risus gravida. Pellentesque id hendrerit felis.</p>
+</div>

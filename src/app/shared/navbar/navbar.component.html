@@ -26,7 +26,7 @@
                 <button routerLink="/search" routerLinkActive="active"  pButton pRipple type="button" label="Search" class="p-button-secondary p-button-text"></button>
             </a>
             <a href="/abbreviations" (click)="$event.preventDefault()">
-                <button routerLink="/abbreviations" routerLinkActive="active"  pButton pRipple type="button" label="References" class="p-button-secondary p-button-text"></button>
+                <button routerLink="/abbreviations" [ngClass]="{'active': maintain_active}" pButton pRipple type="button" label="References" class="p-button-secondary p-button-text"></button>
             </a>
         </div>
     </p-toolbar>

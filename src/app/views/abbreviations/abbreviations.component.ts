@@ -1,15 +1,17 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Router, ActivatedRoute, NavigationEnd, NavigationStart } from '@angular/router';
 import { Paginator } from 'primeng/paginator';
 import { Subscription } from 'rxjs';
+
 import * as data from '../../../assets/mock/words.json'
 
+
 @Component({
-  selector: 'app-bibliography',
-  templateUrl: './bibliography.component.html',
-  styleUrls: ['./bibliography.component.scss']
+  selector: 'app-abbreviations',
+  templateUrl: './abbreviations.component.html',
+  styleUrls: ['./abbreviations.component.scss']
 })
-export class BibliographyComponent implements OnInit {
+export class AbbreviationsComponent implements OnInit, OnDestroy {
 
   current_occurences : number = 0;
   current_page_template : string = '';
@@ -140,5 +142,7 @@ export class BibliographyComponent implements OnInit {
     this.pagination();
 
   }
+
+
 
 }
