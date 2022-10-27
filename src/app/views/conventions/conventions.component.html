@@ -23,7 +23,42 @@
     </ul>
 </div>
 
-<div id="home-content" class="flex flex-column flex-1">
-    <h1 class="mb-5">Lorem Ipsum</h1>
-    <p class="mt-5">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ipsum nisl, lobortis ut vestibulum ut, feugiat at sem. In eget tristique sapien, vitae vestibulum lorem. Donec eget leo sem. Nulla mollis condimentum metus ut molestie. Vivamus et mi porttitor, sodales magna ac, volutpat neque. Morbi faucibus nibh eu neque semper, eu ornare risus gravida. Pellentesque id hendrerit felis.</p>
+<div id="conventions-content" class="flex flex-column flex-1">
+
+    <div class="flex flex-column flex-auto overflow-auto p-5" style="height: 100px;">
+        <h1 class="mb-5">Lorem Ipsum</h1>
+        <ul class="ml-3">
+            <li class="mb-1">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+            <li class="mb-1">Nulla posuere augue sodales ipsum accumsan, at posuere nisi pulvinar.</li>
+            <li class="mb-1">Nunc sed eros tincidunt, sodales tortor id, scelerisque ligula.</li>
+        </ul>
+    
+        
+        <p-table [value]="products" responsiveLayout="scroll" class="my-5">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-product>
+                <tr>
+                    <td>{{product.code}}</td>
+                    <td>{{product.name}}</td>
+                    <td>{{product.category}}</td>
+                    <td>{{product.quantity}}</td>
+                </tr>
+            </ng-template>
+        </p-table>
+         
+        <h1 class="my-5">Another Lorem Ipsum</h1>
+        <ul class="ml-3">
+            <li class="mb-1">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+            <li class="mb-1">Nulla posuere augue sodales ipsum accumsan, at posuere nisi pulvinar.</li>
+            <li class="mb-1">Nunc sed eros tincidunt, sodales tortor id, scelerisque ligula.</li>
+        </ul>
+    </div>
+   
 </div>

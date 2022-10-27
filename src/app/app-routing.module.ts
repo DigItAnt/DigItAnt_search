@@ -8,7 +8,9 @@ import { LocationComponent } from './views/browse/location/location.component';
 import { ThemeComponent } from './views/browse/theme/theme.component';
 import { TypeComponent } from './views/browse/type/type.component';
 import { WordComponent } from './views/browse/word/word.component';
+import { ConcordancesComponent } from './views/concordances/concordances.component';
 import { ConventionsComponent } from './views/conventions/conventions.component';
+import { GlossaryComponent } from './views/glossary/glossary.component';
 import { HomeComponent } from './views/home/home.component';
 import { SearchComponent } from './views/search/search.component';
 
@@ -88,6 +90,14 @@ const routes: Routes = [
   {
     path: 'conventions',
     component: ConventionsComponent
+  },
+  {
+    path: 'glossary',
+    component: GlossaryComponent
+  },
+  {
+    path: 'concordances',
+    component: ConcordancesComponent
   }
   /* { path: '**', component: PageNotFoundComponent } */
 ];
