@@ -1,11 +1,11 @@
 //INTERNAL ANGULAR LIBS
-import { NgModule } from '@angular/core';
+import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ReactiveFormsModule } from '@angular/forms';
-
+import { HttpClientModule } from '@angular/common/http';
 
 //PRIMENG
 import {ToolbarModule} from 'primeng/toolbar';
@@ -23,6 +23,10 @@ import {TooltipModule} from 'primeng/tooltip';
 import {RadioButtonModule} from 'primeng/radiobutton';
 import {DropdownModule} from 'primeng/dropdown';
 import {TableModule} from 'primeng/table';
+import {TabViewModule} from 'primeng/tabview';
+import {ProgressSpinnerModule} from 'primeng/progressspinner';
+import {MenuModule} from 'primeng/menu';
+import {OverlayPanelModule} from 'primeng/overlaypanel';
 
 
 //LEAFLET
@@ -35,18 +39,26 @@ import { FooterComponent } from './shared/footer/footer.component';
 
 //VIEWS
 import { HomeComponent } from './views/home/home.component';
-import { BrowseComponent } from './views/browse/browse.component';
-import { DateComponent } from './views/browse/date/date.component';
 import { LocationComponent } from './views/browse/location/location.component';
 import { WordComponent } from './views/browse/word/word.component';
 import { TypeComponent } from './views/browse/type/type.component';
 import { ThemeComponent } from './views/browse/theme/theme.component';
-import { SearchComponent } from './views/search/search.component';
+import { AdvancedSearchComponent } from './views/search/search.component';
 import { BibliographyComponent } from './views/bibliography/bibliography.component';
 import { ConventionsComponent } from './views/conventions/conventions.component';
 import { GlossaryComponent } from './views/glossary/glossary.component';
 import { ConcordancesComponent } from './views/concordances/concordances.component';
 import { AbbreviationsComponent } from './views/abbreviations/abbreviations.component';
+import { LexiconComponent } from './views/browse/lexicon/lexicon.component';
+import { TextsComponent } from './views/browse/texts/texts.component';
+import { ProjectComponent } from './views/browse/project/project.component';
+import { AboutComponent } from './views/browse/about/about.component';
+import { ContactComponent } from './views/browse/contact/contact.component';
+import { CitationsComponent } from './views/browse/citations/citations.component';
+
+//PIPES
+import { CenturyPipePipe } from './pipes/century-pipe/century-pipe.pipe';
+
 
 @NgModule({
   declarations: [
@@ -55,18 +67,23 @@ import { AbbreviationsComponent } from './views/abbreviations/abbreviations.comp
     HomeComponent,
     MainComponent,
     FooterComponent,
-    BrowseComponent,
-    DateComponent,
     LocationComponent,
     WordComponent,
     TypeComponent,
     ThemeComponent,
-    SearchComponent,
+    AdvancedSearchComponent,
     BibliographyComponent,
     ConventionsComponent,
     GlossaryComponent,
     ConcordancesComponent,
-    AbbreviationsComponent
+    AbbreviationsComponent,
+    LexiconComponent,
+    TextsComponent,
+    ProjectComponent,
+    AboutComponent,
+    ContactComponent,
+    CitationsComponent,
+    CenturyPipePipe,
   ],
   imports: [
     BrowserModule,
@@ -88,7 +105,12 @@ import { AbbreviationsComponent } from './views/abbreviations/abbreviations.comp
     RadioButtonModule,
     ReactiveFormsModule,
     DropdownModule,
-    TableModule
+    TableModule,
+    TabViewModule,
+    HttpClientModule,
+    ProgressSpinnerModule,
+    MenuModule,
+    OverlayPanelModule
   ],
   providers: [],
   bootstrap: [AppComponent]
