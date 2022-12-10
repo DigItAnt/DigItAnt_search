@@ -1,18 +1,18 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Router, ActivatedRoute, NavigationEnd, NavigationStart } from '@angular/router';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { Router, NavigationEnd, NavigationStart, ActivatedRoute } from '@angular/router';
 import { Paginator } from 'primeng/paginator';
-import { Subscription } from 'rxjs';
+import { last, Subscription } from 'rxjs';
 
 import * as data from '../../../assets/mock/words.json'
 
-
 @Component({
-  selector: 'app-abbreviations',
-  templateUrl: './abbreviations.component.html',
-  styleUrls: ['./abbreviations.component.scss']
+  selector: 'app-word',
+  templateUrl: './word.component.html',
+  styleUrls: ['./word.component.scss']
 })
-export class AbbreviationsComponent implements OnInit, OnDestroy {
+export class WordComponent implements OnInit {
 
+  current_word: string = '';
   current_occurences : number = 0;
   current_page_template : string = '';
   route_subscription: Subscription = new Subscription();  
@@ -23,7 +23,6 @@ export class AbbreviationsComponent implements OnInit, OnDestroy {
   pagination_items: any[] = [];
   filtered_items : any[] = [];
 
-
   century_array : number[] = [-6, -5, -4, -3, -2, -1, 1];
   alphabet_array : string[] = ["all", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 
@@ -32,6 +31,8 @@ export class AbbreviationsComponent implements OnInit, OnDestroy {
   places_array: string[] = ['Venetum', 'Florence', 'Rome', 'Falisc'];
 
   filtered_mode_by_letter : boolean = false;
+  filtered_mode_by_word : boolean = false;
+  previous_path : string = '';
 
   @ViewChild('paginator', { static: true }) paginator: Paginator | undefined
 
@@ -51,6 +52,7 @@ export class AbbreviationsComponent implements OnInit, OnDestroy {
         }
       );
     }    
+
     
     this.word_items = (data as any).default;
 
@@ -60,22 +62,39 @@ export class AbbreviationsComponent implements OnInit, OnDestroy {
       return 0;
     });
 
-
     this.activated_route_subscription = this.activated_route.params.subscribe(event => {
-      if (event != undefined) {
-
+      if (event['id'] != undefined) {
+        this.previous_path = '';
+        this.current_word = '';
         if(event['id'] == 'all'){
           this.filtered_mode_by_letter = false;
-          this.first = 0;
-          this.rows = this.word_items.length-1;
-          this.getAllData();
+          this.filtered_mode_by_word = false;
     
         }else if(event['id'].length == 1){
           this.filtered_mode_by_letter = true;
+          this.filtered_mode_by_word = false;
+    
+        }else if(event['id'].length > 1){
+          this.filtered_mode_by_letter = false;
+          this.filtered_mode_by_word = true;
+        }
+        
+        if(!this.filtered_mode_by_letter && !this.filtered_mode_by_word){
           this.first = 0;
-          this.rows = 6;
-          
-          this.filterByLetter(event['id']);
+          this.rows = 17;
+          this.getAllData();
+        }
+
+        else if(this.filtered_mode_by_letter){
+          this.first = 0;
+          this.rows = 17;
+          this.filterByLetter(event['id'])
+        }else if(this.filtered_mode_by_word){
+          this.first = 0;
+          this.rows = 5;
+          this.previous_path = event['id'][0].toLowerCase();
+          this.current_word = event['id'].toLowerCase();
+          this.filterByWord(event['id']);
         }
       }
     })
@@ -101,29 +120,17 @@ export class AbbreviationsComponent implements OnInit, OnDestroy {
     
 
     if (this.first != this.rows && this.first < this.rows) {
-      this.pagination_items = this.filtered_items.slice(this.first, this.rows);
-
-      let temp_array : any = {};
-
-      if(!this.filtered_mode_by_letter){
-        this.alphabet_array.forEach(element => {
-          temp_array[element] = [];
-          this.pagination_items.forEach( word_element => {
-            if(word_element.label[0].toLowerCase() == element && element != 'all'){
-              temp_array[element].push(word_element);
-            }
-          })
-        });
-        this.pagination_items = temp_array;
-      }else{
-        this.pagination_items = this.filtered_items.slice(this.first, this.rows);
-      }
+      this.pagination_items = this.filtered_items.slice(this.first, this.rows)
     } else if(this.rows != 0 && this.first != 0) {
       this.pagination_items = this.filtered_items.slice(this.first, this.first + this.rows)
-      
     }else{
-      this.pagination_items = this.filtered_items.slice(0,6);
-      
+      if(!this.filtered_mode_by_letter && !this.filtered_mode_by_word){
+        this.pagination_items = this.filtered_items.slice(0, 17)
+      }else if(this.filtered_mode_by_letter){
+        this.pagination_items = this.filtered_items.slice(0, 17)
+      }else if(this.filtered_mode_by_word){
+        this.pagination_items = this.filtered_items.slice(0, 5)
+      }
     }
   }
 
@@ -143,6 +150,20 @@ export class AbbreviationsComponent implements OnInit, OnDestroy {
 
   }
 
+  filterByWord(params : string){
 
+    let min = Math.floor(Math.random() * (450 - 0 + 1)) + 0;
+    let max = Math.floor(Math.random() * (466 - min + 1)) + (min);
+
+    /* while(min > max && min != max){
+      min = Math.floor(Math.random() * (2466 - 0 + 1)) + 0;
+      max = Math.floor(Math.random() * (2466 - 0 + 1)) + 0;
+    } */
+    
+    this.filtered_items = this.text_items.slice(min, max)
+    
+    this.pagination();
+
+  }
 
 }

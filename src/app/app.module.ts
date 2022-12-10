@@ -39,22 +39,17 @@ import { FooterComponent } from './shared/footer/footer.component';
 
 //VIEWS
 import { HomeComponent } from './views/home/home.component';
-import { LocationComponent } from './views/browse/location/location.component';
-import { WordComponent } from './views/browse/word/word.component';
-import { TypeComponent } from './views/browse/type/type.component';
-import { ThemeComponent } from './views/browse/theme/theme.component';
+import { WordComponent } from './views/word/word.component';
+import { TypeComponent } from './views/type/type.component';
 import { AdvancedSearchComponent } from './views/search/search.component';
 import { BibliographyComponent } from './views/bibliography/bibliography.component';
-import { ConventionsComponent } from './views/conventions/conventions.component';
-import { GlossaryComponent } from './views/glossary/glossary.component';
 import { ConcordancesComponent } from './views/concordances/concordances.component';
-import { AbbreviationsComponent } from './views/abbreviations/abbreviations.component';
-import { LexiconComponent } from './views/browse/lexicon/lexicon.component';
-import { TextsComponent } from './views/browse/texts/texts.component';
-import { ProjectComponent } from './views/browse/project/project.component';
-import { AboutComponent } from './views/browse/about/about.component';
-import { ContactComponent } from './views/browse/contact/contact.component';
-import { CitationsComponent } from './views/browse/citations/citations.component';
+import { LexiconComponent } from './views/lexicon/lexicon.component';
+import { TextsComponent } from './views/texts/texts.component';
+import { ProjectComponent } from './views/home/project/project.component';
+import { AboutComponent } from './views/home/about/about.component';
+import { ContactComponent } from './views/home/contact/contact.component';
+import { CitationsComponent } from './views/home/citations/citations.component';
 
 //PIPES
 import { CenturyPipePipe } from './pipes/century-pipe/century-pipe.pipe';
@@ -67,16 +62,11 @@ import { CenturyPipePipe } from './pipes/century-pipe/century-pipe.pipe';
     HomeComponent,
     MainComponent,
     FooterComponent,
-    LocationComponent,
     WordComponent,
     TypeComponent,
-    ThemeComponent,
     AdvancedSearchComponent,
     BibliographyComponent,
-    ConventionsComponent,
-    GlossaryComponent,
     ConcordancesComponent,
-    AbbreviationsComponent,
     LexiconComponent,
     TextsComponent,
     ProjectComponent,

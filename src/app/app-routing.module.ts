@@ -1,20 +1,15 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { AbbreviationsComponent } from './views/abbreviations/abbreviations.component';
 import { BibliographyComponent } from './views/bibliography/bibliography.component';
-import { AboutComponent } from './views/browse/about/about.component';
-import { CitationsComponent } from './views/browse/citations/citations.component';
-import { ContactComponent } from './views/browse/contact/contact.component';
-import { LexiconComponent } from './views/browse/lexicon/lexicon.component';
-import { LocationComponent } from './views/browse/location/location.component';
-import { ProjectComponent } from './views/browse/project/project.component';
-import { TextsComponent } from './views/browse/texts/texts.component';
-import { ThemeComponent } from './views/browse/theme/theme.component';
-import { TypeComponent } from './views/browse/type/type.component';
-import { WordComponent } from './views/browse/word/word.component';
+import { AboutComponent } from './views/home/about/about.component';
+import { CitationsComponent } from './views/home/citations/citations.component';
+import { ContactComponent } from './views/home/contact/contact.component';
+import { LexiconComponent } from './views/lexicon/lexicon.component';
+import { ProjectComponent } from './views/home/project/project.component';
+import { TextsComponent } from './views/texts/texts.component';
+import { TypeComponent } from './views/type/type.component';
+import { WordComponent } from './views/word/word.component';
 import { ConcordancesComponent } from './views/concordances/concordances.component';
-import { ConventionsComponent } from './views/conventions/conventions.component';
-import { GlossaryComponent } from './views/glossary/glossary.component';
 import { HomeComponent } from './views/home/home.component';
 import { AdvancedSearchComponent } from './views/search/search.component';
 

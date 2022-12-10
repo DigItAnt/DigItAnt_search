@@ -1,0 +1,163 @@
+<div id="left-bar" class="flex flex-column">
+    <p-tabView>
+
+        <p-tabPanel header="Categories">
+
+            <ul class="home-menu">
+
+                <a *ngFor="let filter of allowedFilters" (click)="getAllData()" [href]="'/texts?filter='+filter"
+                    class="no-underline" routerLink="./" [queryParams]="{filter : filter}" routerLinkActive="active"
+                    [routerLinkActiveOptions]="{exact : false}">
+                    <li class="pl-4 flex align-items-center">
+                        <span class="icon"></span>
+                        <span class="route flex-1">{{filter | titlecase}}</span>
+                    </li>
+                </a>
+            </ul>
+        </p-tabPanel>
+        <p-tabPanel header="Simple search">
+            Albero entrate lessicali
+        </p-tabPanel>
+
+    </p-tabView>
+
+</div>
+
+<div id="texts-container" class="flex flex-column flex-1"
+    *ngIf="{activeTab : activeTab | async, totalRecords: totalRecords | async, groupCenturies : groupCenturies | async, activeDate : activeDate | async, activeLocation : activeLocation | async, groupLocations : groupLocations | async} as text">
+
+    <div id="filter-texts-container" class="flex flex-column text-container-top" *ngIf="text.activeTab == 'all'">
+        <div class="flex flex-row align-items-center horizontal-list m-3 text-center">
+            <h1 class="flex-1 loading" *ngIf="!(text.totalRecords)">Loading <span>.</span><span>.</span><span>.</span>
+            </h1>
+            <h1 class="flex-1" *ngIf="(text.totalRecords)"><span class="red">{{text.totalRecords}} </span>texts found
+            </h1>
+        </div>
+
+
+    </div>
+
+
+    <div id="filter-date-container" class="flex flex-column text-container-top" *ngIf="text.activeTab == 'date'">
+        <div class="flex flex-row horizontal-list m-3 text-container-top">
+            <h1 class="loading text-center flex-1 flex align-items-center justify-content-center"
+                *ngIf="!text.groupCenturies">Loading <span>.</span><span>.</span><span>.</span></h1>
+
+            <ul class="flex-wrap align-items-center" *ngIf="text.groupCenturies">
+
+                <li *ngFor="let item of text.groupCenturies" 
+                    [class.active]="text.activeDate == item.century"
+                    (click)="filterByDate(item.century)"
+                    class="my-2 mr-2 align-items-center border-round-2xl century-list-element" routerLink="./"
+                    [queryParams]="{filter: 'date', date: item.century}">
+                    <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
+                    <a class="no-underline font-bold">{{item.century | centuryPipe}}</a>
+                </li>
+
+
+            </ul>
+        </div>
+    </div>
+
+    <div id="filter-location-container" class="flex flex-column" *ngIf="text.activeTab == 'location'">
+        
+        <div  class="flex flex-row horizontal-list m-3 text-container-top justify-content-between">
+
+            <h1 class="loading text-center flex-1 flex align-items-center justify-content-center"
+                *ngIf="!text.groupLocations">Loading <span>.</span><span>.</span><span>.</span>
+            </h1>
+            <ul class="flex-wrap align-items-center" *ngIf="text.groupLocations"><!--   overlaySpecificMap.hide();   -->
+                <li *ngFor="let item of text.groupLocations"
+                    class="my-2 mr-2 align-items-center border-round-2xl century-list-element" 
+                    routerLink="./" 
+                    [pTooltip]="item.ancientPlaceId" 
+                    tooltipPosition="bottom"
+                    [class.active]="(text.activeLocation == item.ancientPlaceId)"
+                    (contextmenu)="overlaySpecificMap.toggle($event); onRightClick(overlaySpecificMap); " 
+                    [queryParams]="{filter: 'location', place: ((item.ancientPlaceId == '' || item.ancientPlaceId == 'unknown') ? item.modernPlaceId : item.ancientPlaceId)}">
+                        <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
+                        <a class="no-underline font-bold">{{(item.ancientPlaceLabel == '' || item.ancientPlaceLabel == 'unknown') ? item.modernPlaceLabel : item.ancientPlaceLabel}}</a>
+                        <p-overlayPanel #overlaySpecificMap>
+                            <ng-template pTemplate>
+                                <div  class="relative mb-3" style="width: 400px;">
+                                    <div style="height: 400px;"
+                                        leaflet 
+                                        [leafletOptions]="options"
+                                        [leafletLayers]="layers"
+                                        [leafletMaxBounds]="bounds"
+                                        (leafletClick)="onClickMap($event)">
+                                    </div>
+                                    {{item.ancientPlaceLabel}}
+                                </div>
+                            </ng-template>
+                        </p-overlayPanel>
+                </li>
+            </ul>
+            <div class="flex align-items-center map-button">
+                <button (click)="overlayGeneralMap.toggle($event)" pButton type="button" class="p-button-secondary mr-2" icon="fa-solid fa-map-location-dot" iconPos="left"></button>
+                
+                <p-overlayPanel #overlayGeneralMap>
+                    <ng-template pTemplate>
+                        <div  class="relative mb-3" style="width: 400px;">
+                            <div style="height: 400px;"
+                                leaflet 
+                                [leafletOptions]="options"
+                                [leafletLayers]="layers"
+                                [leafletMaxBounds]="bounds"
+                                (leafletClick)="onClickMap($event)">
+                            </div>
+                        </div>
+                    </ng-template>
+                </p-overlayPanel>
+            </div>
+        </div>
+        
+    </div>
+
+    <div class="flex flex-column" *ngIf="text.activeTab == 'type'">
+        type works
+    </div>
+
+    <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="text.totalRecords != 0">
+        <div class="flex flex-row m-2 w-full" *ngIf="!text.totalRecords">
+            <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+
+        </div>
+
+        <a class="flex no-underline text-item m-2" *ngFor="let item of paginationItems | async"
+            [href]="'/file/'+item.itAnt_ID" [routerLink]="['/file/'+item.itAnt_ID]">
+            <div class="flex flex-row  ">
+                <div class="flex text-item-id p-2">
+                    {{item.itAnt_ID}}
+                </div>
+
+                <div class="flex flex-column text-item-preview p-2">
+
+                    <div class="text-item-preview-top">
+                        {{item.title}}
+                    </div>
+
+                    <div class="text-item-preview-bottom flex flex-column mt-3">
+                        <div class="flex flex-row align-items-baseline">
+                            <i class="far fa-calendar-alt"></i>
+                            <span class="ml-2">{{item.dateOfOrigin}}</span>
+                        </div>
+                        <div class="flex flex-row align-items-baseline mt-2">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span class="ml-2">{{item.originalPlace.ancientName}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+
+    </div>
+    <p-paginator *ngIf="text.totalRecords != 0" [dropdownAppendTo]="'body'" [first]="first" [rows]="rows"
+        [totalRecords]="(totalRecords | async) || 0"
+        (onPageChange)="pagination($event, (text.activeTab || 'all'), (text.activeDate || null))"
+        [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[6,12,24]"></p-paginator>
+
+    <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="text.totalRecords == 0">
+        no entries
+    </div>
+</div>

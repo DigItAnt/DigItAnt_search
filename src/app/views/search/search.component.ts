@@ -8,7 +8,7 @@ import { Subscription } from 'rxjs';
   templateUrl: './search.component.html',
   styleUrls: ['./search.component.scss']
 })
-export class SearchComponent implements OnInit, OnDestroy {
+export class AdvancedSearchComponent implements OnInit, OnDestroy {
 
 
   dates: any[] = [
@@ -218,7 +218,7 @@ export class SearchComponent implements OnInit, OnDestroy {
       {
         queryParams: query_params,
         relativeTo: this.activated_route  }
-      );
+    );
   }
 
   resetForm(){
