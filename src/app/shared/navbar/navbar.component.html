@@ -2,44 +2,31 @@
 <div id="navbar">
     <p-toolbar class="hidden lg:block">
         <div class="p-toolbar-group-left">
-            <!--  -->
-            <div class="p-inputgroup">
-                <span class="p-inputgroup-addon">
-                    <i class="fas fa-search"></i>
-                </span>
-                <p-autoComplete [placeholder]="'Enter text ID'" [autoZIndex]="true" [suggestions]="filteredText" (completeMethod)="filterText($event)" [minLength]="0" [virtualScroll]="true" [itemSize]="34" field="label"></p-autoComplete>
-            </div>
+            <a href="/home" (click)="$event.preventDefault()">                
+                <button routerLink="/home" routerLinkActive="active" pButton pRipple type="button" label="Home" class="p-button-secondary p-button-text"></button>
+            </a>
+            <button [iconPos]="'right'" icon="fa-solid fa-sort-down" [ngClass]="{'active': isActive}"  pButton pRipple type="button" label="Browse" class="p-button-secondary p-button-text align-items-stretch" (click)="menu.toggle($event)"></button>
+            <p-menu [appendTo]="'body'"  #menu [popup]="true" [model]="items"></p-menu>
+            <a href="/advancedsearch" (click)="$event.preventDefault()">
+                <button routerLink="/advancedsearch" routerLinkActive="active"  pButton pRipple type="button" [label]="'Search+'" class="p-button-secondary p-button-text"></button>
+
+            </a>
         </div>
-    
         <div id="navbar-logo">
             ΣρiLeχo Search
         </div>
-        
         <div class="p-toolbar-group-right">
-            <a href="/" (click)="$event.preventDefault()">
-                <button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}"  pButton pRipple type="button" label="Home" class="p-button-secondary p-button-text"></button>
-            </a>
-            <a href="/browse" (click)="$event.preventDefault()">
-                <button routerLink="/browse" routerLinkActive="active"  pButton pRipple type="button" label="Browse" class="p-button-secondary p-button-text"></button>
-            </a>
-            <a href="/search" (click)="$event.preventDefault()">
-                <button routerLink="/search" routerLinkActive="active"  pButton pRipple type="button" label="Search" class="p-button-secondary p-button-text"></button>
-            </a>
-            <a href="/abbreviations" (click)="$event.preventDefault()">
-                <button routerLink="/abbreviations" [ngClass]="{'active': maintain_active}" pButton pRipple type="button" label="References" class="p-button-secondary p-button-text"></button>
-            </a>
-        </div>
-    </p-toolbar>
-
-    <p-menubar [model]="menu_items" class="sm:block md:block lg:hidden">
-        <ng-template pTemplate="end">
             <div class="p-inputgroup">
                 <span class="p-inputgroup-addon">
                     <i class="fas fa-search"></i>
                 </span>
-                <p-autoComplete [placeholder]="'Enter text ID'" [suggestions]="filteredText" (completeMethod)="filterText($event)" [minLength]="0" [virtualScroll]="true" [itemSize]="34" field="label"></p-autoComplete>
+                
             </div>
-        </ng-template>
-    </p-menubar>
+        </div>
+    
+       
+        
+        
+    </p-toolbar>
 
 </div>

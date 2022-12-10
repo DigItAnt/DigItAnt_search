@@ -1,8 +1,9 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { AfterContentInit, AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute, NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { MenuItem } from 'primeng/api';
-import { Subscription } from 'rxjs';
-
+import { Subject, takeUntil, } from 'rxjs';
+import { AuthService } from 'src/app/services/auth/auth.service';
+import { TextService, TextMetadata } from 'src/app/services/text/text.service';
 
 @Component({
   selector: 'app-navbar',
@@ -11,73 +12,67 @@ import { Subscription } from 'rxjs';
 })
 export class NavbarComponent implements OnInit, OnDestroy {
 
-  filteredText: any[] = [];
-  items: any[] = [];
+  items: MenuItem[] = [];
+  menuItems: MenuItem[] = [];
+  isActive : boolean = false;
+  textItems = this.textService.texts$;
+  browseButtonActive = ['texts', 'lexicon']
+  destroy$: Subject<boolean> = new Subject<boolean>();
 
-  menu_items: MenuItem[] = [];
-
-  route_subscription : Subscription = new Subscription();
-  allowed_active_items = ['abbreviations', 'bibliography', 'conventions', 'glossary', 'concordances']
-  maintain_active : boolean = false;
-  constructor(private route: Router, private activated_route: ActivatedRoute) { }
+  constructor(private route: Router,
+    private textService: TextService,
+    private activatedRoute: ActivatedRoute) { }
 
   ngOnInit(): void {
-    for (let i = 0; i < 10000; i++) {
-      this.items.push({ label: 'Item ' + i, value: 'Item ' + i });
-    }
 
-    
-    this.route_subscription = this.route.events.subscribe(event => {
+  
+
+    this.route.events.pipe(takeUntil(this.destroy$)).subscribe(event => {
       if (event instanceof NavigationEnd) {
-        let snapshot = this.route.routerState.snapshot.url.split('/')[1];
-        if(this.allowed_active_items.includes(snapshot)){
-          this.maintain_active = true;
-        }else{
-          this.maintain_active = false;
+        const urlTree = this.route.parseUrl(event.url);
+        if (Object.keys(urlTree.root.children).length > 0) {
+          const urlSegments = urlTree.root.children['primary'].segments.map(segment => segment.path);
+          const url = urlSegments[0]
+          this.isActive = this.browseButtonActive.includes(url);
+          this.activatedRoute
         }
       }
     });
+
     
-    this.menu_items = [
+
+
+
+    this.items = [
+      { label: 'Texts', icon: 'fa-solid fa-file-lines', routerLink: '/texts', queryParams: { filter: 'all' } },
+      { label: 'Lexicon', icon: 'fa-solid fa-font', routerLink: '/lexicon' },
+      { label: 'Bibliography', icon: 'fa-solid fa-book', routerLink: '/bibliography' },
+      { label: 'Concordances', icon: 'fa-solid fa-list-check', routerLink: '/concordances' }
+    ];
+
+    this.menuItems = [
       {
         label: 'Home',
-        routerLink : '/'
+        routerLink: '/'
       },
       {
         label: 'Browse',
-        routerLink : '/browse'        
+
       },
       {
-        label: 'Search',   
-        routerLink : '/search'     
+        label: 'Search',
+        routerLink: '/search'
       },
       {
-        label: 'References',    
-        routerLink : '/references'    
+        label: 'References',
+        routerLink: '/references'
       }
     ];
   }
-  
+
   ngOnDestroy(): void {
-      this.route_subscription.unsubscribe();
-  }
-
-
-  filterText(event: any) {
-    let filtered: any[] = [];
-    let query = event.query;
-
-    if (this.items != undefined) {
-      for (let i = 0; i < this.items.length; i++) {
-        let item = this.items[i];
-        if (item.label.toLowerCase().indexOf(query.toLowerCase()) == 0) {
-          filtered.push(item);
-        }
-      }
-    }
-
-    this.filteredText = filtered;
-
+    this.destroy$.next(true);
+    this.destroy$.complete();
   }
 
 }
