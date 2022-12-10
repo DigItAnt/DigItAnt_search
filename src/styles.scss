@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@100;300;400;500;700;800&display=swap');
 @import 'mixins.scss';
-
+@import 'variables.scss';
 
 body,
 app-root {
@@ -30,6 +30,14 @@ app-root {
     box-sizing: border-box;
 }
 
+.p-autocomplete-panel {
+    font-family: 'M PLUS Rounded 1c', sans-serif !important;
+}
+
+.p-menu {
+    font-family: 'M PLUS Rounded 1c', sans-serif !important;
+
+}
 
 //NAVBAR
 #navbar {
@@ -51,10 +59,9 @@ app-root {
 
     .p-button.p-button-secondary.p-button-text.active {
         
-        background-color: #64748B;
+        background-color: $dark-gray;
         color: white;
-        border-color: #64748B;
-        
+        border-color: $dark-gray;   
     }
 
     .p-menubar {
@@ -82,6 +89,304 @@ app-root {
     }
 }
 
+#left-bar{
+    background-color: $black;
+    color: white;
+    width: 30%;
+    position: relative;
+    z-index: 1;
+
+    @include xs {
+        display: none !important;
+    }
+
+    ul.home-menu,
+    .p-tabview-panel > ul {
+        display: flex;
+        flex-direction: column;
+        list-style-type: none;
+        background: $transparentBlack;
+
+        a{ 
+            color: white;
+            display: flex;
+            font-weight: 800;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+
+            span.icon {
+                font-family: 'Font Awesome 5 Free';
+                font-weight: 900;
+                font-size: .75rem;
+                width: 1rem;
+               
+            }
+
+            span.icon::before{
+                
+                content: '\f111'
+                
+            }
+
+            span.route {
+                padding: 1.5rem 1.5rem 1.5rem 1rem;
+                color: white;
+                text-decoration: none;
+            }
+        }
+
+        a.active {
+            background: $red !important;
+
+            span.icon {
+                background: url('assets/images/bullet.png');
+                background-size: cover;
+                background-color: white;
+                border-radius: 50%;
+                width: 1rem;
+                height: 1rem;
+                
+            }
+
+            span.icon::before {
+                content: '';
+               
+            }
+        }
+
+        a:hover {
+            background: $red !important;
+            
+            span.icon {
+                color: $dark-gray;
+                
+            }
+        }
+
+        a:nth-child(even) {
+            background: #2b2e31;
+        }
+    }
+}
+
+#left-bar::after{
+    content: "";
+    background-image: url('assets/images/l-bg.png');
+    //background-size: cover;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: -5rem;
+    z-index: -1;
+    opacity: .5;
+}
+
+#texts-container,
+#date-container {
+    //padding: 2rem;
+    .text-container-top{
+        min-height: 5rem;
+    }
+
+    .horizontal-list{
+        border-top: 2px solid #dee2e6;
+        border-bottom: 2px solid #dee2e6;
+        border-left: transparent;
+        border-right: transparent;
+        border-style: dashed;
+        max-height: 8rem;
+        min-height: 5rem;
+        overflow-y: auto;
+        color: #64748B;
+
+        @keyframes blinkdot {
+            0% { opacity: .2; }
+            20% { opacity: 1; }
+            100% { opacity: .2; }
+        }
+
+        .loading{
+            font-weight: 700;
+        }
+
+        .loading span{
+            animation-name: blinkdot;
+            animation-duration: 1.4s;
+            animation-iteration-count: infinite;
+            animation-fill-mode: both;
+        }
+
+        .loading span:nth-child(2) {
+            animation-delay: .2s;
+        }
+        .loading span:nth-child(3) {
+            animation-delay: .4s;
+        }
+
+        h1{
+            font-weight: 400;
+        }
+
+        .red {
+            color: $red;
+            font-weight: 700;
+        }
+    }
+
+    .text-item-container,
+    #date-total-container {
+        align-content: baseline;
+        overflow-y: auto;
+        height: 100px;
+    }
+    
+    .text-item {
+        padding: 1rem;
+        border: 5px solid transparent;
+        background: $light-gray;
+        cursor: pointer;
+        flex: 0 0 45%;
+        
+        .text-item-id {
+            word-break: break-all;
+            width: 7rem;
+            color: $red;
+            font-weight: 900;
+        }
+    }
+
+    .text-item:hover {
+        border-color: $red;
+        
+    }
+
+    .text-item-preview {
+        color: $dark-gray;
+        flex: 10;
+    }
+
+    .text-item-preview-top {
+        color: $black;
+        font-weight: 900;
+    }
+
+    ul {
+        display: flex;
+        flex-direction: row;
+        list-style-type: none;
+
+        li{ 
+            color: #64748B;
+            display: flex;
+            font-weight: 400;
+            cursor: pointer;
+            
+
+            .icon {
+                font-family: 'Font Awesome 5 Free';
+                font-weight: 900;
+
+                font-size: .75rem;
+            }
+
+            .icon::before{
+                
+                content: '\f111'
+            }
+
+            a {
+                padding: 0.5rem;
+                text-decoration: none;
+                color: unset;
+            }
+
+            a:hover{
+                text-decoration: underline;
+            }
+        }
+
+    
+
+        li.century-list-element {
+            background-color: $light-gray;
+            
+            a{
+                color: $dark-gray;
+            }
+
+            .p-badge {
+                background: $red;
+                font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            }
+        }
+
+        li.century-list-element:hover {
+            background-color: $light-gray-hover;
+            
+            a{
+                color: $dark-gray;
+            }
+
+            .p-badge {
+                background: $red;
+                font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            }
+        }
+
+        li.century-list-element.active {
+            background-color: $dark-gray;
+            
+            a{
+                color: white;
+            }
+
+            .p-badge {
+                background: $red;
+                font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            }
+        }
+       
+    } 
+}
+
+p-tabview {
+    display: flex !important;
+    flex-direction: column!important;
+    flex: 1 !important;
+
+    .p-tabview {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 !important;
+
+        .p-tabview-nav {
+            background: $transparentBlack!important;
+
+            .p-tabview-nav-link {
+                font-family: 'M PLUS Rounded 1c', sans-serif !important;
+                background: transparent !important;
+            }
+
+            li.p-highlight .p-tabview-nav-link {
+                color: white;
+                border-color: $red;
+            }
+
+            .p-tabview-ink-bar {
+                background-color: $red;
+            }
+        }
+
+        .p-tabview-panels {
+            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            padding: 0 !important;
+            background: transparent!important;
+        }
+    }
+}
+
 //HOME
 app-home,
 app-browse,
@@ -89,19 +394,17 @@ app-date,
 app-subdate,
 app-location,
 app-sublocation,
-app-word,
+app-texts,
 app-type,
-app-theme,
 app-search,
-app-abbreviations,
 app-bibliography,
-app-conventions,
-app-glossary,
 app-concordances{
     display: flex !important;
     flex: 1 1 auto !important;
     //position: relative !important;
 }
+
+
 
 app-subdate,
 app-sublocation{
