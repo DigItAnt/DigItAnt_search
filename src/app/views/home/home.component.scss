@@ -1,17 +1,23 @@
 @import '../../../mixins.scss';
+@import '../../../variables.scss';
+@import '../../../styles.scss';
 
-#left-bar{
-    background: #14171b;
-    color: white;
-    width: 30%;
 
-    padding: 2rem;
-
-    @include xs {
-        display: none !important;
-    }
+#left-bar::after{
+    content: "";
+    background-image: url('../../../assets/images/l-bg.png');
+    //background-size: cover;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: -5rem;
+    z-index: -1;
+    opacity: .5;
 }
 
 #home-content {
     padding: 2rem;
+    position: relative; 
+    
 }
