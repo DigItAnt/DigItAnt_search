@@ -70,41 +70,40 @@
                 <li *ngFor="let item of text.groupLocations"
                     class="my-2 mr-2 align-items-center border-round-2xl century-list-element" 
                     routerLink="./" 
-                    [pTooltip]="item.ancientPlaceId" 
-                    tooltipPosition="bottom"
                     [class.active]="(text.activeLocation == item.ancientPlaceId)"
-                    (contextmenu)="overlaySpecificMap.toggle($event); onRightClick(overlaySpecificMap); " 
+                    
                     [queryParams]="{filter: 'location', place: ((item.ancientPlaceId == '' || item.ancientPlaceId == 'unknown') ? item.modernPlaceId : item.ancientPlaceId)}">
-                        <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
-                        <a class="no-underline font-bold">{{(item.ancientPlaceLabel == '' || item.ancientPlaceLabel == 'unknown') ? item.modernPlaceLabel : item.ancientPlaceLabel}}</a>
+                    <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
+                    <a class="no-underline font-bold">{{(item.ancientPlaceLabel == '' || item.ancientPlaceLabel == 'unknown') ? item.modernPlaceLabel : item.ancientPlaceLabel}}</a>
+                    <!-- 
+                        (contextmenu)="overlaySpecificMap.toggle($event); onRightClick(overlaySpecificMap); " 
                         <p-overlayPanel #overlaySpecificMap>
-                            <ng-template pTemplate>
-                                <div  class="relative mb-3" style="width: 400px;">
-                                    <div style="height: 400px;"
-                                        leaflet 
-                                        [leafletOptions]="options"
-                                        [leafletLayers]="layers"
-                                        [leafletMaxBounds]="bounds"
-                                        (leafletClick)="onClickMap($event)">
-                                    </div>
-                                    {{item.ancientPlaceLabel}}
+                        <ng-template pTemplate>
+                            <div  class="relative mb-3" style="width: 400px;">
+                                <div style="height: 400px;"
+                                    leaflet 
+                                    [leafletOptions]="options"
+                                    [leafletLayers]="layers"
+                                    [leafletMaxBounds]="bounds"
+                                    (leafletClick)="onClickMap($event)">
                                 </div>
-                            </ng-template>
-                        </p-overlayPanel>
+                                {{item.ancientPlaceLabel}}
+                            </div>
+                        </ng-template>
+                    </p-overlayPanel> -->
                 </li>
             </ul>
-            <div class="flex align-items-center map-button">
+            <div class="flex align-items-center map-button" *ngIf="{geoData: geoData | async} as map">
                 <button (click)="overlayGeneralMap.toggle($event)" pButton type="button" class="p-button-secondary mr-2" icon="fa-solid fa-map-location-dot" iconPos="left"></button>
                 
-                <p-overlayPanel #overlayGeneralMap>
+                <p-overlayPanel #overlayGeneralMap [appendTo]="'body'">
                     <ng-template pTemplate>
-                        <div  class="relative mb-3" style="width: 400px;">
+                        <div  class="relative mb-3" style="width: 400px;" *ngIf="{geoData : getGeoData.next((text.groupLocations) || [])} as map">
                             <div style="height: 400px;"
                                 leaflet 
                                 [leafletOptions]="options"
                                 [leafletLayers]="layers"
-                                [leafletMaxBounds]="bounds"
-                                (leafletClick)="onClickMap($event)">
+                                [leafletMaxBounds]="bounds">
                             </div>
                         </div>
                     </ng-template>

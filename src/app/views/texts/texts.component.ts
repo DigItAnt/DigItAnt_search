@@ -1,10 +1,12 @@
-import { ChangeDetectorRef, Component, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { Router, ActivatedRoute, NavigationStart, NavigationEnd, Params } from '@angular/router';
 import * as L from 'leaflet';
 import { bounds, circle, latLng, LeafletMouseEvent, polygon, tileLayer } from 'leaflet';
 import { OverlayPanel } from 'primeng/overlaypanel';
 import { Paginator } from 'primeng/paginator';
-import { Subscription, map, tap, Subject, takeUntil, BehaviorSubject, Observable, groupBy, mergeMap, reduce, count, concatMap, switchMap, take, filter, takeLast } from 'rxjs';
+import { Subscription, map, tap, Subject, takeUntil, BehaviorSubject, Observable, groupBy, mergeMap, reduce, count, concatMap, switchMap, take, filter, takeLast, finalize } from 'rxjs';
+import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
+import { PopupService } from 'src/app/services/maps/popup/popup.service';
 import { TextMetadata, TextService } from 'src/app/services/text/text.service';
 
 
@@ -44,16 +46,16 @@ export class TextsComponent implements OnInit {
   first: number = 0;
   rows : number = 6;
   destroy$: Subject<boolean> = new Subject<boolean>();
-  triggerDateFilter : BehaviorSubject<number> = new BehaviorSubject(NaN);
+  getGeoData : BehaviorSubject<LocationsCounter[]> = new BehaviorSubject<LocationsCounter[]>([]);
   allowedFilters : string[] = ['all', 'date', 'location', 'type'];
   allowedOperators: string[] = ['filter', 'date', 'place'];
   options: any;
-  layers: any;
+  layers: Array<L.Circle> = [];
 
-  @ViewChildren('overlaySpecificMap') private overlayList: QueryList<OverlayPanel> = new QueryList<OverlayPanel>();
+  // @ViewChildren('overlaySpecificMap') private overlayList: QueryList<OverlayPanel> = new QueryList<OverlayPanel>();
 
 
-  bounds = new L.LatLngBounds(new L.LatLng(39.02, 10.66), new L.LatLng(46.10, 14.52));
+  bounds = new L.LatLngBounds(new L.LatLng(33.802052, 4.239242), new L.LatLng(50.230863, 19.812745));
 
   totalRecords: Observable<number> = this.textService.texts$.pipe(
     takeUntil(this.destroy$),
@@ -101,12 +103,20 @@ export class TextsComponent implements OnInit {
     takeUntil(this.destroy$),
     map(texts=> groupLocations(texts)),
   )
-
+  
+  geoData = this.groupLocations.pipe(
+    take(1),
+    switchMap(locations => this.mapsService.getGeoPlaceData(locations)),
+    tap(data => this.drawMap(data))
+  )
   //TODO: fetch locations
 
   constructor(private route: Router,
               private activatedRoute: ActivatedRoute,
               private textService: TextService,
+              private mapsService : MapsService,
+              private ngZone : NgZone,
+              private popupService : PopupService
   ) { }
 
   ngOnInit(): void {
@@ -119,39 +129,24 @@ export class TextsComponent implements OnInit {
           if(keys.length>1)for( const [key, value] of Object.entries(event)){if(this.allowedOperators.includes(key)){this.pagination({} as Paginator, key, event[key])}}
         }
       }
-    )
+    );
+
+    
 
     this.options = {
       layers: [
-        tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-          bounds: this.bounds,
-          maxZoom: 9, 
+        tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 15, 
           minZoom: 5, 
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }
-        )
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
+        ),
       ],
-      zoom: 6,
-      center: this.bounds.getCenter(),
-      
+      zoom: 5,
+      center: [42.296818, 12.254809]
     };
 
 
-    this.layers = [
-      polygon([[45.8, 11.91], [45.19, 11.92], [45.19, 12.51], [45.55, 12.70]]).on('click', event => {
-        /* this.navigateTo('../venetum'); */
-      }),
-
-      circle([ 41.92, 12.31 ], { radius: 50000 }).on('click', event => {
-        /* this.navigateTo('../rome'); */
-      }),
-      circle([ 43.77, 11.25 ], { radius: 30000 }).on('click', event => {
-        /* this.navigateTo('../florence');     */  
-      }),
-
-      circle([ 41.35, 15.09 ], { radius: 30000 }).on('click', event => {
-        /* this.navigateTo('../falisc'); */
-      }),
-    ];
+    
   }
 
  
@@ -183,8 +178,8 @@ export class TextsComponent implements OnInit {
     }else{
       this.getAllData(f, r);
     }
-    
   }
+
 
   filterByLocation(locationId : number, f? : number, r? : number) {
     if(locationId){
@@ -198,9 +193,6 @@ export class TextsComponent implements OnInit {
     
   }
   
-  onClickMap(evt: LeafletMouseEvent) {
-    console.log(evt)
-  }
 
   pagination(event: Paginator, ...args : any[]){
     console.log(event);
@@ -216,24 +208,47 @@ export class TextsComponent implements OnInit {
       switch(filter){
         case 'all' : this.getAllData(this.first, rows); break;
         case 'date' : this.filterByDate(value, this.first, rows); break;
+        case 'location' : this.filterByLocation(value, this.first, rows); break;
         case 'place' : this.filterByLocation(value, this.first, rows); break;
       }
       
     }
+
+   
     
   }
 
-  onRightClick(event : OverlayPanel){
-    console.log(event, this.overlayList);
-    this.overlayList.forEach(overlayEl => {
-      if(overlayEl.el == event.el){overlayEl.show(event);return false;}
-      if(overlayEl.el != event.el){overlayEl.hide();return false;}
-      return false;
-    });
-    return false;
+  drawMap(geoData : GlobalGeoDataModel[]){
+    
+    geoData.forEach(geoPlaceData=>{
+      let circleMarker = circle([geoPlaceData.reprPoint.latitude, geoPlaceData.reprPoint.longitude], {radius: 5000}).on('click mouseover', event => {
+        console.log(event);
+        let eventType = event.type;
+        if(eventType == 'mouseover'){
+          circleMarker.bindPopup(this.popupService.showGeoPopup(geoPlaceData)).openPopup();
+        }
+        if(eventType == 'click'){
+          this.ngZone.run(()=>{ 
+            this.route.navigate( 
+              ['/texts'], 
+              { queryParams: 
+                {
+                  filter: 'location', 
+                  place: geoPlaceData.id
+                }
+              }
+            );
+          })
+        }
+        
+      })
+      circleMarker.bindPopup
+      this.layers.push(circleMarker);
+    })
+    
+
   }
 
-  
 
 }
 

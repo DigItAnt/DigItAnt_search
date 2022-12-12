@@ -6,6 +6,8 @@ export const environment = {
   production: false,
 
   cash_baseUrl : '/cash/',
+  endpointPleiades : 'https://pleiades.stoa.org/places/',
+  endpointGeoNames : 'http://api.geonames.org/',
 
   lexo_baseUrl : '/LexO-backend-itant/service/',
   lexo_key: "PRINitant19",
