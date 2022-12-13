@@ -15,6 +15,7 @@ export interface TextMetadata {
   support : object,
   dateOfOrigin : string,
   language : Array<object>,
+  inscriptionType : string,
 }
 
 export interface PlaceModel {
@@ -77,7 +78,8 @@ export class TextService {
       title: text.metadata.title,
       support : text.metadata.support,
       dateOfOrigin : text.metadata.dateOfOrigin,
-      language : text.metadata.language
+      language : text.metadata.language,
+      inscriptionType: text.metadata.inscriptionType,
     }))
   }
 
@@ -100,5 +102,13 @@ export class TextService {
     );
   }
 
+  filterByType(type: string) {
+    return this.texts$.pipe(
+      map(texts => texts.filter((text)=> {
+        console.log(text)
+        return text.inscriptionType == type;
+      }))
+    );
+  }
  
 }

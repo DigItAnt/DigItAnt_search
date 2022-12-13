@@ -4,7 +4,7 @@ import * as L from 'leaflet';
 import { bounds, circle, latLng, LeafletMouseEvent, polygon, tileLayer } from 'leaflet';
 import { OverlayPanel } from 'primeng/overlaypanel';
 import { Paginator } from 'primeng/paginator';
-import { Subscription, map, tap, Subject, takeUntil, BehaviorSubject, Observable, groupBy, mergeMap, reduce, count, concatMap, switchMap, take, filter, takeLast, finalize } from 'rxjs';
+import { Subscription, map, tap, Subject, takeUntil, BehaviorSubject, Observable, groupBy, mergeMap, reduce, count, concatMap, switchMap, take, filter, takeLast, finalize, shareReplay, skipLast } from 'rxjs';
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
 import { PopupService } from 'src/app/services/maps/popup/popup.service';
 import { TextMetadata, TextService } from 'src/app/services/text/text.service';
@@ -25,10 +25,16 @@ export interface LocationsCounter {
   count : number,
 }
 
+export interface TypesCounter {
+  inscriptionType: string,
+  count: number,
+}
+
 export interface Filter {
   filter : string;
   date: number;
   place: string;
+  type : string;
 }
 
 const allowedCenturies : number[] = [-600, -500, -400, -300, -200, -100, 100];
@@ -48,7 +54,7 @@ export class TextsComponent implements OnInit {
   destroy$: Subject<boolean> = new Subject<boolean>();
   getGeoData : BehaviorSubject<LocationsCounter[]> = new BehaviorSubject<LocationsCounter[]>([]);
   allowedFilters : string[] = ['all', 'date', 'location', 'type'];
-  allowedOperators: string[] = ['filter', 'date', 'place'];
+  allowedOperators: string[] = ['filter', 'date', 'place', 'type'];
   options: any;
   layers: Array<L.Circle> = [];
 
@@ -87,6 +93,15 @@ export class TextsComponent implements OnInit {
     })
   );
 
+  activeType : Observable<string> = this.activatedRoute.queryParams.pipe(
+    takeUntil(this.destroy$),
+    map((queryParams : Params) => queryParams as Filter),
+    map((filter: Filter) => {
+      if(filter.type) return filter.type;
+      return '';
+    })
+  );
+
 
   paginationItems: Observable<TextMetadata[]> = this.textService.texts$.pipe(
     takeUntil(this.destroy$),
@@ -102,6 +117,11 @@ export class TextsComponent implements OnInit {
   groupLocations = this.textService.texts$.pipe(
     takeUntil(this.destroy$),
     map(texts=> groupLocations(texts)),
+  )
+
+  groupTypes = this.textService.texts$.pipe(
+    takeUntil(this.destroy$),
+    map(texts=> groupTypes(texts)),
   )
   
   geoData = this.groupLocations.pipe(
@@ -125,8 +145,22 @@ export class TextsComponent implements OnInit {
       (event)=>{
         if(event){
           const keys  = Object.keys(event);
-          if(keys.length == 1)for(const [key, value] of Object.entries(event)) {if(!this.allowedOperators.includes(key) || !this.allowedFilters.includes(value) || event[key] == '' || (Array.isArray(event[key]) && Array.from(event[key]).length > 1)){this.goToDefaultUrl(); return;}}
-          if(keys.length>1)for( const [key, value] of Object.entries(event)){if(this.allowedOperators.includes(key)){this.pagination({} as Paginator, key, event[key])}}
+          const values = Object.values(event);
+          if(keys){
+            for(const [key, value] of Object.entries(event)) {
+              if(!this.allowedOperators.includes(key) ||  
+                  event[key] == '' || 
+                  (Array.isArray(event[key]) && Array.from(event[key]).length > 1))
+              {
+                this.goToDefaultUrl(); 
+                return;
+              }
+            }
+          }
+          if(keys.length>1){
+            this.pagination({} as Paginator, keys[1], values[1])
+          }
+          
         }
       }
     );
@@ -169,7 +203,7 @@ export class TextsComponent implements OnInit {
     this.route.navigate( ['/texts'], { queryParams: {filter: 'all'}});
   }
 
-  filterByDate(century : number, f? : number, r? : number) {
+  filterByDate(century : number, f? : number, r? : number) : void {
     if(century){
       if(!f && !r){this.first = 0;this.rows = 6; this.paginationItems = this.textService.filterByDate(century).pipe(map(text=>text.slice(this.first, this.rows)))}
       if(f || r){this.paginationItems = this.textService.filterByDate(century).pipe(map(text=>text.slice(f, r)))}
@@ -181,7 +215,7 @@ export class TextsComponent implements OnInit {
   }
 
 
-  filterByLocation(locationId : number, f? : number, r? : number) {
+  filterByLocation(locationId : number, f? : number, r? : number) : void {
     if(locationId){
       if(!f && !r){this.first = 0;this.rows = 6; this.paginationItems = this.textService.filterByLocation(locationId).pipe(map(text=>text.slice(this.first, this.rows)))}
       if(f || r){this.paginationItems = this.textService.filterByLocation(locationId).pipe(map(text=>text.slice(f, r)))}
@@ -192,33 +226,47 @@ export class TextsComponent implements OnInit {
     }
     
   }
+
+  filterByType(type : string, f? : number, r?: number) : void {
+    if(type){
+      if(!f && !r){this.first = 0;this.rows = 6; this.paginationItems = this.textService.filterByType(type).pipe(map(text=>text.slice(this.first, this.rows)))}
+      if(f || r){this.paginationItems = this.textService.filterByType(type).pipe(map(text=>text.slice(f, r)))}
+  
+      this.totalRecords = this.textService.filterByType(type).pipe(map(texts=>texts.length || 0))
+    }else{
+      this.getAllData(f, r);
+    }
+  }
   
 
   pagination(event: Paginator, ...args : any[]){
-    console.log(event);
     if(Object.keys(event).length != 0){this.first = event.first; this.rows = event.rows;}
     if(Object.keys(event).length == 0){this.first = 0; this.rows = 6;}
 
     let rows = (this.first != this.rows) && (this.first < this.rows) ? this.rows : this.first + this.rows;
-    
-    if(args.length>0){
+    if(args.length>0){args =args.filter(query=>query != null)}
+    if(args.length==1){
+      this.getAllData(this.first, rows);
+      return;
+    }
+    if(args.length>1){
       let filter = args[0];
       let value = !isNaN(parseInt(args[1])) ? parseInt(args[1]) : args[1];
 
       switch(filter){
         case 'all' : this.getAllData(this.first, rows); break;
         case 'date' : this.filterByDate(value, this.first, rows); break;
-        case 'location' : this.filterByLocation(value, this.first, rows); break;
         case 'place' : this.filterByLocation(value, this.first, rows); break;
+        case 'type' : this.filterByType(value, this.first, rows); break;
       }
-      
+      return;
     }
 
    
     
   }
 
-  drawMap(geoData : GlobalGeoDataModel[]){
+  drawMap(geoData : GlobalGeoDataModel[]) : void{
     
     geoData.forEach(geoPlaceData=>{
       let circleMarker = circle([geoPlaceData.reprPoint.latitude, geoPlaceData.reprPoint.longitude], {radius: 5000}).on('click mouseover', event => {
@@ -252,7 +300,7 @@ export class TextsComponent implements OnInit {
 
 }
 
-function groupByCenturies(texts: TextMetadata[]) {
+function groupByCenturies(texts: TextMetadata[]) : CenturiesCounter[]{
   let tmp : CenturiesCounter[] = [];
   let count : number = 0;
   allowedCenturies.forEach(value=>{
@@ -264,7 +312,7 @@ function groupByCenturies(texts: TextMetadata[]) {
   return tmp;
 }
 
-function groupLocations(texts : TextMetadata[]) {
+function groupLocations(texts : TextMetadata[]) : LocationsCounter[] {
   let tmp : LocationsCounter[] = [];
   let count : number = 0;
 
@@ -287,6 +335,23 @@ function groupLocations(texts : TextMetadata[]) {
 
   tmp = Object.values(
     tmp.reduce((acc, object) => ({...acc, [object.ancientPlaceId] : object}), {})
+  )
+
+  return tmp;
+}
+
+
+function groupTypes(texts : TextMetadata[]) : TypesCounter[]{
+  let tmp : TypesCounter[] = [];
+  let count : number = 0;
+  texts.forEach(text => {
+    count = texts.reduce((acc, cur) => cur.inscriptionType == text.inscriptionType ? ++acc : acc, 0);
+    if(count > 0) {tmp.push({ inscriptionType: text.inscriptionType, count : count} )
+    }
+  });
+
+  tmp = Object.values(
+    tmp.reduce((acc, object) => ({...acc, [object.inscriptionType] : object}), {})
   )
 
   return tmp;

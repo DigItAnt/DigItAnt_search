@@ -53,6 +53,7 @@ import { CitationsComponent } from './views/home/citations/citations.component';
 
 //PIPES
 import { CenturyPipePipe } from './pipes/century-pipe/century-pipe.pipe';
+import { UrlDecoderPipe } from './pipes/url-decoder/url-decoder.pipe';
 
 
 @NgModule({
@@ -74,6 +75,7 @@ import { CenturyPipePipe } from './pipes/century-pipe/century-pipe.pipe';
     ContactComponent,
     CitationsComponent,
     CenturyPipePipe,
+    UrlDecoderPipe,
   ],
   imports: [
     BrowserModule,

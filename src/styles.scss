@@ -309,7 +309,8 @@ app-root {
 
     
 
-        li.century-list-element {
+        li.century-list-element,
+        li.type-list-element {
             background-color: $light-gray;
             
             a{
@@ -322,7 +323,8 @@ app-root {
             }
         }
 
-        li.century-list-element:hover {
+        li.century-list-element:hover,
+        li.type-list-element:hover {
             background-color: $light-gray-hover;
             
             a{
@@ -335,7 +337,8 @@ app-root {
             }
         }
 
-        li.century-list-element.active {
+        li.century-list-element.active,
+        li.type-list-element.active {
             background-color: $dark-gray;
             
             a{
