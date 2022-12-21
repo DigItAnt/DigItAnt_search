@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable, of, shareReplay, tap, throwError } from 'rxjs';
+import { catchError, map, Observable, of, shareReplay, tap, throwError, timeout } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
@@ -35,10 +35,6 @@ export class AuthService {
     );
     return this.http.post<{access_token : string}>(this.token_endpoint, body, {headers: headers}).pipe(
       map((data)=> data.access_token),
-      catchError(err => {
-        console.log('Error');
-        throw new Error(err)
-      }),
       shareReplay()
     )
   }
