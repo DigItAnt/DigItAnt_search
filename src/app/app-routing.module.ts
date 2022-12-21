@@ -7,7 +7,6 @@ import { ContactComponent } from './views/home/contact/contact.component';
 import { LexiconComponent } from './views/lexicon/lexicon.component';
 import { ProjectComponent } from './views/home/project/project.component';
 import { TextsComponent } from './views/texts/texts.component';
-import { TypeComponent } from './views/type/type.component';
 import { WordComponent } from './views/word/word.component';
 import { ConcordancesComponent } from './views/concordances/concordances.component';
 import { HomeComponent } from './views/home/home.component';
