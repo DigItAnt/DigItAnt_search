@@ -59,7 +59,7 @@ export class BibliographyComponent implements OnInit {
     });
 
 
-    this.activated_route_subscription = this.activated_route.params.subscribe(event => {
+    /* this.activated_route_subscription = this.activated_route.params.subscribe(event => {
       if (event != undefined) {
 
         if(event['id'] == 'all'){
@@ -76,7 +76,7 @@ export class BibliographyComponent implements OnInit {
           this.filterByLetter(event['id']);
         }
       }
-    })
+    }) */
 
     
 
