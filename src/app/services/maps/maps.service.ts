@@ -79,9 +79,6 @@ export class MapsService {
   
   getGeoPlaceData(locations: LocationsCounter[]) {
 
-    //TODO: fare chiamate condizionali, metterle in un array e poi processarle tutte
-    //https://stackoverflow.com/questions/35676451/observable-forkjoin-and-array-argument
-
     return forkJoin(
       locations.map(
         (req) => {
