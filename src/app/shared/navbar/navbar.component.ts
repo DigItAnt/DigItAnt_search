@@ -3,7 +3,7 @@ import { ActivatedRoute, NavigationEnd, NavigationStart, Router } from '@angular
 import { MenuItem } from 'primeng/api';
 import { Subject, takeUntil, } from 'rxjs';
 import { AuthService } from 'src/app/services/auth/auth.service';
-import { TextService, TextMetadata } from 'src/app/services/text/text.service';
+import { TextsService, TextMetadata } from 'src/app/services/text/text.service';
 
 @Component({
   selector: 'app-navbar',
@@ -20,7 +20,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   destroy$: Subject<boolean> = new Subject<boolean>();
 
   constructor(private route: Router,
-    private textService: TextService,
+    private textService: TextsService,
     private activatedRoute: ActivatedRoute) { }
 
   ngOnInit(): void {
@@ -34,7 +34,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
           const urlSegments = urlTree.root.children['primary'].segments.map(segment => segment.path);
           const url = urlSegments[0]
           this.isActive = this.browseButtonActive.includes(url);
-          this.activatedRoute
         }
       }
     });
