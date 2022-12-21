@@ -1,18 +1,20 @@
-import { ChangeDetectorRef, Component, NgZone, OnInit, QueryList, ViewChildren } from '@angular/core';
-import { Router, ActivatedRoute, NavigationStart, NavigationEnd, Params } from '@angular/router';
+import {  Component, NgZone, OnInit } from '@angular/core';
+import { FormControl, FormGroup } from '@angular/forms';
+import { Router, ActivatedRoute, Params } from '@angular/router';
 import * as L from 'leaflet';
-import { bounds, circle, latLng, LeafletMouseEvent, polygon, tileLayer } from 'leaflet';
-import { OverlayPanel } from 'primeng/overlaypanel';
+import { circle, tileLayer } from 'leaflet';
 import { Paginator } from 'primeng/paginator';
-import { Subscription, map, tap, Subject, takeUntil, BehaviorSubject, Observable, groupBy, mergeMap, reduce, count, concatMap, switchMap, take, filter, takeLast, finalize, shareReplay, skipLast } from 'rxjs';
+import { map, tap, Subject, takeUntil, BehaviorSubject, Observable, switchMap, take, filter, debounceTime, timeout, catchError, iif, throwError, of, EMPTY } from 'rxjs';
+import { CenturyPipe } from 'src/app/pipes/century-pipe/century-pipe.pipe';
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
 import { PopupService } from 'src/app/services/maps/popup/popup.service';
-import { TextMetadata, TextService } from 'src/app/services/text/text.service';
+import { TextMetadata, TextsService } from 'src/app/services/text/text.service';
 
 
 export interface CenturiesCounter {
   century : number,
   count : number,
+  label: string,
 }
 
 export interface LocationsCounter {
@@ -37,6 +39,11 @@ export interface Filter {
   type : string;
 }
 
+export interface AutoCompleteEvent {
+  originalEvent : object,
+  query: string,
+}
+
 const allowedCenturies : number[] = [-600, -500, -400, -300, -200, -100, 100];
 
 @Component({
@@ -45,25 +52,38 @@ const allowedCenturies : number[] = [-600, -500, -400, -300, -200, -100, 100];
   styleUrls: ['./texts.component.scss']
 })
 export class TextsComponent implements OnInit {
-  
-  path: string = 'texts'
+
+  //OBSERVABLE
+  destroy$: Subject<boolean> = new Subject<boolean>();
+  autocomplete$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
+  autocompleteLocations: Array<LocationsCounter> = [];
+
+  somethingWrong : boolean = false;
   showSpinner: boolean = true;
-  isMainView : boolean = false;
+  isActiveInterval : boolean = false;
   first: number = 0;
   rows : number = 6;
-  destroy$: Subject<boolean> = new Subject<boolean>();
-  getGeoData : BehaviorSubject<LocationsCounter[]> = new BehaviorSubject<LocationsCounter[]>([]);
   allowedFilters : string[] = ['all', 'date', 'location', 'type'];
   allowedOperators: string[] = ['filter', 'date', 'place', 'type'];
-  options: any;
+  searchOptions : Array<string> = ['start', 'equals', 'contains', 'ends']
+
+
+  // MAP
+  leafletMapOptions: any;
   layers: Array<L.Circle> = [];
-
-  // @ViewChildren('overlaySpecificMap') private overlayList: QueryList<OverlayPanel> = new QueryList<OverlayPanel>();
-
+  getGeoData : BehaviorSubject<LocationsCounter[]> = new BehaviorSubject<LocationsCounter[]>([]);
 
   bounds = new L.LatLngBounds(new L.LatLng(33.802052, 4.239242), new L.LatLng(50.230863, 19.812745));
 
+  
   totalRecords: Observable<number> = this.textService.texts$.pipe(
+    timeout(15000),
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), // -- true, 
+        of([]) // -- other cases
+    )),
     takeUntil(this.destroy$),
     map((texts) => texts.length || 0),
   );
@@ -104,6 +124,13 @@ export class TextsComponent implements OnInit {
 
 
   paginationItems: Observable<TextMetadata[]> = this.textService.texts$.pipe(
+    timeout(15000),
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), // -- true, 
+        of([]) // -- other cases
+    )),
     takeUntil(this.destroy$),
     map((texts) => texts.slice(this.first, this.rows)),
     tap((x) => this.showSpinner = false)
@@ -114,29 +141,76 @@ export class TextsComponent implements OnInit {
     map(texts => groupByCenturies(texts)),
   )
 
-  groupLocations = this.textService.texts$.pipe(
+  groupLocations : Observable<LocationsCounter[]> = this.textService.texts$.pipe(
+    timeout(15000),
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), // -- true, 
+        of([]) // -- other cases
+    )),
     takeUntil(this.destroy$),
     map(texts=> groupLocations(texts)),
   )
 
-  groupTypes = this.textService.texts$.pipe(
+  groupTypes : Observable<TypesCounter[]> = this.textService.texts$.pipe(
+    timeout(15000),
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), // -- true, 
+        of([]) // -- other cases
+    )),
     takeUntil(this.destroy$),
     map(texts=> groupTypes(texts)),
   )
   
-  geoData = this.groupLocations.pipe(
+  geoData : Observable<GlobalGeoDataModel[]> = this.groupLocations.pipe(
+    timeout(15000),
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), // -- true, 
+        of([]) // -- other cases
+    )),
     take(1),
     switchMap(locations => this.mapsService.getGeoPlaceData(locations)),
     tap(data => this.drawMap(data))
   )
-  //TODO: fetch locations
+
+  searchLocations : Observable<LocationsCounter[]> = this.autocomplete$.pipe(
+    debounceTime(1000),
+    filter(autoCompleteEvent => autoCompleteEvent.query != ''),
+    switchMap(autoCompleteEvent=> this.textService.searchLocation(autoCompleteEvent.query)),
+    map(texts=> groupLocations(texts, true)),
+    tap(results => this.autocompleteLocations = results)
+  )
+
+  //TODO: LINGUA, TIPO OGGETTO, MATERIALE
+
+  searchForm: FormGroup = new FormGroup({
+    fullText: new FormControl(null),
+    fullTextExactMatch: new FormControl(false),
+    greekMode: new FormControl(false),
+    title: new FormControl(null),
+    titleExactMatch: new FormControl(false),
+    id: new FormControl(null),
+    idExactMatch: new FormControl(false),
+    language: new FormControl(null),
+    fromDate: new FormControl(null),
+    toDate: new FormControl(null),
+    place: new FormControl(null),
+    inscriptionType: new FormControl(null),
+    objectType: new FormControl(null),
+    materials: new FormControl(null)
+  });
 
   constructor(private route: Router,
               private activatedRoute: ActivatedRoute,
-              private textService: TextService,
+              private textService: TextsService,
               private mapsService : MapsService,
               private ngZone : NgZone,
-              private popupService : PopupService
+              private popupService : PopupService,
   ) { }
 
   ngOnInit(): void {
@@ -167,7 +241,7 @@ export class TextsComponent implements OnInit {
 
     
 
-    this.options = {
+    this.leafletMapOptions = {
       layers: [
         tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 15, 
@@ -298,6 +372,12 @@ export class TextsComponent implements OnInit {
   }
 
 
+  thereWasAnError(){
+    this.somethingWrong = true;
+    return EMPTY;
+  }
+
+
 }
 
 function groupByCenturies(texts: TextMetadata[]) : CenturiesCounter[]{
@@ -306,13 +386,13 @@ function groupByCenturies(texts: TextMetadata[]) : CenturiesCounter[]{
   allowedCenturies.forEach(value=>{
     if(value < 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOrigin) >= value && parseInt(cur.dateOfOrigin) < (value + 100)) ? ++acc : acc, 0); 
     if(value > 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOrigin) > (value-100) && parseInt(cur.dateOfOrigin) <= value) ? ++acc : acc, 0);
-    if(count > 0) tmp.push({century: value, count: count,})
+    if(count > 0) tmp.push({century: value, count: count, label: CenturyPipe.prototype.transform(value) })
   })
 
   return tmp;
 }
 
-function groupLocations(texts : TextMetadata[]) : LocationsCounter[] {
+function groupLocations(texts : TextMetadata[], truncatePlaces?:boolean) : LocationsCounter[] {
   let tmp : LocationsCounter[] = [];
   let count : number = 0;
 
@@ -324,12 +404,12 @@ function groupLocations(texts : TextMetadata[]) : LocationsCounter[] {
       tmp.push({
         ancientPlaceUrl : text.originalPlace.ancientNameUrl, 
         ancientPlaceId : ancientPlaceStripId, 
-        ancientPlaceLabel: text.originalPlace.ancientName.split(',')[0], 
+        ancientPlaceLabel: (truncatePlaces? text.originalPlace.ancientName : text.originalPlace.ancientName.split(',')[0]), 
         modernPlaceUrl: text.originalPlace.modernNameUrl, 
         modernPlaceId: modernPlaceStripId, 
         modernPlaceLabel: text.originalPlace.modernName, 
-        count : count}
-      )
+        count : count
+      })
     }
   });
 

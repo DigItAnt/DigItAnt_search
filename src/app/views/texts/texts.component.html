@@ -1,170 +1,335 @@
-<div id="left-bar" class="flex flex-column">
-    <p-tabView>
+<div class="flex flex-1 flex-row" *ngIf="{activeTab : activeTab | async, 
+        totalRecords: totalRecords | async, 
+        groupCenturies : groupCenturies | async, 
+        activeDate : activeDate | async, 
+        activeLocation : activeLocation | async,
+        activeType : activeType | async, 
+        groupLocations : groupLocations | async,
+        groupType : groupTypes | async} as text">
 
-        <p-tabPanel header="Categories">
-
-            <ul class="home-menu">
-
-                <a *ngFor="let filter of allowedFilters" (click)="getAllData()" [href]="'/texts?filter='+filter"
-                    class="no-underline" routerLink="./" [queryParams]="{filter : filter}" routerLinkActive="active"
-                    [routerLinkActiveOptions]="{exact : false}">
-                    <li class="pl-4 flex align-items-center">
-                        <span class="icon"></span>
-                        <span class="route flex-1">{{filter | titlecase}}</span>
-                    </li>
-                </a>
-            </ul>
-        </p-tabPanel>
-        <p-tabPanel header="Simple search">
-            Albero entrate lessicali
-        </p-tabPanel>
-
-    </p-tabView>
-
-</div>
-
-<div id="texts-container" class="flex flex-column flex-1" *ngIf="{activeTab : activeTab | async, 
-                                                                  totalRecords: totalRecords | async, 
-                                                                  groupCenturies : groupCenturies | async, 
-                                                                  activeDate : activeDate | async, 
-                                                                  activeLocation : activeLocation | async,
-                                                                  activeType : activeType | async, 
-                                                                  groupLocations : groupLocations | async,
-                                                                  groupType : groupTypes | async} as text">
-
-    <div id="filter-texts-container" class="flex flex-column text-container-top" *ngIf="text.activeTab == 'all'">
-        <div class="flex flex-row align-items-center horizontal-list m-3 text-center">
-            <h1 class="flex-1 loading" *ngIf="!(text.totalRecords)">Loading <span>.</span><span>.</span><span>.</span>
-            </h1>
-            <h1 class="flex-1" *ngIf="(text.totalRecords)"><span class="red">{{text.totalRecords}} </span>texts found
-            </h1>
-        </div>
-
-
-    </div>
-
-
-    <div id="filter-date-container" class="flex flex-column text-container-top" *ngIf="text.activeTab == 'date'">
-        <div class="flex flex-row horizontal-list m-3 text-container-top">
-            <h1 class="loading text-center flex-1 flex align-items-center justify-content-center"
-                *ngIf="!text.groupCenturies">Loading <span>.</span><span>.</span><span>.</span></h1>
-
-            <ul class="flex-wrap align-items-center" *ngIf="text.groupCenturies">
-
-                <li *ngFor="let item of text.groupCenturies" 
-                    [class.active]="text.activeDate == item.century"
-                    (click)="filterByDate(item.century)"
-                    class="my-2 mr-2 align-items-center border-round-2xl century-list-element" routerLink="./"
-                    [queryParams]="{filter: 'date', date: item.century}">
-                    <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
-                    <a class="no-underline font-bold">{{item.century | centuryPipe}}</a>
-                </li>
-
-
-            </ul>
-        </div>
-    </div>
-
-    <div id="filter-location-container" class="flex flex-column" *ngIf="text.activeTab == 'location'">
+        <div id="left-bar" class="flex flex-column">
+            <p-tabView>
         
-        <div  class="flex flex-row horizontal-list m-3 text-container-top justify-content-between">
+                <p-tabPanel header="Categories">
+        
+                    <ul class="home-menu">
+        
+                        <a *ngFor="let filter of allowedFilters" (click)="getAllData()" [href]="'/texts?filter='+filter"
+                            class="categories no-underline" routerLink="./" [queryParams]="{filter : filter}" routerLinkActive="active"
+                            [routerLinkActiveOptions]="{exact : false}">
+                            <li class="pl-4 flex align-items-center">
+                                <span class="icon"></span>
+                                <span class="route flex-1">{{filter | titlecase}}</span>
+                            </li>
+                        </a>
+                    </ul>
+                </p-tabPanel>
+        
+                <p-tabPanel header="Simple search">
+                    <form id="search-form" [formGroup]="searchForm">
 
-            <h1 class="loading text-center flex-1 flex align-items-center justify-content-center"
-                *ngIf="!text.groupLocations">Loading <span>.</span><span>.</span><span>.</span>
-            </h1>
-            <ul class="flex-wrap align-items-center" *ngIf="text.groupLocations"><!--   overlaySpecificMap.hide();   -->
-                <li *ngFor="let item of text.groupLocations"
-                    class="my-2 mr-2 align-items-center border-round-2xl century-list-element" 
-                    routerLink="./" 
-                    [class.active]="(text.activeLocation == item.ancientPlaceId)" 
-                    [queryParams]="{filter: 'location', place: ((item.ancientPlaceId == '' || item.ancientPlaceId == 'unknown') ? item.modernPlaceId : item.ancientPlaceId)}">
-                    <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
-                    <a class="no-underline font-bold">{{(item.ancientPlaceLabel == '' || item.ancientPlaceLabel == 'unknown') ? item.modernPlaceLabel : item.ancientPlaceLabel}}</a>
 
-                </li>
-            </ul>
-            <div class="flex align-items-center map-button" *ngIf="{geoData: geoData | async} as map">
-                <button (click)="overlayGeneralMap.toggle($event)" pButton type="button" class="p-button-secondary mr-2" icon="fa-solid fa-map-location-dot" iconPos="left"></button>
-                
-                <p-overlayPanel #overlayGeneralMap [appendTo]="'body'">
-                    <ng-template pTemplate>
-                        <div  class="relative mb-3" style="width: 400px;" *ngIf="{geoData : getGeoData.next((text.groupLocations) || [])} as map">
-                            <div style="height: 400px;"
-                                leaflet 
-                                [leafletOptions]="options"
-                                [leafletLayers]="layers"
-                                [leafletMaxBounds]="bounds">
+                        <p-panel header="Full Text" [toggleable]="false">
+                            <div class="flex-column start">
+                                <div id="text-radio-button" class="pt-2 p-inputgroup">
+                                    <input id="float-input" type="text"
+                                        [placeholder]="!searchForm.get('greekMode')?.value  ? 'Eg: legù' : 'Eg: λεγϋ'"
+                                        formControlName="fullText" pInputText> 
+                                    <p-toggleButton styleClass="border-noround" formControlName="fullTextExactMatch" onIcon="exact" offIcon="contains"
+                                        [pTooltip]="searchForm.get('fullTextExactMatch')?.value ? 'Exact match: true' : 'Exact match: false'"
+                                        tooltipPosition="right"></p-toggleButton>
+                                    <p-toggleButton formControlName="greekMode" onIcon="omega" offIcon="latin"
+                                        [pTooltip]="searchForm.get('greekMode')?.value ? 'Greek keyboard' : 'Latin keyboard'"
+                                        tooltipPosition="right"></p-toggleButton>
+                                </div>
+                               <!--  <div class="mt-4">
+                                    <p-selectButton [options]="searchOptions" formControlName="searchMode"></p-selectButton>
+                                </div> -->
+                            </div>
+                        </p-panel>
+
+                        <p-panel header="Title and Id's" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                            <div class="flex-column start">
+                                <div id="text-radio-button" class="pt-2 p-inputgroup">
+                                    <input id="float-input" type="text"
+                                        placeholder="Enter title..."
+                                        formControlName="title" pInputText> 
+                                    <p-toggleButton formControlName="titleExactMatch" onIcon="exact" offIcon="contains"
+                                        [pTooltip]="searchForm.get('titleExactMatch')?.value ? 'Exact match: true' : 'Exact match: false'"
+                                        tooltipPosition="right"></p-toggleButton>
+                                </div>
+
+                                <div id="text-radio-button" class="pt-2 p-inputgroup">
+                                    <input id="float-input" type="text"
+                                        placeholder="Enter ID..."
+                                        formControlName="id" pInputText> 
+                                    <p-toggleButton formControlName="idExactMatch" onIcon="exact" offIcon="contains"
+                                        [pTooltip]="searchForm.get('idExactMatch')?.value ? 'Exact match: true' : 'Exact match: false'"
+                                        tooltipPosition="right"></p-toggleButton>
+                                </div>
+                               <!--  <div class="mt-4">
+                                    <p-selectButton [options]="searchOptions" formControlName="searchMode"></p-selectButton>
+                                </div> -->
+                            </div>
+                        </p-panel>
+
+                        <p-panel class="cursor-pointer" header="Date" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                            <div class="flex pt-3">
+                                <p-checkbox [(ngModel)]="isActiveInterval" [binary]="true" label="Interval" [ngModelOptions]="{standalone: true}"></p-checkbox>
+                            </div>
+                            <div class="flex pt-3">
+                                <p-dropdown [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="fromDate"
+                                    optionValue="century" optionLabel="label" placeholder="Eg: 6th century BC">
+                                    <ng-template let-date pTemplate="item">
+                                        <div class="century-item">
+                                            <span class="counter">{{date.label}}</span>
+                                        </div>
+                                    </ng-template>
+                                </p-dropdown>
+                            </div>
+
+                            <div class="flex pt-3" *ngIf="isActiveInterval">
+                                <p-dropdown  [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="toDate"
+                                    optionValue="century" optionLabel="label" placeholder="Eg: 6th century BC">
+                                    <ng-template let-date pTemplate="item">
+                                        <div class="century-item">
+                                            <span class="counter">{{date.label}}</span>
+                                        </div>
+                                    </ng-template>
+                                </p-dropdown>
+                            </div>
+                        </p-panel>
+
+                        <p-panel class="cursor-pointer" header="Location" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+
+                            <p-autoComplete formControlName="place" 
+                                            [suggestions]="(searchLocations | async) || []" 
+                                            (completeMethod)="autocomplete$.next($event)"
+                                            field="ancientPlaceLabel"
+                                            placeholder="Eg: Samnium">
+
+                                            <ng-template let-item pTemplate="item">
+                                                <div>{{item.ancientPlaceLabel}}</div>
+                                                <sub>{{item.modernPlaceLabel}}</sub>
+                                            </ng-template>
+                            </p-autoComplete>
+
+                        </p-panel>
+
+
+                        <p-panel class="cursor-pointer" header="Language" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                            
+                            <div class="flex pt-3">
+                                <p-dropdown [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="language"
+                                    optionValue="century" optionLabel="label" placeholder="Select language...">
+                                    <ng-template let-language pTemplate="item">
+                                        <div class="language-item">
+                                            <span class="counter">{{language.label}}</span>
+                                        </div>
+                                    </ng-template>
+                                </p-dropdown>
+                            </div>
+
+            
+                        </p-panel>
+
+                        <p-panel class="cursor-pointer" header="Inscription Types" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                            
+                            <div class="flex pt-3">
+                                <p-dropdown [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="inscriptionType"
+                                    optionValue="century" optionLabel="label" placeholder="Select inscription type...">
+                                    <ng-template let-inscriptionType pTemplate="item">
+                                        <div class="language-item">
+                                            <span class="counter">{{inscriptionType.label}}</span>
+                                        </div>
+                                    </ng-template>
+                                </p-dropdown>
+                            </div>
+
+            
+                        </p-panel>
+
+
+                        <p-panel class="cursor-pointer" header="Object Types" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                            
+                            <div class="flex pt-3">
+                                <p-dropdown [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="objectType"
+                                    optionValue="century" optionLabel="label" placeholder="Select object type...">
+                                    <ng-template let-objectType pTemplate="item">
+                                        <div class="language-item">
+                                            <span class="counter">{{objectType.label}}</span>
+                                        </div>
+                                    </ng-template>
+                                </p-dropdown>
+                            </div>
+
+            
+                        </p-panel>
+
+                        <p-panel class="cursor-pointer" header="Materials" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                            
+                            <div class="flex pt-3">
+                                <p-dropdown [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="materials"
+                                    optionValue="century" optionLabel="label" placeholder="Select material...">
+                                    <ng-template let-materials pTemplate="item">
+                                        <div class="language-item">
+                                            <span class="counter">{{materials.label}}</span>
+                                        </div>
+                                    </ng-template>
+                                </p-dropdown>
+                            </div>
+
+            
+                        </p-panel>
+
+    
+                    </form>
+                </p-tabPanel>
+        
+            </p-tabView>
+        
+        </div>
+        
+        <div id="texts-container" class="flex flex-column flex-1">
+            
+            <div id="filter-texts-container" class="flex flex-column text-container-top" *ngIf="text.activeTab == 'all'">
+                <div class="flex flex-row align-items-center horizontal-list m-3 text-center">
+                    <h2 class="flex-1 loading" *ngIf="!(text.totalRecords) && ! somethingWrong">Loading <span>.</span><span>.</span><span>.</span>
+                    </h2>
+                    <h2 class="flex-1" *ngIf="somethingWrong">Ops!</h2>
+                    <h2 class="flex-1" *ngIf="(text.totalRecords)"><span class="red">{{text.totalRecords}} </span>texts found
+                    </h2>
+                </div>
+        
+        
+            </div>
+        
+        
+            <div id="filter-date-container" class="flex flex-column text-container-top" *ngIf="text.activeTab == 'date'">
+                <div class="flex flex-row horizontal-list m-3 text-container-top">
+                    <h2 class="loading text-center flex-1 flex align-items-center justify-content-center"
+                        *ngIf="!text.groupCenturies">Loading <span>.</span><span>.</span><span>.</span></h2>
+        
+                    <ul class="flex-wrap align-items-center" *ngIf="text.groupCenturies">
+        
+                        <li *ngFor="let item of text.groupCenturies" [class.active]="text.activeDate == item.century"
+                            (click)="filterByDate(item.century)"
+                            class="my-2 mr-2 align-items-center border-round-2xl century-list-element" routerLink="./"
+                            [queryParams]="{filter: 'date', date: item.century}">
+                            <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
+                            <a class="no-underline font-bold">{{item.century | centuryPipe}}</a>
+                        </li>
+        
+        
+                    </ul>
+                </div>
+            </div>
+        
+            <div id="filter-location-container" class="flex flex-column" *ngIf="text.activeTab == 'location'">
+        
+                <div class="flex flex-row horizontal-list m-3 text-container-top justify-content-between">
+        
+                    <h2 class="loading text-center flex-1 flex align-items-center justify-content-center"
+                        *ngIf="!text.groupLocations">Loading <span>.</span><span>.</span><span>.</span>
+                    </h2>
+                    <ul class="flex-wrap align-items-center" *ngIf="text.groupLocations">
+                        <!--   overlaySpecificMap.hide();   -->
+                        <li *ngFor="let item of text.groupLocations"
+                            class="my-2 mr-2 align-items-center border-round-2xl century-list-element" routerLink="./"
+                            [class.active]="(text.activeLocation == item.ancientPlaceId)"
+                            [queryParams]="{filter: 'location', place: ((item.ancientPlaceId == '' || item.ancientPlaceId == 'unknown') ? item.modernPlaceId : item.ancientPlaceId)}">
+                            <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
+                            <a class="no-underline font-bold">{{(item.ancientPlaceLabel == '' || item.ancientPlaceLabel ==
+                                'unknown') ? item.modernPlaceLabel : item.ancientPlaceLabel}}</a>
+        
+                        </li>
+                    </ul>
+                    <div class="flex align-items-center map-button" *ngIf="{geoData: geoData | async} as map">
+                        <button (click)="overlayGeneralMap.toggle($event)" pButton type="button" class="p-button-secondary mr-2"
+                            icon="fa-solid fa-map-location-dot" iconPos="left"></button>
+        
+                        <p-overlayPanel #overlayGeneralMap [appendTo]="'body'">
+                            <ng-template pTemplate>
+                                <div class="relative mb-3" style="width: 400px;"
+                                    *ngIf="{geoData : getGeoData.next((text.groupLocations) || [])} as map">
+                                    <div style="height: 400px;" leaflet [leafletOptions]="leafletMapOptions" [leafletLayers]="layers"
+                                        [leafletMaxBounds]="bounds">
+                                    </div>
+                                </div>
+                            </ng-template>
+                        </p-overlayPanel>
+                    </div>
+                </div>
+        
+            </div>
+        
+            <div id="filter-type-container" class="flex flex-column text-container-top" *ngIf="text.activeTab == 'type'">
+                <div class="flex flex-row horizontal-list m-3 text-container-top">
+                    <h2 class="loading text-center flex-1 flex align-items-center justify-content-center"
+                        *ngIf="!text.groupType">Loading <span>.</span><span>.</span><span>.</span></h2>
+        
+                    <ul class="flex-wrap align-items-center" *ngIf="text.groupType">
+        
+                        <li *ngFor="let item of text.groupType" [class.active]="text.activeType == item.inscriptionType"
+                            (click)="filterByType(item.inscriptionType)"
+                            class="my-2 mr-2 align-items-center border-round-2xl type-list-element" routerLink="./"
+                            [queryParams]="{filter: 'type', type: item.inscriptionType | urlDecoder}">
+                            <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
+                            <a class="no-underline font-bold">{{item.inscriptionType}}</a>
+                        </li>
+        
+        
+                    </ul>
+                </div>
+            </div>
+        
+            <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="text.totalRecords != 0 && !somethingWrong">
+                <div class="flex flex-row m-2 w-full" *ngIf="!text.totalRecords">
+                    <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+        
+                </div>
+        
+                <a class="flex no-underline text-item m-2" *ngFor="let item of paginationItems | async"
+                    [href]="'/file/'+item.itAnt_ID" [routerLink]="['/file/'+item.itAnt_ID]">
+                    <div class="flex flex-row  ">
+                        <div class="flex text-item-id p-2">
+                            {{item.itAnt_ID}}
+                        </div>
+        
+                        <div class="flex flex-column text-item-preview p-2">
+        
+                            <div class="text-item-preview-top">
+                                {{item.title}}
+                            </div>
+        
+                            <div class="text-item-preview-bottom flex flex-column mt-3">
+                                <div class="flex flex-row align-items-baseline">
+                                    <i class="far fa-calendar-alt"></i>
+                                    <span class="ml-2">{{item.dateOfOrigin}}</span>
+                                </div>
+                                <div class="flex flex-row align-items-baseline mt-2">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span class="ml-2">{{item.originalPlace.ancientName}}</span>
+                                </div>
                             </div>
                         </div>
-                    </ng-template>
-                </p-overlayPanel>
-            </div>
-        </div>
+                    </div>
+                </a>
         
-    </div>
-
-    <div id="filter-type-container" class="flex flex-column text-container-top" *ngIf="text.activeTab == 'type'">
-        <div class="flex flex-row horizontal-list m-3 text-container-top">
-            <h1 class="loading text-center flex-1 flex align-items-center justify-content-center"
-                *ngIf="!text.groupType">Loading <span>.</span><span>.</span><span>.</span></h1>
-
-            <ul class="flex-wrap align-items-center" *ngIf="text.groupType">
-
-                <li *ngFor="let item of text.groupType" 
-                    [class.active]="text.activeType == item.inscriptionType"
-                    (click)="filterByType(item.inscriptionType)"
-                    class="my-2 mr-2 align-items-center border-round-2xl type-list-element" routerLink="./"
-                    [queryParams]="{filter: 'type', type: item.inscriptionType | urlDecoder}">
-                    <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
-                    <a class="no-underline font-bold">{{item.inscriptionType}}</a>
-                </li>
-
-
-            </ul>
-        </div>
-    </div>
-
-    <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="text.totalRecords != 0">
-        <div class="flex flex-row m-2 w-full" *ngIf="!text.totalRecords">
-            <p-progressSpinner class="flex flex-1"></p-progressSpinner>
-
-        </div>
-
-        <a class="flex no-underline text-item m-2" *ngFor="let item of paginationItems | async"
-            [href]="'/file/'+item.itAnt_ID" [routerLink]="['/file/'+item.itAnt_ID]">
-            <div class="flex flex-row  ">
-                <div class="flex text-item-id p-2">
-                    {{item.itAnt_ID}}
-                </div>
-
-                <div class="flex flex-column text-item-preview p-2">
-
-                    <div class="text-item-preview-top">
-                        {{item.title}}
-                    </div>
-
-                    <div class="text-item-preview-bottom flex flex-column mt-3">
-                        <div class="flex flex-row align-items-baseline">
-                            <i class="far fa-calendar-alt"></i>
-                            <span class="ml-2">{{item.dateOfOrigin}}</span>
-                        </div>
-                        <div class="flex flex-row align-items-baseline mt-2">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span class="ml-2">{{item.originalPlace.ancientName}}</span>
-                        </div>
-                    </div>
-                </div>
             </div>
-        </a>
+        
+            <p-paginator *ngIf="text.totalRecords != 0 && !somethingWrong" [dropdownAppendTo]="'body'" [first]="first" [rows]="rows"
+                [totalRecords]="(totalRecords | async) || 0"
+                (onPageChange)="pagination($event, (text.activeTab || null), (text.activeDate || null), (text.activeLocation || null), (text.activeType || null))"
+                [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[6,12,24]"></p-paginator>
+        
+            <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="text.totalRecords == 0 && !somethingWrong">
+                no entries
+            </div>
 
-    </div>
-    
-    <p-paginator *ngIf="text.totalRecords != 0" [dropdownAppendTo]="'body'" [first]="first" [rows]="rows"
-        [totalRecords]="(totalRecords | async) || 0"
-        (onPageChange)="pagination($event, (text.activeTab || null), (text.activeDate || null), (text.activeLocation || null), (text.activeType || null))"
-        [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[6,12,24]"></p-paginator>
+            <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="somethingWrong">
+                Something went wrong
+            </div>
+        </div>
 
-    <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="text.totalRecords == 0">
-        no entries
-    </div>
 </div>
