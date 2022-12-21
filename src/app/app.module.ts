@@ -27,6 +27,8 @@ import {TabViewModule} from 'primeng/tabview';
 import {ProgressSpinnerModule} from 'primeng/progressspinner';
 import {MenuModule} from 'primeng/menu';
 import {OverlayPanelModule} from 'primeng/overlaypanel';
+import {SelectButtonModule} from 'primeng/selectbutton';
+import {CheckboxModule} from 'primeng/checkbox';
 
 
 //LEAFLET
@@ -40,7 +42,6 @@ import { FooterComponent } from './shared/footer/footer.component';
 //VIEWS
 import { HomeComponent } from './views/home/home.component';
 import { WordComponent } from './views/word/word.component';
-import { TypeComponent } from './views/type/type.component';
 import { AdvancedSearchComponent } from './views/search/search.component';
 import { BibliographyComponent } from './views/bibliography/bibliography.component';
 import { ConcordancesComponent } from './views/concordances/concordances.component';
@@ -52,7 +53,7 @@ import { ContactComponent } from './views/home/contact/contact.component';
 import { CitationsComponent } from './views/home/citations/citations.component';
 
 //PIPES
-import { CenturyPipePipe } from './pipes/century-pipe/century-pipe.pipe';
+import { CenturyPipe } from './pipes/century-pipe/century-pipe.pipe';
 import { UrlDecoderPipe } from './pipes/url-decoder/url-decoder.pipe';
 
 
@@ -64,7 +65,6 @@ import { UrlDecoderPipe } from './pipes/url-decoder/url-decoder.pipe';
     MainComponent,
     FooterComponent,
     WordComponent,
-    TypeComponent,
     AdvancedSearchComponent,
     BibliographyComponent,
     ConcordancesComponent,
@@ -74,7 +74,7 @@ import { UrlDecoderPipe } from './pipes/url-decoder/url-decoder.pipe';
     AboutComponent,
     ContactComponent,
     CitationsComponent,
-    CenturyPipePipe,
+    CenturyPipe,
     UrlDecoderPipe,
   ],
   imports: [
@@ -102,7 +102,9 @@ import { UrlDecoderPipe } from './pipes/url-decoder/url-decoder.pipe';
     HttpClientModule,
     ProgressSpinnerModule,
     MenuModule,
-    OverlayPanelModule
+    OverlayPanelModule,
+    SelectButtonModule,
+    CheckboxModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
