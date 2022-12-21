@@ -1,20 +1,20 @@
 <div id="left-bar" class="flex flex-column">
     <ul class="home-menu">
-        <a href="/home/project" class="no-underline" (click)="$event.preventDefault()" routerLink="./project" routerLinkActive="active" [routerLinkActiveOptions]="{exact : true}">
+        <a href="/home/project" class="categories no-underline" (click)="$event.preventDefault()" routerLink="./project" routerLinkActive="active" [routerLinkActiveOptions]="{exact : true}">
             <li class="pl-4 flex align-items-center"> <!-- (click)="index = 1" [class.active]="index == 1" -->
                 <span class="icon"></span>
                 <span class="route flex-1">Project</span>
             </li>
         </a>
 
-        <a href="/home/about" class="no-underline" (click)="$event.preventDefault()" routerLink="./about" routerLinkActive="active" [routerLinkActiveOptions]="{exact : true}">
+        <a href="/home/about" class="categories no-underline" (click)="$event.preventDefault()" routerLink="./about" routerLinkActive="active" [routerLinkActiveOptions]="{exact : true}">
             <li class="pl-4 flex align-items-center" routerLink="./about"> <!-- (click)="index = 1" [class.active]="index == 1" -->
                 <span class="icon"></span>
                 <span class="route flex-1">About us</span>
             </li>
         </a>
         
-        <a href="/home/contact" class="no-underline" (click)="$event.preventDefault()" routerLink="./contact" routerLinkActive="active" [routerLinkActiveOptions]="{exact : true}">
+        <a href="/home/contact" class="categories no-underline" (click)="$event.preventDefault()" routerLink="./contact" routerLinkActive="active" [routerLinkActiveOptions]="{exact : true}">
             <li class="pl-4 flex align-items-center" routerLink="./contact"> <!-- (click)="index = 1" [class.active]="index == 1" -->
                 <span class="icon"></span>
                 <span class="route flex-1">Contact</span>
@@ -22,7 +22,7 @@
         </a>
 
         
-        <a href="/home/citations" class="no-underline" (click)="$event.preventDefault()" routerLink="./citations" routerLinkActive="active" [routerLinkActiveOptions]="{exact : true}">
+        <a href="/home/citations" class="categories no-underline" (click)="$event.preventDefault()" routerLink="./citations" routerLinkActive="active" [routerLinkActiveOptions]="{exact : true}">
             <li class="pl-4 flex align-items-center" routerLink="./citations"> <!-- (click)="index = 1" [class.active]="index == 1" -->
                 <span class="icon"></span>
                 <span class="route flex-1">How to cite?</span>
@@ -34,8 +34,8 @@
 <div id="home-content" class="flex flex-column flex-1" >
     
     <div *ngIf="isMainView">
-        <h1 class="mb-5">Welcome!</h1>
-        <p class="mt-5">Welcome to EpiLexO Search, the fruition platform for searching texts and lexicons connected to the EpiLexO editing platform. The platform was created in the context of the PRIN 2017 project: "Languages and cultures of Ancient Italy" and in this context it allows users to consult the texts and lexicons uploaded / created in the editing platform.</p>
+        <h2 class="mb-5">Welcome!</h2>
+        <p class="mt-5 text-sm">Welcome to EpiLexO Search, the fruition platform for searching texts and lexicons connected to the EpiLexO editing platform. The platform was created in the context of the PRIN 2017 project: "Languages and cultures of Ancient Italy" and in this context it allows users to consult the texts and lexicons uploaded / created in the editing platform.</p>
     </div>
     
     <div *ngIf="!isMainView">
