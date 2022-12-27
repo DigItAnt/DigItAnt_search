@@ -78,7 +78,7 @@
                                 <p-checkbox [(ngModel)]="isActiveInterval" [binary]="true" label="Interval" [ngModelOptions]="{standalone: true}"></p-checkbox>
                             </div>
                             <div class="flex pt-3">
-                                <p-dropdown [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="fromDate"
+                                <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="fromDate"
                                     optionValue="century" optionLabel="label" placeholder="Eg: 6th century BC">
                                     <ng-template let-date pTemplate="item">
                                         <div class="century-item">
@@ -89,7 +89,7 @@
                             </div>
 
                             <div class="flex pt-3" *ngIf="isActiveInterval">
-                                <p-dropdown  [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="toDate"
+                                <p-dropdown appendTo="body"  [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="toDate"
                                     optionValue="century" optionLabel="label" placeholder="Eg: 6th century BC">
                                     <ng-template let-date pTemplate="item">
                                         <div class="century-item">
@@ -120,7 +120,7 @@
                         <p-panel class="cursor-pointer" header="Language" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                             
                             <div class="flex pt-3">
-                                <p-dropdown [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="language"
+                                <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="language"
                                     optionValue="century" optionLabel="label" placeholder="Select language...">
                                     <ng-template let-language pTemplate="item">
                                         <div class="language-item">
@@ -136,7 +136,7 @@
                         <p-panel class="cursor-pointer" header="Inscription Types" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                             
                             <div class="flex pt-3">
-                                <p-dropdown [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="inscriptionType"
+                                <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="inscriptionType"
                                     optionValue="century" optionLabel="label" placeholder="Select inscription type...">
                                     <ng-template let-inscriptionType pTemplate="item">
                                         <div class="language-item">
@@ -169,7 +169,7 @@
                         <p-panel class="cursor-pointer" header="Materials" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                             
                             <div class="flex pt-3">
-                                <p-dropdown [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="materials"
+                                <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="materials"
                                     optionValue="century" optionLabel="label" placeholder="Select material...">
                                     <ng-template let-materials pTemplate="item">
                                         <div class="language-item">
