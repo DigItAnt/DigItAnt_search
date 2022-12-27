@@ -5,8 +5,8 @@
         "changeOrigin": true,
         "logLevel": "debug"
     },
-    "/cash/*": {
-        "target": "https://lari2.ilc.cnr.it",
+    "/cash_old/*": {
+        "target": "https://digitant.ilc.cnr.it",
         "secure": true,
         "changeOrigin": true,
         "logLevel": "debug"
