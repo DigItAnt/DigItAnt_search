@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { debounceTime, filter, map, Observable, shareReplay, Subject, switchMap, tap, timeout } from 'rxjs';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { AuthService } from '../auth/auth.service';
 
 export interface DocumentSystem {
   documentSystem : Text[]
@@ -39,8 +38,7 @@ export class TextsService {
   private baseUrl = environment.cash_baseUrl;
   private documentSystem: DocumentSystem[] = [];
 
-  texts$ : Observable<TextMetadata[]> = this.authService.getAccessToken().pipe(
-    switchMap(token => this.getTextCollection(token)),
+  texts$ : Observable<TextMetadata[]> = this.getTextCollection().pipe(
     map(texts => texts.filter(text => text.type == 'file' && Object.keys(text.metadata).length > 0)),
     map(texts => this.mapData(texts)),
     shareReplay()
@@ -48,16 +46,12 @@ export class TextsService {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService
   ) { }
 
 
-  getTextCollection(auth_token?: string) : Observable<Text[]> {
-    const header = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${auth_token}`
-    })
-    return this.http.get<DocumentSystem>(this.baseUrl + "api/getDocumentSystem?requestUUID=11", { headers: header }).pipe(
+  getTextCollection() : Observable<Text[]> {
+    
+    return this.http.get<DocumentSystem>(this.baseUrl + "api/public/getDocumentSystem?requestUUID=11").pipe(
       map(res => res.documentSystem),
     )
   }

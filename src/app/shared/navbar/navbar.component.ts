@@ -2,7 +2,6 @@ import { AfterContentInit, AfterViewInit, Component, OnDestroy, OnInit } from '@
 import { ActivatedRoute, NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { Subject, takeUntil, } from 'rxjs';
-import { AuthService } from 'src/app/services/auth/auth.service';
 import { TextsService, TextMetadata } from 'src/app/services/text/text.service';
 
 @Component({
