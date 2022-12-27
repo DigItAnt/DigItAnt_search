@@ -32,6 +32,11 @@ export interface TypesCounter {
   count: number,
 }
 
+export interface LanguagesCounter {
+  language: string,
+  count: number,
+}
+
 export interface Filter {
   filter : string;
   date: number;
@@ -53,7 +58,7 @@ const allowedCenturies : number[] = [-600, -500, -400, -300, -200, -100, 100];
 })
 export class TextsComponent implements OnInit {
 
-  //OBSERVABLE
+  //OBSERVABLES
   destroy$: Subject<boolean> = new Subject<boolean>();
   autocomplete$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
   autocompleteLocations: Array<LocationsCounter> = [];
@@ -75,14 +80,14 @@ export class TextsComponent implements OnInit {
 
   bounds = new L.LatLngBounds(new L.LatLng(33.802052, 4.239242), new L.LatLng(50.230863, 19.812745));
 
-  
+  // PAGINATIONS
   totalRecords: Observable<number> = this.textService.texts$.pipe(
     timeout(15000),
     catchError(err => 
       iif(
         () => err,
         this.thereWasAnError(), // -- true, 
-        of([]) // -- other cases
+        of([]) 
     )),
     takeUntil(this.destroy$),
     map((texts) => texts.length || 0),
@@ -129,12 +134,16 @@ export class TextsComponent implements OnInit {
       iif(
         () => err,
         this.thereWasAnError(), // -- true, 
-        of([]) // -- other cases
+        of([]) 
     )),
     takeUntil(this.destroy$),
     map((texts) => texts.slice(this.first, this.rows)),
     tap((x) => this.showSpinner = false)
   );
+
+
+
+  // GROUPING DATA
 
   groupCenturies: Observable<CenturiesCounter[]> = this.textService.texts$.pipe(
     takeUntil(this.destroy$),
@@ -146,8 +155,8 @@ export class TextsComponent implements OnInit {
     catchError(err => 
       iif(
         () => err,
-        this.thereWasAnError(), // -- true, 
-        of([]) // -- other cases
+        this.thereWasAnError(), 
+        of([]) 
     )),
     takeUntil(this.destroy$),
     map(texts=> groupLocations(texts)),
@@ -158,20 +167,35 @@ export class TextsComponent implements OnInit {
     catchError(err => 
       iif(
         () => err,
-        this.thereWasAnError(), // -- true, 
-        of([]) // -- other cases
+        this.thereWasAnError(), 
+        of([]) 
     )),
     takeUntil(this.destroy$),
     map(texts=> groupTypes(texts)),
   )
+
+  //TODO: TIPO OGGETTO, MATERIALE
+
+  groupLanguages : Observable<LanguagesCounter[]> = this.textService.texts$.pipe(
+    timeout(15000),
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), 
+        of([]) 
+    )),
+    takeUntil(this.destroy$),
+    map(texts=> groupLanguages(texts)),
+  )
+
   
   geoData : Observable<GlobalGeoDataModel[]> = this.groupLocations.pipe(
     timeout(15000),
     catchError(err => 
       iif(
         () => err,
-        this.thereWasAnError(), // -- true, 
-        of([]) // -- other cases
+        this.thereWasAnError(), 
+        of([]) 
     )),
     take(1),
     switchMap(locations => this.mapsService.getGeoPlaceData(locations)),
@@ -186,7 +210,6 @@ export class TextsComponent implements OnInit {
     tap(results => this.autocompleteLocations = results)
   )
 
-  //TODO: LINGUA, TIPO OGGETTO, MATERIALE
 
   searchForm: FormGroup = new FormGroup({
     fullText: new FormControl(null),
@@ -434,5 +457,24 @@ function groupTypes(texts : TextMetadata[]) : TypesCounter[]{
     tmp.reduce((acc, object) => ({...acc, [object.inscriptionType] : object}), {})
   )
 
+  return tmp;
+}
+
+
+function groupLanguages(texts : TextMetadata[]) : LanguagesCounter[]{
+  let tmp : LanguagesCounter[] = [];
+  let count : number = 0;
+
+  
+  texts.forEach(text=> {
+    count = texts.reduce((acc, cur) => cur.language[0].ident == text.language[0].ident ? ++acc : acc , 0);
+    if(count > 0) {tmp.push({language: text.language[0].ident, count: count})}
+  })
+
+  tmp = Object.values(
+    tmp.reduce((acc, object) => ({...acc, [object.language] : object}), {})
+  )
+
+  
   return tmp;
 }

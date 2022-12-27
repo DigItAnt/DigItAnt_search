@@ -5,7 +5,8 @@
         activeLocation : activeLocation | async,
         activeType : activeType | async, 
         groupLocations : groupLocations | async,
-        groupType : groupTypes | async} as text">
+        groupType : groupTypes | async,
+        groupLanguage : groupLanguages | async} as text">
 
         <div id="left-bar" class="flex flex-column">
             <p-tabView>
@@ -120,11 +121,11 @@
                         <p-panel class="cursor-pointer" header="Language" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                             
                             <div class="flex pt-3">
-                                <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="language"
-                                    optionValue="century" optionLabel="label" placeholder="Select language...">
-                                    <ng-template let-language pTemplate="item">
+                                <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupLanguage) || []" formControlName="language"
+                                    optionValue="language" optionLabel="language" placeholder="Select language...">
+                                    <ng-template let-item pTemplate="item">
                                         <div class="language-item">
-                                            <span class="counter">{{language.label}}</span>
+                                            <span class="counter">{{item.language}} - {{item.count}}</span>
                                         </div>
                                     </ng-template>
                                 </p-dropdown>
@@ -136,11 +137,11 @@
                         <p-panel class="cursor-pointer" header="Inscription Types" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                             
                             <div class="flex pt-3">
-                                <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="inscriptionType"
-                                    optionValue="century" optionLabel="label" placeholder="Select inscription type...">
+                                <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupType) || []" formControlName="inscriptionType"
+                                    optionValue="inscriptionType" optionLabel="inscriptionType" placeholder="Select inscription type...">
                                     <ng-template let-inscriptionType pTemplate="item">
                                         <div class="language-item">
-                                            <span class="counter">{{inscriptionType.label}}</span>
+                                            <span class="counter">{{inscriptionType.inscriptionType}}</span>
                                         </div>
                                     </ng-template>
                                 </p-dropdown>

@@ -13,7 +13,7 @@ export interface TextMetadata {
   title: string,
   support : object,
   dateOfOrigin : string,
-  language : Array<object>,
+  language : Array<LanguageMetadata>,
   inscriptionType : string,
 }
 
@@ -27,6 +27,11 @@ export interface PlaceModel {
 export interface Text {
   type: string,
   metadata : TextMetadata
+}
+
+export interface LanguageMetadata {
+  ident : string,
+  source: string,
 }
 
 
