@@ -6,7 +6,9 @@
         activeType : activeType | async, 
         groupLocations : groupLocations | async,
         groupType : groupTypes | async,
-        groupLanguage : groupLanguages | async} as text">
+        groupLanguage : groupLanguages | async,
+        groupMaterial : groupMaterial | async,
+        groupObjectTypes : groupObjectTypes | async} as text">
 
         <div id="left-bar" class="flex flex-column">
             <p-tabView>
@@ -26,8 +28,8 @@
                     </ul>
                 </p-tabPanel>
         
-                <p-tabPanel header="Simple search">
-                    <form id="search-form" [formGroup]="searchForm">
+                <p-tabPanel class="flex flex-column flex-1" header="Simple search">
+                    <form id="search-form" class="flex flex-column flex-auto h-full" [formGroup]="searchForm">
 
 
                         <p-panel header="Full Text" [toggleable]="false">
@@ -154,11 +156,11 @@
                         <p-panel class="cursor-pointer" header="Object Types" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                             
                             <div class="flex pt-3">
-                                <p-dropdown [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="objectType"
+                                <p-dropdown [appendTo]="'body'" [showClear]="true" class="flex-auto" [options]="(text.groupObjectTypes) || []" formControlName="objectType"
                                     optionValue="century" optionLabel="label" placeholder="Select object type...">
                                     <ng-template let-objectType pTemplate="item">
                                         <div class="language-item">
-                                            <span class="counter">{{objectType.label}}</span>
+                                            <span class="counter">{{objectType.objectType}}</span>
                                         </div>
                                     </ng-template>
                                 </p-dropdown>
@@ -170,11 +172,11 @@
                         <p-panel class="cursor-pointer" header="Materials" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                             
                             <div class="flex pt-3">
-                                <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="materials"
+                                <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupMaterial) || []" formControlName="materials"
                                     optionValue="century" optionLabel="label" placeholder="Select material...">
                                     <ng-template let-materials pTemplate="item">
                                         <div class="language-item">
-                                            <span class="counter">{{materials.label}}</span>
+                                            <span class="counter">{{materials.material}}</span>
                                         </div>
                                     </ng-template>
                                 </p-dropdown>
@@ -182,6 +184,24 @@
 
             
                         </p-panel>
+
+
+                        <div class="flex pt-3 mb-0 mt-auto search-button-div sticky bottom-0">
+                            <button pButton 
+                                    type="button"
+                                    label="Clear" 
+                                    class="p-button-danger border-noround flex-1"
+                                    icon="fa-solid fa-times" 
+                                    iconPos="left">
+                            </button>
+                            <button pButton 
+                                    type="button"
+                                    label="Search" 
+                                    class="p-button-secondary border-noround flex-1"
+                                    icon="fa-solid fa-search" 
+                                    iconPos="right">
+                            </button>
+                        </div>
 
     
                     </form>

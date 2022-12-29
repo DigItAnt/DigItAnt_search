@@ -37,6 +37,16 @@ export interface LanguagesCounter {
   count: number,
 }
 
+export interface ObjectTypeCounter {
+  objectType : string,
+  count : number,
+}
+
+export interface MaterialCounter {
+  material : string,
+  count : number,
+}
+
 export interface Filter {
   filter : string;
   date: number;
@@ -186,6 +196,30 @@ export class TextsComponent implements OnInit {
     )),
     takeUntil(this.destroy$),
     map(texts=> groupLanguages(texts)),
+  )
+
+  groupObjectTypes : Observable<ObjectTypeCounter[]> = this.textService.texts$.pipe(
+    timeout(15000),
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), 
+        of([]) 
+    )),
+    takeUntil(this.destroy$),
+    map(texts=> groupObjectTypes(texts)),
+  )
+
+  groupMaterial : Observable<MaterialCounter[]> = this.textService.texts$.pipe(
+    timeout(15000),
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), 
+        of([]) 
+    )),
+    takeUntil(this.destroy$),
+    map(texts=> groupMaterial(texts)),
   )
 
   
@@ -473,6 +507,43 @@ function groupLanguages(texts : TextMetadata[]) : LanguagesCounter[]{
 
   tmp = Object.values(
     tmp.reduce((acc, object) => ({...acc, [object.language] : object}), {})
+  )
+
+  
+  return tmp;
+}
+
+function groupObjectTypes(texts : TextMetadata[]) : ObjectTypeCounter[]{
+  let tmp : ObjectTypeCounter[] = [];
+  let count : number = 0;
+
+  
+  texts.forEach(text=> {
+    count = texts.reduce((acc, cur) => cur.support.objectType == text.support.objectType ? ++acc : acc , 0);
+    if(count > 0) {tmp.push({objectType: text.support.objectType, count: count})}
+  })
+
+  tmp = Object.values(
+    tmp.reduce((acc, object) => ({...acc, [object.objectType] : object}), {})
+  )
+
+  
+  return tmp;
+}
+
+
+function groupMaterial(texts : TextMetadata[]) : MaterialCounter[]{
+  let tmp : MaterialCounter[] = [];
+  let count : number = 0;
+
+  
+  texts.forEach(text=> {
+    count = texts.reduce((acc, cur) => cur.support.material == text.support.material ? ++acc : acc , 0);
+    if(count > 0) {tmp.push({material: text.support.material, count: count})}
+  })
+
+  tmp = Object.values(
+    tmp.reduce((acc, object) => ({...acc, [object.material] : object}), {})
   )
 
   

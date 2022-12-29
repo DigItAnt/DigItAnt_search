@@ -11,7 +11,7 @@ export interface TextMetadata {
   itAnt_ID : string,
   originalPlace : PlaceModel,
   title: string,
-  support : object,
+  support : SupportModel,
   dateOfOrigin : string,
   language : Array<LanguageMetadata>,
   inscriptionType : string,
@@ -22,6 +22,13 @@ export interface PlaceModel {
   ancientNameUrl : string,
   modernName : string,
   modernNameUrl : string
+}
+
+export interface SupportModel {
+  material : string,
+  material_conceptUrl : string,
+  objectType : string,
+  objectType_conceptUrl : string
 }
 
 export interface Text {
@@ -109,12 +116,12 @@ export class TextsService {
     );
   }
 
-    searchLocation(query : string) : Observable<TextMetadata[]>{
-      return this.texts$.pipe(
-        map(texts=>texts.filter((text) => {
-          return text.originalPlace.ancientName.includes(query) || text.originalPlace.modernName.includes(query);
-        })),
-      )
-    }
+  searchLocation(query : string) : Observable<TextMetadata[]>{
+    return this.texts$.pipe(
+      map(texts=>texts.filter((text) => {
+        return text.originalPlace.ancientName.includes(query) || text.originalPlace.modernName.includes(query);
+      })),
+    )
+  }
  
 }

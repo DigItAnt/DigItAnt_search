@@ -290,30 +290,7 @@ app-root {
                 user-select: none;
             }
 
-            p-dropdown {
-        
-
-                .p-dropdown {
-                    width: 100% !important;
-                }
-        
-                .p-dropdown-label{
-                    font-family: 'M PLUS Rounded 1c', sans-serif !important;
-                    font-weight: 400 !important;
-                    font-size: .85rem;
-                }
-        
-                .p-dropdown-items {
-                    font-family: 'M PLUS Rounded 1c', sans-serif !important;
-                    font-weight: 400 !important;
-                    font-size: .85rem;
-                }
-        
-                .counter {
-                    font-weight: 900;
-                    color: #234b86 !important;
-                }
-            }
+            
 
 
             .p-autocomplete {
@@ -545,7 +522,7 @@ p-tabview {
 
         .p-tabview-nav {
             font-size: .85rem !important;
-            background: $transparentBlack!important;
+            background: $black!important;
 
             .p-tabview-nav-link {
                 font-family: 'M PLUS Rounded 1c', sans-serif !important;
@@ -562,13 +539,64 @@ p-tabview {
             }
         }
 
+        .p-tabview-nav-container{
+            position: sticky;
+            top: 0;
+            z-index: 9999;
+        }
+
         .p-tabview-panels {
             font-family: 'M PLUS Rounded 1c', sans-serif !important;
             padding: 0 !important;
             background: transparent!important;
+            display: flex;
+            flex-direction: column;
+            flex: auto;
+        }
+
+        .p-tabview-panel {
+           height: 100%;
+        }
+
+        .search-button-div button{
+            background: $black;
+            color: white;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            border: none;
+            font-family: "M PLUS Rounded 1c", sans-serif;
+            font-size: 0.85rem;
+        }
+
+        .search-button-div button:focus{
+            box-shadow: none !important;
         }
     }
 }
+
+        
+
+.p-dropdown {
+    width: 100% !important;
+}
+
+.p-dropdown-label{
+    font-family: 'M PLUS Rounded 1c', sans-serif !important;
+    font-weight: 400 !important;
+    font-size: .85rem !important;
+}
+
+.p-dropdown-items {
+    font-family: 'M PLUS Rounded 1c', sans-serif !important;
+    font-weight: 400 !important;
+    font-size: .85rem !important;
+}
+
+.counter {
+    font-weight: 900;
+    color: $red !important;
+}
+
 
 //HOME
 app-home,
