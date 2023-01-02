@@ -30,77 +30,7 @@ const routes: Routes = [
   { path: 'bibliography', component: BibliographyComponent, },
   { path: 'concordances', component: ConcordancesComponent, },
   { path: 'advancedsearch', component: AdvancedSearchComponent },
-  /* { path: '**', redirectTo: '/home', }, */
-  /* {
-    path: 'date',
-    redirectTo: 'date/all',
-  },
-  {
-    path: 'date/:id',
-    component: DateComponent
-  },
-  {
-    path: 'location',
-    redirectTo: 'location/all',
-  },
-  {
-    path: 'location/:id',
-    component: LocationComponent
-    
-  },
-  {
-    path: 'word',
-    redirectTo: 'word/all',
-  },
-  {
-    path: 'word/:id',
-    component: WordComponent
-  },
-  {
-    path: 'type',
-    redirectTo: 'type/all',
-  },
-  {
-    path: 'type/:id',
-    component: TypeComponent
-  },
-  {
-    path: 'theme',
-    redirectTo: 'theme/all',
-  },
-  {
-    path: 'theme/:id',
-    component: ThemeComponent
-  } */
-  /* ,
-  {
-    path: 'abbreviations',
-    redirectTo: 'abbreviations/all',
-  },
-  {
-    path: 'abbreviations/:id',
-    component: AbbreviationsComponent
-  },
-  {
-    path: 'bibliography',
-    redirectTo: 'bibliography/all',
-  },
-  {
-    path: 'bibliography/:id',
-    component: BibliographyComponent
-  },
-  {
-    path: 'conventions',
-    component: ConventionsComponent
-  },
-  {
-    path: 'glossary',
-    component: GlossaryComponent
-  } *//* ,
-  {
-    path: 'concordances',
-    component: ConcordancesComponent
-  } */
+  
 ];
 
 @NgModule({

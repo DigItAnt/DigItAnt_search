@@ -47,7 +47,7 @@ export interface MaterialCounter {
   count : number,
 }
 
-export interface Filter {
+export interface TextFilter {
   filter : string;
   date: number;
   place: string;
@@ -68,10 +68,11 @@ const allowedCenturies : number[] = [-600, -500, -400, -300, -200, -100, 100];
 })
 export class TextsComponent implements OnInit {
 
-  //OBSERVABLES
+  //RXJS
   destroy$: Subject<boolean> = new Subject<boolean>();
   autocomplete$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
   autocompleteLocations: Array<LocationsCounter> = [];
+  getGeoData : BehaviorSubject<LocationsCounter[]> = new BehaviorSubject<LocationsCounter[]>([]);
 
   somethingWrong : boolean = false;
   showSpinner: boolean = true;
@@ -86,11 +87,9 @@ export class TextsComponent implements OnInit {
   // MAP
   leafletMapOptions: any;
   layers: Array<L.Circle> = [];
-  getGeoData : BehaviorSubject<LocationsCounter[]> = new BehaviorSubject<LocationsCounter[]>([]);
 
   bounds = new L.LatLngBounds(new L.LatLng(33.802052, 4.239242), new L.LatLng(50.230863, 19.812745));
 
-  // PAGINATIONS
   totalRecords: Observable<number> = this.textService.texts$.pipe(
     timeout(15000),
     catchError(err => 
@@ -106,14 +105,14 @@ export class TextsComponent implements OnInit {
   activeTab : Observable<string> = this.activatedRoute.queryParams.pipe(
     takeUntil(this.destroy$),
     filter(params => Object.keys(params).length != 0),
-    map((queryParams : Params) => queryParams as Filter),
-    map((filter : Filter) => filter.filter)
+    map((queryParams : Params) => queryParams as TextFilter),
+    map((filter : TextFilter) => filter.filter)
   );
 
   activeDate : Observable<number> = this.activatedRoute.queryParams.pipe(
     takeUntil(this.destroy$),
-    map((queryParams : Params) => queryParams as Filter),
-    map((filter: Filter) => {
+    map((queryParams : Params) => queryParams as TextFilter),
+    map((filter: TextFilter) => {
       if(filter.date) return filter.date;
       return NaN;
     })
@@ -121,8 +120,8 @@ export class TextsComponent implements OnInit {
 
   activeLocation : Observable<string> = this.activatedRoute.queryParams.pipe(
     takeUntil(this.destroy$),
-    map((queryParams : Params) => queryParams as Filter),
-    map((filter: Filter) => {
+    map((queryParams : Params) => queryParams as TextFilter),
+    map((filter: TextFilter) => {
       if(filter.place) return filter.place;
       return '';
     })
@@ -130,8 +129,8 @@ export class TextsComponent implements OnInit {
 
   activeType : Observable<string> = this.activatedRoute.queryParams.pipe(
     takeUntil(this.destroy$),
-    map((queryParams : Params) => queryParams as Filter),
-    map((filter: Filter) => {
+    map((queryParams : Params) => queryParams as TextFilter),
+    map((filter: TextFilter) => {
       if(filter.type) return filter.type;
       return '';
     })
@@ -150,10 +149,6 @@ export class TextsComponent implements OnInit {
     map((texts) => texts.slice(this.first, this.rows)),
     tap((x) => this.showSpinner = false)
   );
-
-
-
-  // GROUPING DATA
 
   groupCenturies: Observable<CenturiesCounter[]> = this.textService.texts$.pipe(
     takeUntil(this.destroy$),
@@ -183,8 +178,6 @@ export class TextsComponent implements OnInit {
     takeUntil(this.destroy$),
     map(texts=> groupTypes(texts)),
   )
-
-  //TODO: TIPO OGGETTO, MATERIALE
 
   groupLanguages : Observable<LanguagesCounter[]> = this.textService.texts$.pipe(
     timeout(15000),
@@ -277,6 +270,10 @@ export class TextsComponent implements OnInit {
         if(event){
           const keys  = Object.keys(event);
           const values = Object.values(event);
+          if(keys.length == 0) {
+            this.goToDefaultUrl(); 
+            return;
+          }
           if(keys){
             for(const [key, value] of Object.entries(event)) {
               if(!this.allowedOperators.includes(key) ||  

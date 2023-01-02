@@ -254,7 +254,6 @@
                         *ngIf="!text.groupLocations">Loading <span>.</span><span>.</span><span>.</span>
                     </h2>
                     <ul class="flex-wrap align-items-center" *ngIf="text.groupLocations">
-                        <!--   overlaySpecificMap.hide();   -->
                         <li *ngFor="let item of text.groupLocations"
                             class="my-2 mr-2 align-items-center border-round-2xl century-list-element" routerLink="./"
                             [class.active]="(text.activeLocation == item.ancientPlaceId)"

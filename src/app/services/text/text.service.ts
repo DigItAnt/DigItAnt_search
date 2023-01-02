@@ -47,7 +47,7 @@ export interface LanguageMetadata {
 })
 export class TextsService {
 
-  private baseUrl = environment.cash_baseUrl;
+  private baseUrl = environment.cashUrl;
   private documentSystem: DocumentSystem[] = [];
 
   texts$ : Observable<TextMetadata[]> = this.getTextCollection().pipe(

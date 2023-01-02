@@ -43,7 +43,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     this.items = [
       { label: 'Texts', icon: 'fa-solid fa-file-lines', routerLink: '/texts', queryParams: { filter: 'all' } },
-      { label: 'Lexicon', icon: 'fa-solid fa-font', routerLink: '/lexicon' },
+      { label: 'Lexicon', icon: 'fa-solid fa-font', routerLink: '/lexicon', queryParams: { filter: 'all' } },
       { label: 'Bibliography', icon: 'fa-solid fa-book', routerLink: '/bibliography' },
       { label: 'Concordances', icon: 'fa-solid fa-list-check', routerLink: '/concordances' }
     ];

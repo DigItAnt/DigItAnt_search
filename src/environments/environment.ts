@@ -5,12 +5,14 @@
 export const environment = {
   production: false,
 
-  cash_baseUrl : '/cash_old/',
+  cashUrl : '/cash_old/',
+  lexoUrl : '/LexO-backend-itant_demo/service/',
+  lexoKey: "PRINitant19",
+
   endpointPleiades : 'https://pleiades.stoa.org/places/',
   endpointGeoNames : 'http://api.geonames.org/',
 
-  lexo_baseUrl : '/LexO-backend-itant_demo/service/',
-  lexo_key: "PRINitant19",
+  
 
   
 };
