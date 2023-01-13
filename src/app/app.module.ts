@@ -29,6 +29,8 @@ import {MenuModule} from 'primeng/menu';
 import {OverlayPanelModule} from 'primeng/overlaypanel';
 import {SelectButtonModule} from 'primeng/selectbutton';
 import {CheckboxModule} from 'primeng/checkbox';
+import {TreeModule} from 'primeng/tree';
+import {AccordionModule} from 'primeng/accordion';
 
 
 //LEAFLET
@@ -105,6 +107,8 @@ import { UrlDecoderPipe } from './pipes/url-decoder/url-decoder.pipe';
     OverlayPanelModule,
     SelectButtonModule,
     CheckboxModule,
+    TreeModule,
+    AccordionModule
   ],
   providers: [],
   bootstrap: [AppComponent]
