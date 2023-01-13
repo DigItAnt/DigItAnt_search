@@ -6,43 +6,195 @@
     wordOrLetter : wordOrLetter | async,
     groupLanguage : groupLanguages | async,
     groupPos: groupPos | async,
-    totalRecords: totalRecords | async} as lexicon">
+    totalRecords: totalRecords | async,
+    getChildren : getChildren | async,
+    types : typesList | async,
+    pos : posList | async, 
+    authors : authorsList | async,
+    languages : languagesList | async,
+    status : statusList | async} as lexicon">
 
     <div id="left-bar" class="flex flex-column">
-        <p-tabView>
+        
+            <p-tabView>
 
-            <p-tabPanel header="Categories">
+                <p-tabPanel header="Categories">
 
-                <ul class="home-menu">
+                    <ul class="home-menu">
 
-                    <a *ngFor="let filter of allowedFilters" (click)="getAllData()" [href]="'/texts?filter='+filter"
-                        class="categories no-underline" routerLink="./" [queryParams]="{filter : filter}"
-                        routerLinkActive="active" [routerLinkActiveOptions]="{exact : false}">
-                        <li class="pl-4 flex align-items-center">
-                            <span class="icon"></span>
-                            <span class="route flex-1">{{filter | titlecase}}</span>
-                        </li>
-                    </a>
-                </ul>
-            </p-tabPanel>
+                        <a *ngFor="let filter of allowedFilters" (click)="getAllData()"
+                            [href]="'/lexicon?filter='+filter" class="categories no-underline" routerLink="./"
+                            [queryParams]="{filter : filter}" routerLinkActive="active"
+                            [routerLinkActiveOptions]="{exact : false}">
+                            <li class="pl-4 flex align-items-center">
+                                <span class="icon"></span>
+                                <span class="route flex-1">{{filter | titlecase}}</span>
+                            </li>
+                        </a>
+                    </ul>
+                </p-tabPanel>
 
-            <p-tabPanel header="Simple search">
+                <p-tabPanel header="Simple search" id="lexicon-tree-search">
 
-            </p-tabPanel>
 
-        </p-tabView>
+                    <form *ngIf="lexicon.types && lexicon.pos && lexicon.authors && lexicon.languages && lexicon.status" id="filter-form" class="h-full" [formGroup]="filterForm">
+                        <div id="text-radio-button" class="p-3 pt-2 pb-2 p-inputgroup">
+                            <input id="float-input" type="text" placeholder="Search lexical entries..."
+                                formControlName="text" pInputText>
+    
+                            <button pTooltip="Show filters" tooltipPosition="right" type="button" (click)="toggle();"
+                                icon="fa-solid fa-filter" pButton pRipple></button>
+                        </div>
+    
+    
+                        <!-- TODO:  filtri per ricerca semplice-->
+                        <div class="tree-container" [style.height]="'calc(100% - 58px)'">
+                            <p-accordion>
+                                <p-accordionTab [(selected)]="activeState">
+    
+                                    <!-- SELECT BUTTON: CONTAINS START -->
+                                    <p-selectButton class="p-button-secondary" [options]="searchModeOptions"
+                                        formControlName="searchMode" optionLabel="label" optionValue="value">
+                                    </p-selectButton>
+    
+                                    <!-- DROPDOWN: TYPES, AUTHOR, ETC... -->
+                                    <div class="grid mt-2">
+                                        <div class="col-12 md:col-12 lg:col-6">
+                                            <p-dropdown [showClear]="true" appendTo="body" class="flex-auto" [options]="(lexicon.types) || []"
+                                                formControlName="type" optionValue="label" optionLabel="label"
+                                                placeholder="Type">
+                                                <ng-template let-type pTemplate="item">
+                                                    <div class="type-item">
+                                                        <span class="counter">{{type.label}}</span>
+                                                    </div>
+                                                </ng-template>
+                                            </p-dropdown>
+                                        </div>
+                                        <div class="col-12 md:col-12 lg:col-6">
+                                            <p-dropdown [showClear]="true" appendTo="body" placeholder="Pos" class="flex-auto"
+                                                [options]="(lexicon.pos) || []" formControlName="pos" optionValue="label"
+                                                optionLabel="label">
+                                                <ng-template let-pos pTemplate="item">
+                                                    <div class="pos-item">
+                                                        <span class="counter">{{pos.label}}</span>
+                                                    </div>
+                                                </ng-template>
+                                            </p-dropdown>
+                                        </div>
+                                        <div class="col-12 md:col-12 lg:col-6">
+                                            <p-dropdown [showClear]="true" appendTo="body" placeholder="Form type" class="flex-auto"
+                                                [options]="formTypeOptions" formControlName="formType" optionValue="label"
+                                                optionLabel="label">
+                                                <ng-template let-formType pTemplate="item">
+                                                    <div class="formType-item">
+                                                        <span class="counter">{{formType.label}}</span>
+                                                    </div>
+                                                </ng-template>
+                                            </p-dropdown>
+                                        </div>
+                                        <div class="col-12 md:col-12 lg:col-6">
+                                            <p-dropdown [showClear]="true" appendTo="body" placeholder="Author" class="flex-auto"
+                                                [options]="(lexicon.authors) || []" formControlName="author"
+                                                optionValue="label" optionLabel="label">
+                                                <ng-template let-author pTemplate="item">
+                                                    <div class="author-item">
+                                                        <span class="counter">{{author.label}}</span>
+                                                    </div>
+                                                </ng-template>
+                                            </p-dropdown>
+                                        </div>
+                                        <div class="col-12 md:col-12 lg:col-6">
+                                            <p-dropdown [showClear]="true" appendTo="body" placeholder="Language" class="flex-auto"
+                                                [options]="(lexicon.languages) || []" formControlName="lang"
+                                                optionValue="label" optionLabel="label">
+                                                <ng-template let-languages pTemplate="item">
+                                                    <div class="languages-item">
+                                                        <span class="counter">{{languages.label}}</span>
+                                                    </div>
+                                                </ng-template>
+                                            </p-dropdown>
+                                        </div>
+                                        <div class="col-12 md:col-12 lg:col-6">
+                                            <p-dropdown [showClear]="true" appendTo="body" placeholder="Status" class="flex-auto"
+                                                [options]="(lexicon.status) || []" formControlName="status"
+                                                optionValue="label" optionLabel="label">
+                                                <ng-template let-status pTemplate="item">
+                                                    <div class="status-item">
+                                                        <span class="counter">{{status.label}}</span>
+                                                    </div>
+                                                </ng-template>
+                                            </p-dropdown>
+                                        </div>
+                                    </div>
+    
+                                </p-accordionTab>
+                            </p-accordion>
+                            <p-tree [value]="(lexiconTree|async) || []" selectionMode="single" [(selection)]="selectedFile"
+                                (onNodeSelect)="nodeSelect($event)" (onNodeExpand)="loadNode$.next($event);"
+                                class="block overflow-y-auto" scrollHeight="flex"
+                                [style.height]="activeState ? 'calc(100% - 208px)' : '100%'">
+
+                                <!-- TODO: template nodi con pos e lingua -->
+                                <ng-template let-node pTemplate="default">
+                                    
+                                    <!-- LEXICAL ENTRY -->
+                                    <span class="flex justify-content-between" *ngIf="node.data?.lexicalEntry != undefined && node.data?.formInstanceName == undefined">
+                                        <b>{{node.label}}</b>
+                                        &nbsp;&nbsp;
+                                        <span class="font-normal text-red-500">@{{node.data.language}}</span>
+                                        &nbsp;&nbsp;
+                                        <span class="font-normal">
+                                            <span *ngIf="node.data.pos != ''" class="text-primary-500">
+                                                {{node.data.pos}}
+                                            </span>
+                                            <span *ngIf="node.data.pos == ''" class="font-italic text-secondary-500">
+                                                [No pos]
+                                            </span>
+                                        </span>
+                                    </span>
+                                    
+                                    <!-- FORM -->
+                                    <span *ngIf="node.data?.lexicalEntry != undefined && node.data?.formInstanceName != undefined">
+                                        <b>{{node.label}}</b>
+                                        &nbsp;&nbsp;
+                                        <span class="font-normal">
+
+                                            <span *ngIf="node.data?.morphology[0].value != ''" class="text-primary-500">
+                                                {{node.data?.morphology[0].value}}
+                                            </span>
+                                            <span *ngIf="node.data?.morphology[0].value == ''" class="font-italic text-secondary-500">
+                                                [No pos]
+                                            </span>
+                                        </span>
+                                    </span>
+
+                                    <span *ngIf="node.data?.lexicalEntry == undefined && node.data?.formInstanceName == undefined">
+                                        <span class="font-light font-italic">No children</span>
+                                    </span>
+                                </ng-template>
+
+                                
+                            </p-tree>
+                        </div>
+                    </form>
+                    
+
+                </p-tabPanel>
+
+            </p-tabView>
 
     </div>
 
     <div id="lexicon-container" class="flex flex-column flex-1">
 
         <!-- FILTER -->
-        
+
         <div id="filter-letter-container" class="flex flex-column text-container-top"
             *ngIf="lexicon.activeTab == 'all' && lexicon.wordOrLetter != 'word'">
             <div class="flex flex-row align-items-center horizontal-list m-3 text-center">
                 <h2 class="flex-1 loading" *ngIf="!(lexicon.totalRecords) && !somethingWrong">Loading
-                    <span>.</span><span>.</span><span>.</span> </h2>
+                    <span>.</span><span>.</span><span>.</span>
+                </h2>
                 <h2 class="flex-1" *ngIf="somethingWrong">Ops!</h2>
                 <ul class="flex-wrap" *ngIf="(lexicon.totalRecords)  && !somethingWrong">
                     <li [routerLink]="'./'" [queryParams]="{filter: 'all', letter: alpha.letter}"
@@ -61,22 +213,23 @@
 
         </div>
 
-        <div id="filter-language-container" class="flex flex-column text-container-top" *ngIf="lexicon.activeTab == 'language'">
+        <div id="filter-language-container" class="flex flex-column text-container-top"
+            *ngIf="lexicon.activeTab == 'language'">
             <div class="flex flex-row horizontal-list m-3 text-container-top">
                 <h2 class="loading text-center flex-1 flex align-items-center justify-content-center"
                     *ngIf="!lexicon.groupLanguage">Loading <span>.</span><span>.</span><span>.</span></h2>
-    
+
                 <ul class="flex-wrap align-items-center" *ngIf="lexicon.groupLanguage">
-    
-                    <li *ngFor="let item of lexicon.groupLanguage" [class.active]="lexicon.activeLanguage == item.language"
-                        
+
+                    <li *ngFor="let item of lexicon.groupLanguage"
+                        [class.active]="lexicon.activeLanguage == item.language"
                         class="my-2 mr-2 align-items-center border-round-2xl century-list-element" routerLink="./"
                         [queryParams]="{filter: 'language', language: item.language}">
                         <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
                         <a class="no-underline font-bold">{{item.language}}</a>
                     </li>
-    
-    
+
+
                 </ul>
             </div>
         </div>
@@ -86,40 +239,43 @@
                 <h2 class="loading text-center flex-1 flex align-items-center justify-content-center"
                     *ngIf="!lexicon.groupPos">Loading <span>.</span><span>.</span><span>.</span></h2>
                 <ul class="flex-wrap align-items-center" *ngIf="lexicon.groupPos">
-    
-                    <li *ngFor="let item of lexicon.groupPos" [class.active]="(lexicon.activePos == item.pos) || (lexicon.activePos == 'unknown' && item.pos == '')"
-                        
+
+                    <li *ngFor="let item of lexicon.groupPos"
+                        [class.active]="(lexicon.activePos == item.pos) || (lexicon.activePos == 'unknown' && item.pos == '')"
                         class="my-2 mr-2 align-items-center border-round-2xl century-list-element" routerLink="./"
                         [queryParams]="{filter: 'pos', pos: (item.pos != '' ? item.pos : 'unknown')}">
                         <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
                         <a class="no-underline font-bold">{{item.pos != '' ? item.pos : 'unkown'}}</a>
                     </li>
-    
-    
+
+
                 </ul>
             </div>
         </div>
 
 
         <!-- CONTENT -->
-        <div class="flex flex-row flex-wrap flex-auto lexicon-item-container p-3" *ngIf="lexicon.wordOrLetter == '' || lexicon.wordOrLetter != 'word'">
+        <div class="flex flex-row flex-wrap flex-auto lexicon-item-container p-3"
+            *ngIf="lexicon.wordOrLetter == '' || lexicon.wordOrLetter != 'word'">
             <div class="flex flex-row m-2 w-full" *ngIf="!lexicon.totalRecords">
                 <p-progressSpinner class="flex flex-1"></p-progressSpinner>
 
             </div>
 
-            <a class="flex no-underline lexicon-item m-2" *ngFor="let item of paginationItems | async">
+            <a class="flex no-underline lexicon-item m-2" *ngFor="let item of paginationItems | async" routerLink="./"
+                [href]="'/lexicon?word='+item.lexicalEntryInstanceName"
+                [queryParams]="{word : item.lexicalEntryInstanceName}">
                 <div class="flex flex-row">
                     <div class="flex text-item-id p-2">
                         {{item.label}}
                     </div>
 
                     <div class="flex flex-column text-item-preview p-2">
-    
+
                         <div class="text-item-preview-top">
                             {{item.lexicalEntryInstanceName}}
                         </div>
-    
+
                         <div class="text-item-preview-bottom flex flex-column mt-3">
                             <div class="flex flex-row align-items-baseline">
                                 <i class="far fa-calendar-alt"></i>
@@ -127,7 +283,8 @@
                             </div>
                             <div class="flex flex-row align-items-baseline mt-2">
                                 <span class="pos"></span>
-                                <span class="ml-2" [class.font-italic]="item.pos == ''">{{item.pos != '' ? item.pos : 'no info'}}</span>
+                                <span class="ml-2" [class.font-italic]="item.pos == ''">{{item.pos != '' ? item.pos :
+                                    'no info'}}</span>
                             </div>
                             <div class="flex flex-row align-items-baseline mt-2">
                                 <i class="fas fa-language"></i>
@@ -140,10 +297,12 @@
 
         </div>
 
-        <p-paginator *ngIf="lexicon.totalRecords != 0 && !somethingWrong && lexicon.wordOrLetter != 'word'" [dropdownAppendTo]="'body'" [first]="first"
-            [rows]="rows" [totalRecords]="(totalRecords | async) || 0"
+        <!-- TODO: WORD CONTENT -->
+
+        <p-paginator *ngIf="lexicon.totalRecords != 0 && !somethingWrong && lexicon.wordOrLetter != 'word'"
+            [dropdownAppendTo]="'body'" [first]="first" [rows]="rows" [totalRecords]="(totalRecords | async) || 0"
             (onPageChange)="pagination($event, (lexicon.wordOrLetter || null), (lexicon.activeLetter || null), (lexicon.activeTab || null), (lexicon.activeLanguage || null), (lexicon.activePos || null))"
-            [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[10,20,30]"></p-paginator>
+            [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[6,12,24]"></p-paginator>
 
         <div class="flex flex-row flex-wrap flex-auto text-item-container p-3"
             *ngIf="lexicon.totalRecords == 0 && !somethingWrong && lexicon.wordOrLetter != 'word'">

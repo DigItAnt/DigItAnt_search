@@ -1,9 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Paginator } from 'primeng/paginator';
-import { catchError, EMPTY, filter, iif, map, Observable, of, Subject, takeLast, takeUntil, tap, timeout } from 'rxjs';
-import { LexicalElement, LexiconService } from 'src/app/services/lexicon/lexicon.service';
+import { BehaviorSubject, catchError, debounceTime, EMPTY, filter, iif, map, mergeMap, Observable, of, Subject, switchMap, take, takeLast, takeUntil, tap, timeout } from 'rxjs';
+import { FormElement, LexicalElement, LexiconQueryFilter, LexiconService } from 'src/app/services/lexicon/lexicon.service';
+import {TreeNode} from 'primeng/api';
+import { FormControl, FormGroup } from '@angular/forms';
 
+export interface TreeEvent {
+  node : TreeNode,
+  originalEvent : PointerEvent
+}
 export interface LanguagesCounter {
   language : string,
   count : number,
@@ -25,6 +31,11 @@ export interface LexiconFilter {
   pos : string,
 }
 
+export interface StatisticsCounter {
+  label : string,
+  count : number
+}
+
 @Component({
   selector: 'app-lexicon',
   templateUrl: './lexicon.component.html',
@@ -34,12 +45,15 @@ export class LexiconComponent implements OnInit {
 
   //RXJS
   destroy$: Subject<boolean> = new Subject<boolean>();
+  loadNode$ : BehaviorSubject<TreeEvent> = new BehaviorSubject<TreeEvent>({node: {}, originalEvent: new PointerEvent('')});
+
+  selectedFile : TreeNode[] = [];
 
   allowedFilters: string[] = ['all', 'language', 'pos', 'sense', 'concept'];
   allowedOperators: string[] = ['filter', 'letter', 'word', 'language', 'pos', 'senseType', 'conceptType'];
 
   first: number = 0;
-  rows: number = 10;
+  rows: number = 6;
   somethingWrong: boolean = false;
 
   activeTab: Observable<string> = this.activatedRoute.queryParams.pipe(
@@ -141,13 +155,58 @@ export class LexiconComponent implements OnInit {
     //tap((x) => this.showSpinner = false)
   );
 
+  lexiconTree : Observable<TreeNode[]> = this.lexiconService.lexicon$.pipe(
+    map(lexicon => this.mapLexicalElement(lexicon))
+  );
+
+  getChildren = this.loadNode$.pipe(
+    filter(event => Object.keys(event.node).length > 0),
+    switchMap(event => this.lexiconService.getForms(event.node.data.lexicalEntryInstanceName).pipe(
+      map(forms=> this.mapFormElement(forms)),
+      map(formsNodes => event.node.children = formsNodes)
+    )),
+  )
+
+  filterForm : FormGroup = new FormGroup({
+    text: new FormControl(null),
+    searchMode: new FormControl('contains'),
+    type: new FormControl(null),
+    pos: new FormControl(null),
+    formType: new FormControl(null),
+    author: new FormControl(null),
+    lang: new FormControl(null),
+    status: new FormControl(null),
+    offset: new FormControl(0),
+    limit: new FormControl(500)
+  })
+
+  searchModeOptions : Array<object> = [
+    {label : 'Equals', value: 'equals'},
+    {label : 'Starts', value: 'starts'},
+    {label : 'Contains', value: 'contains'},
+    {label : 'Ends', value: 'ends'},
+  ]
+
+  formTypeOptions : Array<object> = [
+    {label : 'Entry', value: 'entry'},
+    {label : 'Flexed', value: 'flexed'}
+  ]
+
+  activeState : boolean = false;
+  
+  typesList : Observable<StatisticsCounter[]> = this.lexiconService.types$;
+  posList : Observable<StatisticsCounter[]> = this.lexiconService.pos$;
+  authorsList : Observable<StatisticsCounter[]> = this.lexiconService.authors$;
+  languagesList : Observable<StatisticsCounter[]> = this.lexiconService.languages$;
+  statusList : Observable<StatisticsCounter[]> = this.lexiconService.status$;
+  
   constructor(private route: Router,
     private activatedRoute: ActivatedRoute,
     private lexiconService: LexiconService
   ) { }
 
   ngOnInit(): void {
-    this.activatedRoute.queryParams.pipe(takeUntil(this.destroy$)).subscribe(
+    this.activatedRoute.queryParams.pipe(takeUntil(this.destroy$), debounceTime(500)).subscribe(
       (event) => {
         if (event) {
           const keys = Object.keys(event);
@@ -166,19 +225,76 @@ export class LexiconComponent implements OnInit {
               }
             }
           }
-          if (keys.length > 1) {
+          if (keys.length > 1 && keys[0] == 'filter') {
             this.pagination({} as Paginator, keys[1], values[1])
           }
 
+          //TODO: logica per le word
+          if(keys[0] == 'word'){
+
+          }
         }
       }
     );
+
+    this.filterForm.valueChanges.pipe(takeUntil(this.destroy$), debounceTime(500)).subscribe(
+      (data : LexiconQueryFilter)=>{
+        //TODO: ricerca filtro lexical entries
+        console.log(data);
+        Object.entries(data).forEach(([key, value], index) => {
+          const k = key as keyof LexiconQueryFilter;
+          if(data[k as keyof LexiconQueryFilter] == null){
+            data[k as keyof LexiconQueryFilter] = '' as never;
+          }
+        })
+        this.lexiconTree = this.lexiconService.getLexicalEntryList(data).pipe(
+          take(1),
+          map(list => this.mapLexicalElement(list))
+        )
+      }
+    )
+  }
+
+
+  nodeSelect(event:Event){
+    console.log(event)
+  }
+
+  mapLexicalElement(lexicon : LexicalElement[]) : TreeNode[] {
+    return lexicon.map((lexEl : LexicalElement) => ({
+      label : lexEl.label,
+      data: lexEl,
+      children : [],
+      leaf : !lexEl.hasChildren,
+      draggable: false,
+      droppable: false
+    }))
+  }
+
+  mapFormElement(lexicon : FormElement[]) : TreeNode[] {
+    if(lexicon.length == 0){
+      return [{
+        label : 'No children',
+        data : null,
+        leaf : true,
+        draggable : false,
+        droppable : false,
+        selectable : false,
+      }]
+    }
+    return lexicon.map((lexEl : FormElement) => ({
+      label : lexEl.label,
+      data: lexEl,
+      leaf : true,
+      draggable: false,
+      droppable: false
+    }))
   }
 
   getAllData(f? : number, r? : number): void {
     let rows = 0;
     if(f && r){this.first = f; rows = r; }
-    if(!f && !r){this.first = 0; this.rows = 10;}
+    if(!f && !r){this.first = 0; this.rows = 6;}
     
    
     this.paginationItems = this.lexiconService.lexicon$.pipe(map(lexicon => lexicon.slice(this.first, rows == 0 ? this.rows : rows)));
@@ -188,7 +304,7 @@ export class LexiconComponent implements OnInit {
   filterByLetter(f?: number, r?: number, letter?: string): void {
     let rows = 0;
     if (f && r) { this.first = f; rows = r; }
-    if (!f && !r) { this.first = 0; this.rows = 12; }
+    if (!f && !r) { this.first = 0; this.rows = 6; }
 
     this.paginationItems = this.lexiconService.filterByLetter((letter)||'').pipe(map(text=>text.slice(f, r)))
     this.totalRecords = this.lexiconService.filterByLetter((letter)||'').pipe(map(texts=>texts.length || 0))
@@ -199,7 +315,7 @@ export class LexiconComponent implements OnInit {
   filterByLanguage(f?: number, r?: number, lang?: string): void {
     let rows = 0;
     if (f && r) { this.first = f; rows = r; }
-    if (!f && !r) { this.first = 0; this.rows = 12; }
+    if (!f && !r) { this.first = 0; this.rows = 6; }
 
     this.paginationItems = this.lexiconService.filterByLanguage((lang)||'').pipe(map(lexicon=>lexicon.slice(f, r)))
     this.totalRecords = this.lexiconService.filterByLanguage((lang)||'').pipe(map(lexicon=>lexicon.length || 0))
@@ -209,7 +325,7 @@ export class LexiconComponent implements OnInit {
   filterByPos(f?: number, r?: number, pos?: string): void {
     let rows = 0;
     if (f && r) { this.first = f; rows = r; }
-    if (!f && !r) { this.first = 0; this.rows = 12; }
+    if (!f && !r) { this.first = 0; this.rows = 6; }
 
     this.paginationItems = this.lexiconService.filterByPos((pos)||'').pipe(map(lexicon=>lexicon.slice(f, r)))
     this.totalRecords = this.lexiconService.filterByPos((pos)||'').pipe(map(lexicon=>lexicon.length || 0))
@@ -222,7 +338,7 @@ export class LexiconComponent implements OnInit {
 
   pagination(event: Paginator, ...args: any[]) {
     if (Object.keys(event).length != 0) { this.first = event.first; this.rows = event.rows; }
-    if (Object.keys(event).length == 0) { this.first = 0; this.rows = 10; }
+    if (Object.keys(event).length == 0) { this.first = 0; this.rows = 6; }
 
     let rows = (this.first != this.rows) && (this.first < this.rows) ? this.rows : this.first + this.rows;
     if (args.length > 0) { args = args.filter(query => query != null) }
@@ -248,6 +364,10 @@ export class LexiconComponent implements OnInit {
   thereWasAnError(){
     this.somethingWrong = true;
     return EMPTY;
+  }
+
+  toggle() {
+    this.activeState = !this.activeState;
   }
 }
 
@@ -299,5 +419,4 @@ function groupByPos(lexicon: LexicalElement[]) : PosCounter[]{
 
   
   return tmp;
-
 }
