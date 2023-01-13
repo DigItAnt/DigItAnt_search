@@ -143,21 +143,6 @@ app-root {
 
         a.categories.active {
             background: $red !important;
-
-            /* span.icon {
-                background: url('assets/images/bullet.png');
-                background-size: cover;
-                background-color: white;
-                border-radius: 50%;
-                width: .85rem;
-                height: .85rem;
-                
-            }
-
-            span.icon::before {
-                content: '';
-               
-            } */
         }
 
         a.categories:hover {
@@ -207,106 +192,129 @@ app-root {
             color: unset !important;
             padding-top: 0;
             font-family: 'M PLUS Rounded 1c', sans-serif !important;
+        }
+    }
 
-            p-togglebutton {
-        
-                .p-button {
-                    border-top-left-radius: 0 !important;
-                    border-bottom-left-radius: 0 !important;
-                    height: 100% !important;
-                    border-left: 0 !important;
-                    font-family: 'M PLUS Rounded 1c', sans-serif !important;
-                }
-        
-                .p-button:focus {
-                    box-shadow: none !important;
-                }
-        
-                .omega, .latin {
-                    font-family: 'M PLUS Rounded 1c', sans-serif !important;
-                    font-weight: 700 !important;
-                    // color: white(0, 0, 0, 0.452) !important;
-                    font-size: 1rem !important;
-                }
+    .p-button {
+        /* border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important; */
+        height: 100% !important;
+        border-left: 0 !important;
+        font-family: 'M PLUS Rounded 1c', sans-serif !important;
+        font-size: .85rem;
+        padding: .5rem;
+    }
 
-                .contains, .exact {
-                    font-family: 'Font Awesome 6 Free' !important;
-                    font-weight: 700 !important;
-                }
-        
-                .omega::before{
-                    
-                    content: '\03a9' !important;
-                }
+    p-accordiontab {
+        .p-accordion-header {
+            display: none !important;
+        }
 
+        .p-accordion-content {
+            margin: 0 1rem!important;
+            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            font-size: .85rem;
+            padding: 0;
+            color: $light-gray !important;
+            background: transparent;
+            border: none !important;
+            border-bottom-right-radius:0 !important;
+            border-bottom-left-radius:0 !important;
+        }
+    }
 
-        
-                .latin::before{
-                    
-                    content: 'Ab' !important;
-                }
-
-        
-                .contains::before{
-                    
-                    content: '\f00d' !important;
-                }
-
-                .exact::before{
-                    
-                    content: '\f00c' !important;
-                }
+    p-togglebutton {
         
         
-                .p-button-icon-only {
-                    padding: 0 !important;
-                }
-                
-            }
-            input {
-                font-family: 'M PLUS Rounded 1c', sans-serif !important;
-                font-weight: 400 !important;
-                font-size: .85rem;
-            }
-            .p-selectbutton{
-                display: flex;
-    
-                .p-button {
-                    font-size: .85rem;
-                    padding: .75rem;
-                    flex: 1;
-                }
-    
-                span {
-                    font-family: 'M PLUS Rounded 1c', sans-serif !important;
-                    font-weight: 400;
-                }
-            }
 
-            h4{
-                color: white;
-                display: flex;
-                font-weight: 800;
-                user-select: none;
-            }
+        .p-button:focus {
+            box-shadow: none !important;
+        }
 
+        .omega, .latin {
+            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            font-weight: 700 !important;
+            // color: white(0, 0, 0, 0.452) !important;
+            font-size: 1rem !important;
+        }
+
+        .contains, .exact {
+            font-family: 'Font Awesome 6 Free' !important;
+            font-weight: 700 !important;
+        }
+
+        .omega::before{
             
+            content: '\03a9' !important;
+        }
 
 
-            .p-autocomplete {
 
-                display: flex;
-                input {
-                    flex: 1;
-                }
-            }
+        .latin::before{
+            
+            content: 'Ab' !important;
+        }
 
-            p-checkbox {
-                label{
-                    color: white;
-                    font-size: .85rem;
-                }
-            }
+
+        .contains::before{
+            
+            content: '\f00d' !important;
+        }
+
+        .exact::before{
+            
+            content: '\f00c' !important;
+        }
+
+
+        .p-button-icon-only {
+            padding: 0 !important;
+        }
+        
+    }
+    input {
+        font-family: 'M PLUS Rounded 1c', sans-serif !important;
+        font-weight: 400 !important;
+        font-size: .85rem;
+        padding: .5rem !important;
+    }
+    .p-selectbutton{
+        display: flex;
+
+        .p-button {
+            font-size: .85rem;
+            padding: .5rem;
+            flex: 1;
+        }
+
+        span {
+            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            font-weight: 400;
+        }
+    }
+
+    h4{
+        color: white;
+        display: flex;
+        font-weight: 800;
+        user-select: none;
+    }
+
+    
+
+
+    .p-autocomplete {
+
+        display: flex;
+        input {
+            flex: 1;
+        }
+    }
+
+    p-checkbox {
+        label{
+            color: white;
+            font-size: .85rem;
         }
     }
 }
@@ -590,7 +598,15 @@ p-tabview {
             background: transparent!important;
             display: flex;
             flex-direction: column;
-            flex: auto;
+            flex: 1 1 auto;
+            overflow: auto;
+            height: 100px;
+
+
+            p-tabpanel#lexicon-tree-search {
+                height: 100%;
+            }
+            
         }
 
         .p-tabview-panel {
@@ -613,16 +629,60 @@ p-tabview {
     }
 }
 
+p-tree {
+    transition: all 0.5s ease 0s;
+    .p-tree {
+        font-family: "M PLUS Rounded 1c", sans-serif;
+        font-size: 0.85rem;
+        font-weight: 800;
+        border: none;
+        background: $transparentBlack;
+        color: white;
+        padding: 0;
+        border-radius: 0;
+        flex-direction: row-reverse;
+        .p-tree-container {
+            
+            .p-treenode {
+
+                .p-treenode-content:focus {
+                    box-shadow: inset 0 0 0 0.15rem $red;
+                }
+
+                .p-treenode-content.p-highlight {
+                    color: $red !important;
+                    background: $light-gray !important;
+                }
+
+                .p-treenode-content {
+                    .p-tree-toggler {
+                        width: 1rem !important;
+                        height: 1rem !important;
+                        color: $dark-gray !important;
+                    }
+
+                    .p-tree-toggler:focus {
+                        color: $dark-gray !important;
+                        box-shadow: none !important;
+                    }
+                }
+            }
+        }
+    }
+}
+
         
 
 .p-dropdown {
     width: 100% !important;
+    
 }
 
 .p-dropdown-label{
     font-family: 'M PLUS Rounded 1c', sans-serif !important;
     font-weight: 400 !important;
     font-size: .85rem !important;
+    padding: .5rem !important;
 }
 
 .p-dropdown-items {
