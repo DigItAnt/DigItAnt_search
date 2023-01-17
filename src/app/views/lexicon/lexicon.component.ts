@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Paginator } from 'primeng/paginator';
-import { BehaviorSubject, catchError, debounceTime, EMPTY, filter, iif, map, mergeMap, Observable, of, Subject, switchMap, take, takeLast, takeUntil, tap, timeout } from 'rxjs';
-import { FormElement, LexicalElement, LexiconQueryFilter, LexiconService } from 'src/app/services/lexicon/lexicon.service';
+import { BehaviorSubject, catchError, debounceTime, distinctUntilChanged, EMPTY, filter, iif, map, mergeMap, Observable, of, Subject, switchMap, take, takeLast, takeUntil, tap, throwError, timeout } from 'rxjs';
+import { CognateElement, EtymologyElement, EtymologyTreeElement, FormElement, LexicalElement, LexiconQueryFilter, LexiconService, SenseElement } from 'src/app/services/lexicon/lexicon.service';
 import {TreeNode} from 'primeng/api';
 import { FormControl, FormGroup } from '@angular/forms';
+import { HttpResponseBase } from '@angular/common/http';
 
 export interface TreeEvent {
   node : TreeNode,
@@ -27,6 +28,7 @@ export interface LexiconFilter {
   filter: string,
   letter: string,
   word: string,
+  form: string,
   language: string,
   pos : string,
 }
@@ -49,8 +51,12 @@ export class LexiconComponent implements OnInit {
 
   selectedFile : TreeNode[] = [];
 
+
+  //TODO: separare operatori per evitare che si combinino
+  //esempio: evitare che ci sia word e pos -> illegale
+  //ogni operatore deve avere un suo campo di appartenenza in modo da non mischiarli
   allowedFilters: string[] = ['all', 'language', 'pos', 'sense', 'concept'];
-  allowedOperators: string[] = ['filter', 'letter', 'word', 'language', 'pos', 'senseType', 'conceptType'];
+  allowedOperators: string[] = ['filter', 'letter', 'word', 'form', 'language', 'pos', 'senseType', 'conceptType'];
 
   first: number = 0;
   rows: number = 6;
@@ -74,7 +80,16 @@ export class LexiconComponent implements OnInit {
     takeUntil(this.destroy$),
     filter(params => Object.keys(params).length != 0),
     map((queryParams: Params) => queryParams as LexiconFilter),
-    map((filter: LexiconFilter) => filter.word)
+    map((filter: LexiconFilter) => filter.word),
+    tap( word => this.currentLexicalEntry = word)
+  )
+
+  activeForm : Observable<string> = this.activatedRoute.queryParams.pipe(
+    takeUntil(this.destroy$),
+    filter(params => Object.keys(params).length != 0),
+    map((queryParams: Params) => queryParams as LexiconFilter),
+    map((filter: LexiconFilter) => filter.form),
+    tap( form => this.currentForm = form)
   )
 
   activeLanguage : Observable<string> = this.activatedRoute.queryParams.pipe(
@@ -155,15 +170,20 @@ export class LexiconComponent implements OnInit {
     //tap((x) => this.showSpinner = false)
   );
 
+  treeLoading : boolean = true;
+
   lexiconTree : Observable<TreeNode[]> = this.lexiconService.lexicon$.pipe(
-    map(lexicon => this.mapLexicalElement(lexicon))
+    map(lexicon => this.mapLexicalElement(lexicon)),
+    tap(x => this.treeLoading = false)
   );
 
+  
+  
   getChildren = this.loadNode$.pipe(
     filter(event => Object.keys(event.node).length > 0),
     switchMap(event => this.lexiconService.getForms(event.node.data.lexicalEntryInstanceName).pipe(
       map(forms=> this.mapFormElement(forms)),
-      map(formsNodes => event.node.children = formsNodes)
+      map(formsNodes => event.node.children = formsNodes),
     )),
   )
 
@@ -200,6 +220,68 @@ export class LexiconComponent implements OnInit {
   languagesList : Observable<StatisticsCounter[]> = this.lexiconService.languages$;
   statusList : Observable<StatisticsCounter[]> = this.lexiconService.status$;
   
+  getLexicalEntryReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getFormReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getSensesReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getEtymologiesListReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getEtymologyDataReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getCognatesReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+
+  currentLexicalEntry : string = '';
+  currentForm : string = '';
+
+  getLexicalEntry : Observable<LexicalElement> = this.getLexicalEntryReq$.pipe(
+    takeUntil(this.destroy$),
+    tap(instanceName => {
+      if(instanceName != ''){
+        this.getSensesReq$.next(instanceName);
+        this.getEtymologiesListReq$.next(instanceName);
+        this.getCognatesReq$.next(instanceName);
+      }
+    }),
+    switchMap(instanceName => (instanceName != '' && instanceName == this.currentLexicalEntry) ? this.lexiconService.getLexicalEntryData(instanceName).pipe(catchError(err => this.thereWasAnError())) : of()),
+  ) 
+
+  getForm : Observable<FormElement> = this.getFormReq$.pipe(
+    takeUntil(this.destroy$),
+    switchMap(instanceName => (instanceName != '' && instanceName == this.currentForm) ? this.lexiconService.getFormData(instanceName) : of())
+  )
+
+  getSenses : Observable<SenseElement[]> = this.getSensesReq$.pipe(
+    take(1),
+    switchMap(instanceName => instanceName != '' ? this.lexiconService.getSenses(instanceName) : of()),
+    //tap(senses => console.log(senses))
+  )
+
+  
+  getEtymologiesList : Observable<EtymologyTreeElement[]> = this.getEtymologiesListReq$.pipe(
+    take(1),
+    switchMap(instanceName => instanceName != ''  ? this.lexiconService.getEtymologiesList(instanceName).pipe(catchError(err => this.thereWasAnError())) : of()),
+    tap(etymologies => {
+      if(etymologies.length > 0){
+        etymologies.forEach(etymology => this.getEtymologyDataReq$.next(etymology.etymologyInstanceName))
+      }else{
+        this.getEtymologyDataReq$.next('')
+      }
+    }),
+  );
+
+  //TODO: restart and stop observable --- repeatWhen(subject)
+  getEtymologyData : Observable<EtymologyElement> = this.getEtymologyDataReq$.pipe(
+    takeUntil(this.destroy$),
+    switchMap(instanceName => instanceName != ''  ? this.lexiconService.getEtymologyData(instanceName).pipe(catchError(err => this.thereWasAnError())) : of()),
+    tap(etymologyData => console.log(etymologyData))
+  );
+
+
+  getCognates : Observable<CognateElement[]> = this.getCognatesReq$.pipe(
+    take(1),
+    tap(x => this.noCognates = false),
+    switchMap(instanceName => instanceName != ''  ? this.lexiconService.getCognates(instanceName).pipe(catchError(err => this.thereWasAnError(err, 'cognates'))) : of()),
+    map(cognates => this.mapCognates(cognates))
+  )
+  noCognates: boolean = false;
+
   constructor(private route: Router,
     private activatedRoute: ActivatedRoute,
     private lexiconService: LexiconService
@@ -228,9 +310,19 @@ export class LexiconComponent implements OnInit {
           if (keys.length > 1 && keys[0] == 'filter') {
             this.pagination({} as Paginator, keys[1], values[1])
           }
-
           //TODO: logica per le word
           if(keys[0] == 'word'){
+            /* console.log('siamo qua', keys, values) */
+
+            //è una lexical entry
+            if(keys.length == 1){
+              this.getLexicalEntryReq$.next(values[0])
+            }
+
+            //è una form
+            if(keys.length == 2){
+              this.getFormReq$.next(values[1])
+            }
 
           }
         }
@@ -238,8 +330,8 @@ export class LexiconComponent implements OnInit {
     );
 
     this.filterForm.valueChanges.pipe(takeUntil(this.destroy$), debounceTime(500)).subscribe(
+
       (data : LexiconQueryFilter)=>{
-        //TODO: ricerca filtro lexical entries
         console.log(data);
         Object.entries(data).forEach(([key, value], index) => {
           const k = key as keyof LexiconQueryFilter;
@@ -247,17 +339,37 @@ export class LexiconComponent implements OnInit {
             data[k as keyof LexiconQueryFilter] = '' as never;
           }
         })
+        this.treeLoading = true;
         this.lexiconTree = this.lexiconService.getLexicalEntryList(data).pipe(
           take(1),
-          map(list => this.mapLexicalElement(list))
+          map(list => this.mapLexicalElement(list)),
+          tap(x => this.treeLoading = false),
         )
       }
     )
   }
 
 
-  nodeSelect(event:Event){
-    console.log(event)
+  nodeSelect(event:TreeEvent){
+    console.log(event);
+
+    //TODO: se clicco su un nodo dell'albero devo aprire la vista word 
+    let node : TreeNode = event.node;
+    let lexicalInstanceName : string = '';
+    let formInstanceName : string = '';
+    this.somethingWrong = false;
+    if(node.data.lexicalEntryInstanceName != undefined && node.data.formInstanceName == undefined){
+      lexicalInstanceName = node.data.lexicalEntryInstanceName;
+      this.route.navigate(['/lexicon'], { queryParams: { word: lexicalInstanceName } });
+    }
+
+    if(node.data.lexicalEntryInstanceName != undefined && node.data.formInstanceName != undefined){
+      lexicalInstanceName = node.data.lexicalEntryInstanceName;
+      formInstanceName = node.data.formInstanceName;
+      this.route.navigate(['/lexicon'], { queryParams: { word: lexicalInstanceName, form: formInstanceName } });
+    }
+
+    
   }
 
   mapLexicalElement(lexicon : LexicalElement[]) : TreeNode[] {
@@ -289,6 +401,25 @@ export class LexiconComponent implements OnInit {
       draggable: false,
       droppable: false
     }))
+  }
+
+  mapCognates(cognates : CognateElement[]) : CognateElement[] {
+
+    return cognates.map((cog : CognateElement) => ({
+      inferred : cog.inferred,
+      label : cog.label,
+      language : this.mapCognatesLanguage(cog.lexicalEntityInstanceName),
+      lexicalEntity : cog.lexicalEntity,
+      lexicalEntityInstanceName : cog.lexicalEntityInstanceName,
+      lexicalType : cog.lexicalType,
+      link : cog.link,
+      linkType : cog.linkType,
+    }))
+  }
+
+  mapCognatesLanguage(instanceName : string) : string{
+    let array = instanceName.split('_');
+    return array[array.length-2]
   }
 
   getAllData(f? : number, r? : number): void {
@@ -361,9 +492,16 @@ export class LexiconComponent implements OnInit {
   }
 
 
-  thereWasAnError(){
-    this.somethingWrong = true;
-    return EMPTY;
+  thereWasAnError(err? : HttpResponseBase, source? : string){
+    if(err?.status != 200){
+      this.somethingWrong = true;
+      return EMPTY;
+    }
+    
+    if(source == 'cognates'){
+      this.noCognates = true;
+    }
+    return of()
   }
 
   toggle() {
