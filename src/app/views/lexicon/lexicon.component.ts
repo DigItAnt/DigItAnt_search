@@ -51,10 +51,6 @@ export class LexiconComponent implements OnInit {
 
   selectedFile : TreeNode[] = [];
 
-
-  //TODO: separare operatori per evitare che si combinino
-  //esempio: evitare che ci sia word e pos -> illegale
-  //ogni operatore deve avere un suo campo di appartenenza in modo da non mischiarli
   allowedFilters: string[] = ['all', 'language', 'pos', 'sense', 'concept'];
   allowedOperators: string[] = ['filter', 'letter', 'word', 'form', 'language', 'pos', 'senseType', 'conceptType'];
 
@@ -202,7 +198,7 @@ export class LexiconComponent implements OnInit {
 
   searchModeOptions : Array<object> = [
     {label : 'Equals', value: 'equals'},
-    {label : 'Starts', value: 'starts'},
+    {label : 'Starts', value: 'startsWith'},
     {label : 'Contains', value: 'contains'},
     {label : 'Ends', value: 'ends'},
   ]

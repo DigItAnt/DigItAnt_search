@@ -864,7 +864,7 @@ app-footer {
         bottom: 0;
         left: 0;
         width: 100%;
-        @include md {
+        /* @include md {
             position: fixed !important;
             bottom: 0 !important;
             width: 100%;
@@ -883,6 +883,6 @@ app-footer {
 
         @include xs {
             padding: .3rem;
-        }
+        } */
     }
 }

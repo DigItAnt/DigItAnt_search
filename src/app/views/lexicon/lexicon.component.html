@@ -501,18 +501,7 @@
                                         {{form.label}}
 
 
-                                        <p-overlayPanel #attestationsList appendTo="body">
-
-                                            <div>
-                                                {{form.formInstanceName}}
-                                            </div>
-                                            <div class="flex flex-auto">
-                                                <button routerLink="./"
-                                                    [queryParams]="{word: form.lexicalEntryInstanceName, form: form.formInstanceName}"
-                                                    class="w-full" pButton type="button" label="Go to form"></button>
-                                            </div>
-
-                                        </p-overlayPanel>
+                                        
 
                                         <span *ngFor="let morpho of form.morphology" class="text-xl font-light">
                                             <span class="pl-2 text-blue-900" *ngIf="morpho.trait == 'partOfSpeech'">@{{morpho.value}}</span>
@@ -520,7 +509,18 @@
                                         </span>
                                     </li>
 
-                                    
+                                    <p-overlayPanel #attestationsList appendTo="body">
+
+                                        <div>
+                                            {{form.formInstanceName}}
+                                        </div>
+                                        <div class="flex flex-auto">
+                                            <button routerLink="./"
+                                                [queryParams]="{word: form.lexicalEntryInstanceName, form: form.formInstanceName}"
+                                                class="w-full" pButton type="button" label="Go to form"></button>
+                                        </div>
+
+                                    </p-overlayPanel>
 
                                     <li class="pl-2 text-xl font-light font-italic" *ngIf="form.label == ''">
 

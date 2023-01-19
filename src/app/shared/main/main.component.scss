@@ -8,17 +8,11 @@
 
 
     @include md {
-        margin: 4rem 0;
-
-    }
-
-    @include sm {
-       margin: 4rem 0;
-    }
-
-    @include xs {
         margin: 0;
+
     }
+
+
     
     
 }
