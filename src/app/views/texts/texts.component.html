@@ -308,7 +308,8 @@
                 </div>
         
                 <a class="flex no-underline text-item m-2" *ngFor="let item of paginationItems | async"
-                    [href]="'/file/'+item.itAnt_ID" [routerLink]="['/file/'+item.itAnt_ID]">
+                    [href]="'/text?file='+item.fileID" routerLink="./" [queryParams]="{file: item.fileID}">
+
                     <div class="flex flex-row  ">
                         <div class="flex text-item-id p-2">
                             {{item.itAnt_ID}}

@@ -80,7 +80,7 @@ export class TextsComponent implements OnInit {
   first: number = 0;
   rows : number = 6;
   allowedFilters : string[] = ['all', 'date', 'location', 'type'];
-  allowedOperators: string[] = ['filter', 'date', 'place', 'type'];
+  allowedOperators: string[] = ['filter', 'date', 'place', 'type', 'file'];
   searchOptions : Array<string> = ['start', 'equals', 'contains', 'ends']
 
 
@@ -287,6 +287,9 @@ export class TextsComponent implements OnInit {
           }
           if(keys.length>1){
             this.pagination({} as Paginator, keys[1], values[1])
+          }
+          if(keys[0] == 'file'){
+            //TODO: logica per file
           }
           
         }

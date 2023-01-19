@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { TreeNode } from 'primeng/api';
-import { map, Observable, of, shareReplay } from 'rxjs';
+import { map, Observable, of, pipe, shareReplay } from 'rxjs';
 import { StatisticsCounter } from 'src/app/views/lexicon/lexicon.component';
 import { environment } from 'src/environments/environment';
 
@@ -30,7 +30,7 @@ export interface LexicalElement {
   type: Array<string>
 }
 
-export interface FormElement {
+export interface FormElementTree {
   confidence: number,
   creator: string,
   creationDate: string,
@@ -46,6 +46,31 @@ export interface FormElement {
   targetSense: string,
   targetSenseInstanceName: string,
   type: string
+}
+
+export interface FormElement {
+  confidence: number,
+  creator: string,
+  creationDate: string,
+  form: string,
+  formInstanceName: string,
+  inheritedMorphology : Array<Morphology>,
+  label: Array<FormElementLabels>,
+  language : string,
+  lastUpdate: string,
+  lexicalEntry: string,
+  lexicalEntryInstanceName: string,
+  morphology: Array<Morphology>,
+  note: string,
+  phoneticRep: string,
+  targetSense: string,
+  targetSenseInstanceName: string,
+  type: string
+}
+
+export interface FormElementLabels {
+  propertyID : string,
+  propertyValue : string,
 }
 
 export interface SenseElement {
@@ -214,66 +239,93 @@ export class LexiconService {
 
   getLexicalEntryList(params: LexiconQueryFilter): Observable<LexicalElement[]> {
     return this.http.post<LexiconList>(this.baseUrl + "lexicon/data/lexicalEntries", params).pipe(
-      map((res) => res.list)
+      map((res) => res.list),
+      shareReplay(),
     )
   }
 
   getLexicalEntryData(instanceName: string): Observable<LexicalElement> {
     return this.http.get<LexicalElement>(`${this.baseUrl}lexicon/data/${instanceName}/lexicalEntry?key=lexodemo&aspect=core`).pipe(
-      map((res) => res)
+      map((res) => res),
+      shareReplay(),
     )
   }
 
   getFormData(instanceName: string): Observable<FormElement> {
     return this.http.get<FormElement>(`${this.baseUrl}lexicon/data/${instanceName}/form?key=lexodemo&aspect=core`).pipe(
-      map((res) => res)
+      map((res) => res),
+      shareReplay(),
     )
   }
 
-  getForms(instanceName: string): Observable<FormElement[]> {
-    return this.http.get<FormElement[]>(`${this.baseUrl}lexicon/data/${instanceName}/forms`)
+  getForms(instanceName: string): Observable<FormElementTree[]> {
+    return this.http.get<FormElementTree[]>(`${this.baseUrl}lexicon/data/${instanceName}/forms`).pipe(
+      map((res) => res),
+      shareReplay(),
+    )
   }
 
   getSenses(instanceName: string): Observable<SenseElement[]> {
-    return this.http.get<SenseElement[]>(`${this.baseUrl}lexicon/data/${instanceName}/senses`)
+    return this.http.get<SenseElement[]>(`${this.baseUrl}lexicon/data/${instanceName}/senses`).pipe(
+      map((res) => res),
+      shareReplay(),
+    )
   }
 
   getEtymologiesList(instanceName: string): Observable<EtymologyTreeElement[]> {
     return this.http.get<EtymologyTreeElement[]>(`${this.baseUrl}lexicon/data/${instanceName}/etymologies`).pipe(
-      map((res) => res)
+      map((res) => res),
+      shareReplay(),
     )
   }
 
   getEtymologyData(instanceName: string): Observable<EtymologyElement> {
     return this.http.get<EtymologyElement>(`${this.baseUrl}lexicon/data/${instanceName}/etymology`).pipe(
-      map((res) => res)
+      map((res) => res),
+      shareReplay(),
     )
   }
 
   getCognates(instanceName : string) : Observable<CognateElement[]>{
     return this.http.get<CognateElement[]>(`${this.baseUrl}lexicon/data/${instanceName}/linguisticRelation?key=lexodemo&property=cognate`).pipe(
-      map((res) => res)
+      map((res) => res),
+      shareReplay(),
     )
   }
 
   getTypes(): Observable<StatisticsCounter[]> {
-    return this.http.get<StatisticsCounter[]>(`${this.baseUrl}lexicon/statistics/types`)
+    return this.http.get<StatisticsCounter[]>(`${this.baseUrl}lexicon/statistics/types`).pipe(
+      map((res) => res),
+      shareReplay(),
+    )
   }
 
   getAuthors(): Observable<StatisticsCounter[]> {
-    return this.http.get<StatisticsCounter[]>(`${this.baseUrl}lexicon/statistics/authors`)
+    return this.http.get<StatisticsCounter[]>(`${this.baseUrl}lexicon/statistics/authors`).pipe(
+      map((res) => res),
+      shareReplay(),
+    )
   }
 
   getLanguages(): Observable<StatisticsCounter[]> {
-    return this.http.get<StatisticsCounter[]>(`${this.baseUrl}lexicon/statistics/languages`)
+    return this.http.get<StatisticsCounter[]>(`${this.baseUrl}lexicon/statistics/languages`).pipe(
+      map((res) => res),
+      shareReplay(),
+    )
   }
 
   getPos(): Observable<StatisticsCounter[]> {
-    return this.http.get<StatisticsCounter[]>(`${this.baseUrl}lexicon/statistics/pos`)
+    return this.http.get<StatisticsCounter[]>(`${this.baseUrl}lexicon/statistics/pos`).pipe(
+      map((res) => res),
+      shareReplay(),
+    )
   }
 
   getStatus(): Observable<StatisticsCounter[]> {
-    return this.http.get<StatisticsCounter[]>(`${this.baseUrl}lexicon/statistics/status`)
+    return this.http.get<StatisticsCounter[]>(`${this.baseUrl}lexicon/statistics/status`).pipe(
+      map((res) => res),
+      shareReplay(),
+    )
   }
 
   filterByLetter(letter: string): Observable<LexicalElement[]> {

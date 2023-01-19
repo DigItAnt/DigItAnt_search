@@ -9,6 +9,7 @@ export interface DocumentSystem {
 
 export interface TextMetadata {
   itAnt_ID : string,
+  fileID : string,
   originalPlace : PlaceModel,
   title: string,
   support : SupportModel,
@@ -80,6 +81,7 @@ export class TextsService {
   mapData(texts : Text[]): TextMetadata[]{
     return texts.map((text : Text) => ({
       itAnt_ID : text.metadata.itAnt_ID,
+      fileID : text.metadata.fileID,
       originalPlace : text.metadata.originalPlace,
       title: text.metadata.title,
       support : text.metadata.support,
