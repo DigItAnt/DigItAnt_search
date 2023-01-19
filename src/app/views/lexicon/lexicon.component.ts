@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Paginator } from 'primeng/paginator';
-import { BehaviorSubject, catchError, debounceTime, distinctUntilChanged, EMPTY, filter, iif, map, mergeMap, Observable, of, Subject, switchMap, take, takeLast, takeUntil, tap, throwError, timeout } from 'rxjs';
-import { CognateElement, EtymologyElement, EtymologyTreeElement, FormElement, LexicalElement, LexiconQueryFilter, LexiconService, SenseElement } from 'src/app/services/lexicon/lexicon.service';
+import { BehaviorSubject, catchError, debounceTime, distinctUntilChanged, EMPTY, filter, iif, map, mergeMap, Observable, of, repeat, retry, startWith, Subject, switchMap, take, takeLast, takeUntil, takeWhile, tap, throttle, throwError, timeout } from 'rxjs';
+import { CognateElement, EtymologyElement, EtymologyTreeElement, FormElement, FormElementLabels, FormElementTree, LexicalElement, LexiconQueryFilter, LexiconService, SenseElement } from 'src/app/services/lexicon/lexicon.service';
 import {TreeNode} from 'primeng/api';
 import { FormControl, FormGroup } from '@angular/forms';
 import { HttpResponseBase } from '@angular/common/http';
@@ -179,7 +179,7 @@ export class LexiconComponent implements OnInit {
 
   
   
-  getChildren = this.loadNode$.pipe(
+  getChildren : Observable<TreeNode[]> = this.loadNode$.pipe(
     filter(event => Object.keys(event.node).length > 0),
     switchMap(event => this.lexiconService.getForms(event.node.data.lexicalEntryInstanceName).pipe(
       map(forms=> this.mapFormElement(forms)),
@@ -226,6 +226,9 @@ export class LexiconComponent implements OnInit {
   getEtymologiesListReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
   getEtymologyDataReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
   getCognatesReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getFormsListReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+
+  formRequestComplete : boolean = false;
 
   currentLexicalEntry : string = '';
   currentForm : string = '';
@@ -237,20 +240,34 @@ export class LexiconComponent implements OnInit {
         this.getSensesReq$.next(instanceName);
         this.getEtymologiesListReq$.next(instanceName);
         this.getCognatesReq$.next(instanceName);
+        this.getFormsListReq$.next(instanceName);
+        
+        
       }
     }),
     switchMap(instanceName => (instanceName != '' && instanceName == this.currentLexicalEntry) ? this.lexiconService.getLexicalEntryData(instanceName).pipe(catchError(err => this.thereWasAnError())) : of()),
   ) 
+  
 
   getForm : Observable<FormElement> = this.getFormReq$.pipe(
     takeUntil(this.destroy$),
-    switchMap(instanceName => (instanceName != '' && instanceName == this.currentForm) ? this.lexiconService.getFormData(instanceName) : of())
+    switchMap(instanceName => (instanceName != '' && instanceName == this.currentForm) ? this.lexiconService.getFormData(instanceName) : of()),
+    tap(form => {
+      console.log(form)
+    })
   )
 
   getSenses : Observable<SenseElement[]> = this.getSensesReq$.pipe(
     take(1),
     switchMap(instanceName => instanceName != '' ? this.lexiconService.getSenses(instanceName) : of()),
     //tap(senses => console.log(senses))
+  )
+
+
+  getFormsList : Observable<FormElementTree[]> = this.getFormsListReq$.pipe(
+    distinctUntilChanged(),
+    switchMap(instanceName => (instanceName != '' && instanceName == this.currentLexicalEntry) ? this.lexiconService.getForms(instanceName) : of()),
+    tap(forms => console.log(forms))
   )
 
   
@@ -310,9 +327,7 @@ export class LexiconComponent implements OnInit {
           if (keys.length > 1 && keys[0] == 'filter') {
             this.pagination({} as Paginator, keys[1], values[1])
           }
-          //TODO: logica per le word
           if(keys[0] == 'word'){
-            /* console.log('siamo qua', keys, values) */
 
             //è una lexical entry
             if(keys.length == 1){
@@ -353,7 +368,6 @@ export class LexiconComponent implements OnInit {
   nodeSelect(event:TreeEvent){
     console.log(event);
 
-    //TODO: se clicco su un nodo dell'albero devo aprire la vista word 
     let node : TreeNode = event.node;
     let lexicalInstanceName : string = '';
     let formInstanceName : string = '';
@@ -383,7 +397,7 @@ export class LexiconComponent implements OnInit {
     }))
   }
 
-  mapFormElement(lexicon : FormElement[]) : TreeNode[] {
+  mapFormElement(lexicon : FormElementTree[]) : TreeNode[] {
     if(lexicon.length == 0){
       return [{
         label : 'No children',
@@ -394,7 +408,7 @@ export class LexiconComponent implements OnInit {
         selectable : false,
       }]
     }
-    return lexicon.map((lexEl : FormElement) => ({
+    return lexicon.map((lexEl : FormElementTree) => ({
       label : lexEl.label,
       data: lexEl,
       leaf : true,
@@ -402,6 +416,8 @@ export class LexiconComponent implements OnInit {
       droppable: false
     }))
   }
+
+  
 
   mapCognates(cognates : CognateElement[]) : CognateElement[] {
 
