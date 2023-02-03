@@ -6,6 +6,7 @@ export const environment = {
   production: false,
 
   cashUrl : '/cash_old/',
+  leidenUrl : '/leiden_demo/',
   lexoUrl : '/LexO-backend-itant_demo/service/',
   lexoKey: "PRINitant19",
 
