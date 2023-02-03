@@ -1,10 +1,10 @@
-import {  Component, NgZone, OnInit } from '@angular/core';
+import {  Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import * as L from 'leaflet';
 import { circle, tileLayer } from 'leaflet';
 import { Paginator } from 'primeng/paginator';
-import { map, tap, Subject, takeUntil, BehaviorSubject, Observable, switchMap, take, filter, debounceTime, timeout, catchError, iif, throwError, of, EMPTY } from 'rxjs';
+import { map, tap, Subject, takeUntil, BehaviorSubject, Observable, switchMap, take, filter, debounceTime, timeout, catchError, iif, throwError, of, EMPTY, shareReplay } from 'rxjs';
 import { CenturyPipe } from 'src/app/pipes/century-pipe/century-pipe.pipe';
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
 import { PopupService } from 'src/app/services/maps/popup/popup.service';
@@ -52,11 +52,19 @@ export interface TextFilter {
   date: number;
   place: string;
   type : string;
+  file : string;
 }
 
 export interface AutoCompleteEvent {
   originalEvent : object,
   query: string,
+}
+
+export interface PaginatorEvent {
+  page : number,
+  first : number,
+  rows : number,
+  pageCount : number,
 }
 
 const allowedCenturies : number[] = [-600, -500, -400, -300, -200, -100, 100];
@@ -132,6 +140,15 @@ export class TextsComponent implements OnInit {
     map((queryParams : Params) => queryParams as TextFilter),
     map((filter: TextFilter) => {
       if(filter.type) return filter.type;
+      return '';
+    })
+  );
+
+  activeFile : Observable<string> = this.activatedRoute.queryParams.pipe(
+    takeUntil(this.destroy$),
+    map((queryParams : Params) => queryParams as TextFilter),
+    map((filter: TextFilter) => {
+      if(filter.file) return filter.file;
       return '';
     })
   );
@@ -237,6 +254,62 @@ export class TextsComponent implements OnInit {
     tap(results => this.autocompleteLocations = results)
   )
 
+  getTextPaginationIndexReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getFileIdByIndexReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
+  getFileByIndexReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
+
+  getTextContentReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
+  getLeidenReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+
+  loadingInterpretative : boolean = false;
+
+  @ViewChild('interpretativeText') interpretativeText!: ElementRef;
+
+
+  getTextPaginationIndex : Observable<number> = this.getTextPaginationIndexReq$.pipe(
+    switchMap(fileId => fileId != '' ? this.textService.getIndexOfText(fileId) : of()),
+    tap(index => this.getFileByIndexReq$.next(index))
+  )
+
+  getFileIdByIndex : Observable<string> = this.getFileIdByIndexReq$.pipe(
+    switchMap(index => !isNaN(index) ? this.textService.getFileIdByIndex(index) : of()),
+    tap(fileID => {
+      if(fileID != ''){
+        this.route.navigate(['/texts'], {queryParams : {file : fileID}})
+      }
+    }),
+  )
+
+  getFileByIndex : Observable<TextMetadata> = this.getFileByIndexReq$.pipe(
+    switchMap(index => !isNaN(index) ? this.textService.getFileByIndex(index) : of()),
+    tap(file => {
+      if(file){
+        this.getTextContentReq$.next(file['element-id']);
+      }
+    })
+  )
+
+
+  getXMLContent : Observable<string> = this.getTextContentReq$.pipe(
+    tap(x => this.loadingInterpretative = true),
+    switchMap(elementId => !isNaN(elementId) ? this.textService.getContent(elementId) : of()),
+    tap((xml) => {
+      if(xml != '') {
+        this.getLeidenReq$.next(xml);
+        
+      }
+    }),
+    
+  )
+  
+  getInterpretativeContent : Observable<string> = this.getLeidenReq$.pipe(
+    map(rawXml => this.textService.mapXmlRequest(rawXml)),
+    switchMap(leidenRequest => leidenRequest.xmlString != '' ? this.textService.getHTMLContent(leidenRequest) : of()),
+    map(html => leidenInterpretativeBuilder(html)),
+    tap(x => this.loadingInterpretative = false)
+  );
+
+  //TODO ottenere diplomatica, interpretativa, traduzione
 
   searchForm: FormGroup = new FormGroup({
     fullText: new FormControl(null),
@@ -254,6 +327,9 @@ export class TextsComponent implements OnInit {
     objectType: new FormControl(null),
     materials: new FormControl(null)
   });
+
+
+  
 
   constructor(private route: Router,
               private activatedRoute: ActivatedRoute,
@@ -289,7 +365,9 @@ export class TextsComponent implements OnInit {
             this.pagination({} as Paginator, keys[1], values[1])
           }
           if(keys[0] == 'file'){
-            //TODO: logica per file
+            
+            let fileId = values[0];
+            this.getTextPaginationIndexReq$.next(fileId);
           }
           
         }
@@ -368,9 +446,15 @@ export class TextsComponent implements OnInit {
       this.getAllData(f, r);
     }
   }
+
+  textPagination(event: PaginatorEvent){
+    let indexRequested = event.page;
+    this.getFileIdByIndexReq$.next(indexRequested);
+  }
   
 
   pagination(event: Paginator, ...args : any[]){
+    this.getTextContentReq$.next(NaN)
     if(Object.keys(event).length != 0){this.first = event.first; this.rows = event.rows;}
     if(Object.keys(event).length == 0){this.first = 0; this.rows = 6;}
 
@@ -396,6 +480,7 @@ export class TextsComponent implements OnInit {
    
     
   }
+
 
   drawMap(geoData : GlobalGeoDataModel[]) : void{
     
@@ -429,12 +514,34 @@ export class TextsComponent implements OnInit {
   }
 
 
+  showHideRestorations(){
+    let interpretativeDiv : Array<HTMLElement> = Array.from(this.interpretativeText.nativeElement.getElementsByClassName('gap'));
+    interpretativeDiv.forEach(
+      element=> {
+        if(element.style.opacity == '0'){
+
+          element.setAttribute('style', 'opacity: 1');
+        }else{
+          element.setAttribute('style', 'opacity: 0');
+
+        }
+      
+      }
+    )
+  } 
+
+
   thereWasAnError(){
     this.somethingWrong = true;
     return EMPTY;
   }
 
 
+}
+
+function leidenInterpretativeBuilder(html : string){
+  let nodes = new DOMParser().parseFromString(html, "text/html").querySelectorAll('#edition .textpart');
+  return nodes[0].innerHTML;
 }
 
 function groupByCenturies(texts: TextMetadata[]) : CenturiesCounter[]{

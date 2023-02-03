@@ -3,7 +3,8 @@
         groupCenturies : groupCenturies | async, 
         activeDate : activeDate | async, 
         activeLocation : activeLocation | async,
-        activeType : activeType | async, 
+        activeType : activeType | async,
+        activeFile : activeFile | async, 
         groupLocations : groupLocations | async,
         groupType : groupTypes | async,
         groupLanguage : groupLanguages | async,
@@ -11,7 +12,7 @@
         groupObjectTypes : groupObjectTypes | async} as text">
 
         <div id="left-bar" class="flex flex-column">
-            <p-tabView>
+            <p-tabView *ngIf="!text.activeFile" class="normal-tabview">
         
                 <p-tabPanel header="Categories">
         
@@ -206,11 +207,53 @@
                 </p-tabPanel>
         
             </p-tabView>
+
+            <ul class="home-menu" *ngIf="text.activeFile">
+        
+                <!-- ATTESTATIONS -->
+                <a  class="categories no-underline">
+                    <li class="pl-4 flex align-items-center">
+                        <span class="icon"></span>
+                        <span class="route flex-1">Attestations</span>
+                    </li>
+                </a>
+
+                <!-- HOW TO CITE -->
+                <a  class="categories no-underline">
+                    <li class="pl-4 flex align-items-center">
+                        <span class="icon"></span>
+                        <span class="route flex-1">How to cite</span>
+                    </li>
+                </a>
+                <!-- SHOW XML -->
+                <a  class="categories no-underline">
+                    <li class="pl-4 flex align-items-center">
+                        <span class="icon"></span>
+                        <span class="route flex-1">Show XML</span>
+                    </li>
+                </a>
+                <!-- PRINT/PDF ? -->
+                <a  class="categories no-underline">
+                    <li class="pl-4 flex align-items-center">
+                        <span class="icon"></span>
+                        <span class="route flex-1">Print/Save PDF</span>
+                    </li>
+                </a>
+
+                <!-- SHOW HIDE RESTORATIONS -->
+                <a  class="categories no-underline" (click)="showHideRestorations()">
+                    <li class="pl-4 flex align-items-center">
+                        <span class="icon"></span>
+                        <span class="route flex-1">Show/Hide restorations</span>
+                    </li>
+                </a>
+            </ul>
         
         </div>
         
         <div id="texts-container" class="flex flex-column flex-1">
-            
+
+            <!-- TEXT FILTER ALL -->
             <div id="filter-texts-container" class="flex flex-column text-container-top" *ngIf="text.activeTab == 'all'">
                 <div class="flex flex-row align-items-center horizontal-list m-3 text-center">
                     <h2 class="flex-1 loading" *ngIf="!(text.totalRecords) && ! somethingWrong">Loading <span>.</span><span>.</span><span>.</span>
@@ -223,7 +266,8 @@
         
             </div>
         
-        
+            
+            <!-- TEXT FILTER DATE -->
             <div id="filter-date-container" class="flex flex-column text-container-top" *ngIf="text.activeTab == 'date'">
                 <div class="flex flex-row horizontal-list m-3 text-container-top">
                     <h2 class="loading text-center flex-1 flex align-items-center justify-content-center"
@@ -243,7 +287,9 @@
                     </ul>
                 </div>
             </div>
-        
+            
+
+            <!-- TEXT FILTER LOCATION -->
             <div id="filter-location-container" class="flex flex-column" *ngIf="text.activeTab == 'location'">
         
                 <div class="flex flex-row horizontal-list m-3 text-container-top justify-content-between">
@@ -280,7 +326,9 @@
                 </div>
         
             </div>
-        
+
+
+            <!-- TEXTS FILTER BY TYPE -->
             <div id="filter-type-container" class="flex flex-column text-container-top" *ngIf="text.activeTab == 'type'">
                 <div class="flex flex-row horizontal-list m-3 text-container-top">
                     <h2 class="loading text-center flex-1 flex align-items-center justify-content-center"
@@ -301,7 +349,8 @@
                 </div>
             </div>
         
-            <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="text.totalRecords != 0 && !somethingWrong">
+            <!-- TEXTS LIST -->
+            <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="(text.totalRecords != 0 && !somethingWrong) && !text.activeFile">
                 <div class="flex flex-row m-2 w-full" *ngIf="!text.totalRecords">
                     <p-progressSpinner class="flex flex-1"></p-progressSpinner>
         
@@ -318,7 +367,7 @@
                         <div class="flex flex-column text-item-preview p-2">
         
                             <div class="text-item-preview-top">
-                                {{item.title}}
+                                {{item.inscriptionTitle != '' ? item.inscriptionTitle : item.itAnt_ID}}
                             </div>
         
                             <div class="text-item-preview-bottom flex flex-column mt-3">
@@ -336,8 +385,126 @@
                 </a>
         
             </div>
+
+
+            <!-- TEXT VIEW -->
+            <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="((text.totalRecords != 0 && !somethingWrong) && text.activeFile) 
+                                                                                        && {index : getTextPaginationIndex | async,
+                                                                                            fileID: getFileIdByIndex | async, 
+                                                                                            file : getFileByIndex | async} as textView">
+                
+                <div class="flex flex-column flex-auto ">
+                    <div class="flex flex-row horizontal-list m-3 text-container-top sticky top-0">
+                        <p-paginator *ngIf="(text.totalRecords != 0 && !somethingWrong)"
+                            id="text-view-paginator"
+                            [dropdownAppendTo]="'body'" [first]="(textView.index) || 0" [rows]="1"
+                            [totalRecords]="(totalRecords | async) || 0"
+                            (onPageChange)="textPagination($event)"
+                            [showJumpToPageDropdown]="false" 
+                            [showPageLinks]="false">
+                    
+                        </p-paginator>
+
+                        <div id="text-view-id" class="select-none absolute h-full flex justify-content-center align-items-center">
+                            
+                            <div *ngIf="!textView.file">
+                                <i class="fas fa-spinner fa-pulse"></i>
+                            </div>
+                            <div class="flex flex-column align-items-center" *ngIf="textView.file">
+                                <h2 class="font-bold">{{textView.file?.itAnt_ID}}</h2>
+                                <h3 class="font-italic font-normal">{{textView.file.inscriptionTitle != '' ? textView.file.inscriptionTitle : textView.file.title}}</h3>
+                            </div>
+                        </div>
+
+                        
+                    </div>         
+                    
+                    
+                    <div class="main-section flex flex-column m-3" *ngIf="textView.file">
+
+
+                        <!-- GENERAL -->
+                        <div id="general-data-div" class="flex flex-column flex-auto">
+                            <div id="general-data-div-title" class="flex flex-row">
+                                <h2 class="font-medium">General data:</h2>
+                            </div>
+                            
+                            <div id="general-data-div-list" class="flex grid data-list  pt-3 ">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold">ID:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <span class="font-normal">{{textView.file.itAnt_ID}}</span>
+
+                                    <div class="flex flex-column" *ngIf="textView.file.traditionalIDs.length > 0">
+
+                                        <div class="flex flex-column">
+                                            <a class="font-bold text-red-800 pl-2" *ngFor="let traditionalIDs of textView.file.traditionalIDs" [href]="traditionalIDs.traditionalID_URL" target="_blank">{{traditionalIDs.traditionalID}}</a>
+
+                                        </div>
+                                        
+                                        <div class="flex flex-row pl-2" *ngIf="textView.file.trismegistos">
+                                            <a [href]="'//'+textView.file.trismegistos.trismegistosID_url" target="_blank" class="font-bold text-red-800">{{textView.file.trismegistos.trismegistosID}}</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div id="general-data-div-list" class="flex grid data-list">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold">Title:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <span class="font-normal">{{textView.file.title}}</span>
+
+                                    
+                                </div>
+                            </div>
+                        </div>  
+
+
+                        <!-- TEXT -->
+
+                        <div id="edition-div" class="flex flex-column flex-auto" *ngIf="{raw : getXMLContent | async} as xml">
+                            <div id="edition-div-title" class="flex flex-row">
+                                <h2 class="font-medium">Text</h2>
+                                
+                            </div>
+
+                            <div id="edition-div-panel" class="flex data-list  pt-3" *ngIf="{interpretative: getInterpretativeContent | async} as leiden">
+                                <div #interpretativeText id="interpretative-text" *ngIf="!loadingInterpretative" [innerHTML]="leiden.interpretative">
+
+                                </div>
+                                <div class="flex flex-row m-2 w-full" *ngIf="loadingInterpretative">
+                                    <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+                        
+                                </div>
+                            </div>
+                        </div>  
+
+                         <!-- SUPPORT -->
+
+                        <!-- ORIGIN AND CONSERVATION -->
+
+                        <!-- BIBLIOGRAPHY -->
+
+                        <!-- ICONOGRAPHIC APPARATUS -->
+                    </div>
+                    
+
+                   
+                    
+                </div>
+                <div class="flex flex-row m-2 w-full" *ngIf="!textView.file">
+                    <p-progressSpinner class="flex flex-1"></p-progressSpinner>
         
-            <p-paginator *ngIf="text.totalRecords != 0 && !somethingWrong" [dropdownAppendTo]="'body'" [first]="first" [rows]="rows"
+                </div>
+            </div>
+        
+            <p-paginator *ngIf="(text.totalRecords != 0 && !somethingWrong) && !text.activeFile" [dropdownAppendTo]="'body'" [first]="first" [rows]="rows"
                 [totalRecords]="(totalRecords | async) || 0"
                 (onPageChange)="pagination($event, (text.activeTab || null), (text.activeDate || null), (text.activeLocation || null), (text.activeType || null))"
                 [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[6,12,24]"></p-paginator>
