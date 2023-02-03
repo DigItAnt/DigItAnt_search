@@ -279,7 +279,6 @@ export class LexiconComponent implements OnInit {
     }),
   );
 
-  //TODO: restart and stop observable --- repeatWhen(subject)
   getEtymologyData : Observable<EtymologyElement> = this.getEtymologyDataReq$.pipe(
     takeUntil(this.destroy$),
     switchMap(instanceName => instanceName != ''  ? this.lexiconService.getEtymologyData(instanceName).pipe(catchError(err => this.thereWasAnError())) : of()),

@@ -18,7 +18,7 @@
 
     <div id="left-bar" class="flex flex-column">
 
-        <p-tabView>
+        <p-tabView class="normal-tabview">
 
             <p-tabPanel header="Categories">
 
@@ -312,19 +312,17 @@
                 <div class="flex w-full h-full" *ngIf="{data : getLexicalEntry | async} as lexicalEntry">
                     <div class="flex flex-column w-full h-full"
                         *ngIf="lexicalEntry.data && lexicon.activeWord == lexicalEntry.data.lexicalEntryInstanceName">
-                        <span id="lexical-entry-title"
-                            class="text-6xl font-bold pb-5">{{lexicalEntry.data.label}}</span>
+                        <span id="lexical-entry-title" class="text-6xl font-bold pb-3">{{lexicalEntry.data.label}}</span>
                         <div class="flex flex-row align-items-baseline" *ngIf="{data : getSenses | async} as senses">
-                            <span class="text-2xl font-light">Lexical entry</span>,
-                            <span class="pl-2 text-2xl font-light">Sense definitions:</span>
+                            
                             <div *ngIf="!senses.data" class="pl-2">
                                 <i class="fas fa-spinner fa-pulse"></i>
                             </div>
-                            <div *ngIf="senses.data" class="pl-2">
+                            <div *ngIf="senses.data">
 
-                                <span *ngFor="let sense of senses.data">
+                                <span *ngFor="let sense of senses.data; let i = index;">
                                     <span class="pr-2 text-2xl font-light" *ngIf="sense.definition != ''">
-                                        {{sense.definition}}
+                                        ({{i+1}}) {{sense.definition}}
                                     </span>
                                     <span class="pr-2 text-2xl font-light font-italic" *ngIf="sense.definition == ''">
                                         No definitions
@@ -553,16 +551,13 @@
                     <div class="flex flex-column flex-auto"
                         *ngIf="form.data && lexicon.activeForm == form.data.formInstanceName">
 
-                        <span id="lexical-entry-title" class="text-6xl font-bold pb-5">
+                        <span id="lexical-entry-title" class="text-6xl font-bold pb-3">
                             <span *ngFor="let label of form.data.label">
                                 <span *ngIf="label.propertyID == 'writtenRep'">
                                     {{label.propertyValue}}
                                 </span>
                             </span>
                         </span>
-                        <div class="flex align-items-baseline">
-                            <span class="text-2xl font-light">Form</span>
-                        </div>
 
                         <div class="flex flex-row align-items-baseline">
                             <span id="lexical-entry-language">

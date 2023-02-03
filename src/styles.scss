@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@100;300;400;500;700;800&display=swap');
-@import 'mixins.scss';
-@import 'variables.scss';
+@import url("https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@100;300;400;500;700;800&display=swap");
+@import "mixins.scss";
+@import "variables.scss";
 
 body,
 app-root {
@@ -21,7 +21,6 @@ app-root {
     @include xs {
         overflow: auto !important;
     }
-
 }
 
 * {
@@ -31,38 +30,37 @@ app-root {
 }
 
 .p-autocomplete-panel {
-    font-family: 'M PLUS Rounded 1c', sans-serif !important;
+    font-family: "M PLUS Rounded 1c", sans-serif !important;
 }
 
 .p-menu {
-    font-family: 'M PLUS Rounded 1c', sans-serif !important;
-    font-size: .85rem !important;
+    font-family: "M PLUS Rounded 1c", sans-serif !important;
+    font-size: 0.85rem !important;
 }
 
 //NAVBAR
 #navbar {
     .p-toolbar {
-        padding: .5rem 10% !important;
+        padding: 0.5rem 10% !important;
         border-radius: 0 !important;
         position: sticky !important;
         top: 0;
     }
 
-    .p-inputgroup .p-inputwrapper>.p-component{
+    .p-inputgroup .p-inputwrapper > .p-component {
         width: 100% !important;
     }
 
-    .p-component{
+    .p-component {
         font-size: 0.85rem;
-        font-family: 'M PLUS Rounded 1c', sans-serif;
+        font-family: "M PLUS Rounded 1c", sans-serif;
         font-weight: 400;
     }
 
     .p-button.p-button-secondary.p-button-text.active {
-        
         background-color: $dark-gray;
         color: white;
-        border-color: $dark-gray;   
+        border-color: $dark-gray;
     }
 
     .p-menubar {
@@ -76,7 +74,7 @@ app-root {
             top: 0 !important;
             width: 100%;
         }
-    
+
         @include sm {
             position: fixed !important;
             top: 0 !important;
@@ -90,7 +88,7 @@ app-root {
     }
 }
 
-#left-bar{
+#left-bar {
     background-color: $black;
     color: white;
     width: 30%;
@@ -103,15 +101,13 @@ app-root {
 
     ul.home-menu,
     .p-tabview-panel > ul,
-    .text-simple-search{
+    .text-simple-search {
         display: flex;
         flex-direction: column;
         list-style-type: none;
         background: $transparentBlack;
 
-        
-
-        a.categories{ 
+        a.categories {
             color: white;
             display: flex;
             font-weight: 800;
@@ -120,24 +116,21 @@ app-root {
             position: relative;
 
             span.icon {
-                font-family: 'Font Awesome 6 Free';
+                font-family: "Font Awesome 6 Free";
                 font-weight: 900;
-                font-size: .5rem;
-                width: .85rem;
-               
+                font-size: 0.5rem;
+                width: 0.85rem;
             }
 
-            span.icon::before{
-                
-                content: '\f111'
-                
+            span.icon::before {
+                content: "\f111";
             }
 
             span.route {
                 padding: 1rem;
                 color: white;
                 text-decoration: none;
-                font-size: .85rem;
+                font-size: 0.85rem;
             }
         }
 
@@ -147,10 +140,9 @@ app-root {
 
         a.categories:hover {
             background: $red !important;
-            
+
             span.icon {
                 color: $dark-gray;
-                
             }
         }
 
@@ -160,18 +152,17 @@ app-root {
     }
 
     p-panel {
-
-        .p-panel-header{
+        .p-panel-header {
             background: #00000082 !important;
             color: white !important;
             border-top-left-radius: 0 !important;
             border-top-right-radius: 0 !important;
             border: none !important;
-            font-family: 'M PLUS Rounded 1c', sans-serif !important;
-            font-size: .85rem;
+            font-family: "M PLUS Rounded 1c", sans-serif !important;
+            font-size: 0.85rem;
         }
 
-        .p-panel-header-icon{
+        .p-panel-header-icon {
             color: white !important;
         }
 
@@ -191,7 +182,7 @@ app-root {
             border: 0 !important;
             color: unset !important;
             padding-top: 0;
-            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            font-family: "M PLUS Rounded 1c", sans-serif !important;
         }
     }
 
@@ -200,9 +191,9 @@ app-root {
         border-bottom-left-radius: 0 !important; */
         height: 100% !important;
         border-left: 0 !important;
-        font-family: 'M PLUS Rounded 1c', sans-serif !important;
-        font-size: .85rem;
-        padding: .5rem;
+        font-family: "M PLUS Rounded 1c", sans-serif !important;
+        font-size: 0.85rem;
+        padding: 0.5rem;
     }
 
     p-accordiontab {
@@ -211,100 +202,86 @@ app-root {
         }
 
         .p-accordion-content {
-            margin: 0 1rem!important;
-            font-family: 'M PLUS Rounded 1c', sans-serif !important;
-            font-size: .85rem;
+            margin: 0 1rem !important;
+            font-family: "M PLUS Rounded 1c", sans-serif !important;
+            font-size: 0.85rem;
             padding: 0;
             color: $light-gray !important;
             background: transparent;
             border: none !important;
-            border-bottom-right-radius:0 !important;
-            border-bottom-left-radius:0 !important;
+            border-bottom-right-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
         }
     }
 
     p-togglebutton {
-        
-        
-
         .p-button:focus {
             box-shadow: none !important;
         }
 
-        .omega, .latin {
-            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+        .omega,
+        .latin {
+            font-family: "M PLUS Rounded 1c", sans-serif !important;
             font-weight: 700 !important;
             // color: white(0, 0, 0, 0.452) !important;
             font-size: 1rem !important;
         }
 
-        .contains, .exact {
-            font-family: 'Font Awesome 6 Free' !important;
+        .contains,
+        .exact {
+            font-family: "Font Awesome 6 Free" !important;
             font-weight: 700 !important;
         }
 
-        .omega::before{
-            
-            content: '\03a9' !important;
+        .omega::before {
+            content: "\03a9" !important;
         }
 
-
-
-        .latin::before{
-            
-            content: 'Ab' !important;
+        .latin::before {
+            content: "Ab" !important;
         }
 
-
-        .contains::before{
-            
-            content: '\f00d' !important;
+        .contains::before {
+            content: "\f00d" !important;
         }
 
-        .exact::before{
-            
-            content: '\f00c' !important;
+        .exact::before {
+            content: "\f00c" !important;
         }
-
 
         .p-button-icon-only {
             padding: 0 !important;
         }
-        
     }
     input {
-        font-family: 'M PLUS Rounded 1c', sans-serif !important;
+        font-family: "M PLUS Rounded 1c", sans-serif !important;
         font-weight: 400 !important;
-        font-size: .85rem;
-        padding: .5rem !important;
+        font-size: 0.85rem;
+        padding: 0.5rem !important;
     }
-    .p-selectbutton{
+    .p-selectbutton {
         display: flex;
 
         .p-button {
-            font-size: .85rem;
-            padding: .5rem;
+            font-size: 0.85rem;
+            padding: 0.5rem;
             flex: 1;
         }
 
         span {
-            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            font-family: "M PLUS Rounded 1c", sans-serif !important;
             font-weight: 400;
         }
     }
 
-    h4{
+    h4 {
         color: white;
         display: flex;
         font-weight: 800;
         user-select: none;
     }
 
-    
-
-
     .p-autocomplete {
-
         display: flex;
         input {
             flex: 1;
@@ -312,16 +289,16 @@ app-root {
     }
 
     p-checkbox {
-        label{
+        label {
             color: white;
-            font-size: .85rem;
+            font-size: 0.85rem;
         }
     }
 }
 
-#left-bar::after{
+#left-bar::after {
     content: "";
-    background-image: url('assets/images/l-bg.png');
+    background-image: url("assets/images/l-bg.png");
     //background-size: cover;
     position: absolute;
     top: 0px;
@@ -329,17 +306,17 @@ app-root {
     bottom: 0px;
     left: -5rem;
     z-index: -1;
-    opacity: .5;
+    opacity: 0.5;
 }
 
 #texts-container,
 #lexicon-container {
     //padding: 2rem;
-    .text-container-top{
+    .text-container-top {
         min-height: 5rem;
     }
 
-    .horizontal-list{
+    .horizontal-list {
         border-top: 2px solid #dee2e6;
         border-bottom: 2px solid #dee2e6;
         border-left: transparent;
@@ -348,19 +325,25 @@ app-root {
         max-height: 8rem;
         min-height: 5rem;
         overflow-y: auto;
-        color: #64748B;
+        color: #64748b;
 
         @keyframes blinkdot {
-            0% { opacity: .2; }
-            20% { opacity: 1; }
-            100% { opacity: .2; }
+            0% {
+                opacity: 0.2;
+            }
+            20% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.2;
+            }
         }
 
-        .loading{
+        .loading {
             font-weight: 700;
         }
 
-        .loading span{
+        .loading span {
             animation-name: blinkdot;
             animation-duration: 1.4s;
             animation-iteration-count: infinite;
@@ -368,13 +351,13 @@ app-root {
         }
 
         .loading span:nth-child(2) {
-            animation-delay: .2s;
+            animation-delay: 0.2s;
         }
         .loading span:nth-child(3) {
-            animation-delay: .4s;
+            animation-delay: 0.4s;
         }
 
-        h1{
+        h1 {
             font-weight: 400;
         }
 
@@ -385,25 +368,46 @@ app-root {
     }
 
     .text-item-container,
-    .lexicon-item-container{
+    .lexicon-item-container {
         align-content: baseline;
         overflow-y: auto;
-        height: 100px; 
+        height: 100px;
+
+        #interpretative-text {
+            span.ab {
+                span.linenumber {
+                    display: none;
+                }
+            }
+        }
     }
 
-   
-
     p-paginator {
-
-        button, span {
-            font-size: .85rem;
+        button,
+        span {
+            font-size: 0.85rem;
         }
 
         .p-dropdown {
             height: unset;
         }
     }
-    
+
+    p-paginator#text-view-paginator {
+        display: flex !important;
+        flex: 1 !important;
+
+        .p-paginator {
+            flex: 1 !important;
+            justify-content: space-between !important;
+
+            .p-paginator-first,
+            .p-paginator-last {
+                display: none !important;
+            }
+        }
+    }
+
     .text-item,
     .lexicon-item {
         padding: 1rem;
@@ -411,9 +415,9 @@ app-root {
         background: $light-gray;
         cursor: pointer;
         flex: 0 0 45%;
-        font-size: .85rem;
+        font-size: 0.85rem;
         word-break: break-all;
-        
+
         .text-item-id {
             word-break: break-all;
             width: 7rem;
@@ -425,7 +429,6 @@ app-root {
     .text-item:hover,
     .lexicon-item:hover {
         border-color: $red;
-        
     }
 
     .text-item-preview {
@@ -440,14 +443,14 @@ app-root {
 
     .text-item-preview-bottom {
         .pos {
-            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            font-family: "M PLUS Rounded 1c", sans-serif !important;
             font-weight: 700 !important;
             color: white(0, 0, 0, 0.452) !important;
-            font-size: .75rem !important;
+            font-size: 0.75rem !important;
         }
 
         .pos::before {
-            content : 'pos'
+            content: "pos";
         }
     }
 
@@ -464,23 +467,21 @@ app-root {
             }
         }
 
-        li{ 
-            color: #64748B;
+        li {
+            color: #64748b;
             display: flex;
             font-weight: 400;
             cursor: pointer;
-            
 
             .icon {
-                font-family: 'Font Awesome 6 Free';
+                font-family: "Font Awesome 6 Free";
                 font-weight: 900;
 
-                font-size: .75rem;
+                font-size: 0.75rem;
             }
 
-            .icon::before{
-                
-                content: '\f111'
+            .icon::before {
+                content: "\f111";
             }
 
             a {
@@ -490,75 +491,69 @@ app-root {
             }
 
             a.letter {
-                
                 width: 1.75rem;
                 text-align: center;
-                font-size: .85rem;
+                font-size: 0.85rem;
                 font-weight: 700;
                 padding: 0.5rem;
                 border-radius: 5px;
                 color: unset;
                 text-decoration: none;
-                    
-            
             }
 
-            a:hover{
+            a:hover {
                 text-decoration: underline;
             }
         }
 
-    
-
         li.century-list-element,
         li.type-list-element {
             background-color: $light-gray;
-            font-size: .85rem;
-            a{
+            font-size: 0.85rem;
+            a {
                 color: $dark-gray;
             }
 
             .p-badge {
                 background: $red;
-                font-family: 'M PLUS Rounded 1c', sans-serif !important;
+                font-family: "M PLUS Rounded 1c", sans-serif !important;
             }
         }
 
         li.century-list-element:hover,
         li.type-list-element:hover {
             background-color: $light-gray-hover;
-            
-            a{
+
+            a {
                 color: $dark-gray;
             }
 
             .p-badge {
                 background: $red;
-                font-family: 'M PLUS Rounded 1c', sans-serif !important;
+                font-family: "M PLUS Rounded 1c", sans-serif !important;
             }
         }
 
         li.century-list-element.active,
         li.type-list-element.active {
             background-color: $dark-gray;
-            
-            a{
+
+            a {
                 color: white;
             }
 
             .p-badge {
                 background: $red;
-                font-family: 'M PLUS Rounded 1c', sans-serif !important;
+                font-family: "M PLUS Rounded 1c", sans-serif !important;
             }
         }
-       
-    } 
+    }
 }
 
-p-tabview {
+p-tabview.normal-tabview {
     display: flex !important;
-    flex-direction: column!important;
-    flex: 1 1 auto!important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
     height: 100px;
     overflow-y: auto;
 
@@ -568,11 +563,11 @@ p-tabview {
         flex: 1 !important;
 
         .p-tabview-nav {
-            font-size: .85rem !important;
-            background: $black!important;
+            font-size: 0.85rem !important;
+            background: $black !important;
 
             .p-tabview-nav-link {
-                font-family: 'M PLUS Rounded 1c', sans-serif !important;
+                font-family: "M PLUS Rounded 1c", sans-serif !important;
                 background: transparent !important;
             }
 
@@ -586,34 +581,32 @@ p-tabview {
             }
         }
 
-        .p-tabview-nav-container{
+        .p-tabview-nav-container {
             position: sticky;
             top: 0;
             z-index: 9999;
         }
 
         .p-tabview-panels {
-            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            font-family: "M PLUS Rounded 1c", sans-serif !important;
             padding: 0 !important;
-            background: transparent!important;
+            background: transparent !important;
             display: flex;
             flex-direction: column;
             flex: 1 1 auto;
             overflow: auto;
             height: 100px;
 
-
             p-tabpanel#lexicon-tree-search {
                 height: 100%;
             }
-            
         }
 
         .p-tabview-panel {
-           height: 100%;
+            height: 100%;
         }
 
-        .search-button-div button{
+        .search-button-div button {
             background: $black;
             color: white;
             border-top-left-radius: 0;
@@ -623,7 +616,7 @@ p-tabview {
             font-size: 0.85rem;
         }
 
-        .search-button-div button:focus{
+        .search-button-div button:focus {
             box-shadow: none !important;
         }
     }
@@ -642,9 +635,7 @@ p-tree {
         border-radius: 0;
         flex-direction: row-reverse;
         .p-tree-container {
-            
             .p-treenode {
-
                 .p-treenode-content:focus {
                     box-shadow: inset 0 0 0 0.15rem $red;
                 }
@@ -671,31 +662,27 @@ p-tree {
     }
 }
 
-        
-
 .p-dropdown {
     width: 100% !important;
-    
 }
 
-.p-dropdown-label{
-    font-family: 'M PLUS Rounded 1c', sans-serif !important;
+.p-dropdown-label {
+    font-family: "M PLUS Rounded 1c", sans-serif !important;
     font-weight: 400 !important;
-    font-size: .85rem !important;
-    padding: .5rem !important;
+    font-size: 0.85rem !important;
+    padding: 0.5rem !important;
 }
 
 .p-dropdown-items {
-    font-family: 'M PLUS Rounded 1c', sans-serif !important;
+    font-family: "M PLUS Rounded 1c", sans-serif !important;
     font-weight: 400 !important;
-    font-size: .85rem !important;
+    font-size: 0.85rem !important;
 }
 
 .counter {
     font-weight: 900;
     color: $red !important;
 }
-
 
 //HOME
 app-home,
@@ -704,59 +691,61 @@ app-lexicon,
 app-search,
 app-bibliography,
 app-concordances,
-app-file{
+app-file {
+    #interpretative-text {
+        span.ab {
+            span.linenumber {
+                display: none;
+            }
+        }
+    }
     display: flex !important;
     flex: 1 1 auto !important;
     //position: relative !important;
 }
 
-
-
 app-subdate,
-app-sublocation{
+app-sublocation {
     flex-direction: column;
 }
 
 app-theme {
-
     p-panel {
-        .p-panel-icons-end{
+        .p-panel-icons-end {
             margin: 0 !important;
         }
         .p-panel-title {
             display: none !important;
         }
-        .p-panel-header{
+        .p-panel-header {
             padding: 0 !important;
             border: 0 !important;
             background: transparent !important;
             margin-top: 0.2rem !important;
-
         }
 
-        .p-toggleable-content{
+        .p-toggleable-content {
             margin-left: -4rem !important;
         }
 
         .p-panel-content {
             padding: 0.5rem !important;
-            
+
             border: 0 !important;
-            font-family: 'M PLUS Rounded 1c', sans-serif;
+            font-family: "M PLUS Rounded 1c", sans-serif;
             font-weight: 700;
 
-            ul{
+            ul {
                 flex-direction: column !important;
 
                 li {
-                    margin: .5rem 0 !important;
-                    
+                    margin: 0.5rem 0 !important;
                 }
 
-                li.sublink:hover{
+                li.sublink:hover {
                     color: #234b86 !important;
                     .icon {
-                        color : #234b86 !important;
+                        color: #234b86 !important;
                     }
                 }
             }
@@ -765,9 +754,7 @@ app-theme {
 }
 
 app-search {
-    
     p-togglebutton {
-        
         .p-button {
             border-top-left-radius: 0 !important;
             border-bottom-left-radius: 0 !important;
@@ -780,29 +767,26 @@ app-search {
         }
 
         .omega {
-            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            font-family: "M PLUS Rounded 1c", sans-serif !important;
             font-weight: 700 !important;
             color: white(0, 0, 0, 0.452) !important;
             font-size: 1.5rem !important;
         }
 
-        .omega::before{
-            
-            content: '\03a9' !important;
+        .omega::before {
+            content: "\03a9" !important;
         }
 
         .latin {
-            font-family: 'M PLUS Rounded 1c', sans-serif !important;
+            font-family: "M PLUS Rounded 1c", sans-serif !important;
             font-weight: 700 !important;
             color: white(0, 0, 0, 0.452) !important;
             font-size: 1.5rem !important;
         }
 
-        .latin::before{
-            
-            content: 'Ab' !important;
+        .latin::before {
+            content: "Ab" !important;
         }
-
 
         .p-button-icon-only {
             padding: 0 !important;
@@ -814,21 +798,17 @@ app-search {
         outline-offset: 0;
         box-shadow: none !important;
         border-color: none !important;
-        font-family: 'M PLUS Rounded 1c', sans-serif !important;
+        font-family: "M PLUS Rounded 1c", sans-serif !important;
         font-weight: 400 !important;
     }
 
-    
-
     .p-radiobutton {
-        position: inherit !important;   
+        position: inherit !important;
     }
-
-    
 }
 
 .p-dropdown-panel {
-    font-family: 'M PLUS Rounded 1c', sans-serif !important;
+    font-family: "M PLUS Rounded 1c", sans-serif !important;
     font-weight: 400 !important;
 }
 
@@ -836,14 +816,14 @@ app-conventions,
 app-glossary,
 app-concordances {
     table {
-        font-family: 'M PLUS Rounded 1c', sans-serif !important;
+        font-family: "M PLUS Rounded 1c", sans-serif !important;
         font-weight: 400 !important;
 
-        tr:nth-child(even){
+        tr:nth-child(even) {
             background-color: #dee2e6 !important;
         }
 
-        thead{
+        thead {
             th {
                 background-color: #dee2e6 !important;
                 font-style: italic !important;
@@ -859,30 +839,30 @@ app-concordances {
 app-footer {
     .p-toolbar {
         border-radius: 0 !important;
-        padding: .7rem !important;
+        padding: 0.7rem !important;
         position: sticky;
         bottom: 0;
         left: 0;
         width: 100%;
-        /* @include md {
-            position: fixed !important;
-            bottom: 0 !important;
-            width: 100%;
-            z-index: 4;
-            padding: .3rem;
-        }
-    
-        @include sm {
-            position: fixed !important;
-            bottom: 0 !important;
-            width: 100%;
-            z-index: 4;
-            padding: .3rem;
+    }
+}
 
-        }
+.gap{
+    transition: all .5s ease-in-out;
+}
 
-        @include xs {
-            padding: .3rem;
-        } */
+//PRINT CSS
+@media print {
+    app-navbar,
+    #left-bar {
+        display: none !important;
+    }
+
+    .text-container-top,
+    .text-item-container,
+    #main-content {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 }
