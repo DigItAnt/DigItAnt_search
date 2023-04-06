@@ -468,7 +468,7 @@
 
                         <!-- TEXT -->
 
-                        <div id="edition-div" class="flex flex-column flex-auto" *ngIf="{raw : getXMLContent | async } as xml">
+                        <div id="edition-div" class="flex flex-column flex-auto pt-3" *ngIf="{raw : getXMLContent | async } as xml">
                             <div id="edition-div-title" class="flex flex-row">
                                 <h2 class="font-medium">Text</h2>
                                 
@@ -499,7 +499,38 @@
                                 <p-progressSpinner class="flex flex-1"></p-progressSpinner>
                     
                             </div>
-                        </div>  
+                        </div> 
+                        
+                        
+                        <div id="translation-div" class="flex flex-column flex-auto pt-3" *ngIf="{raw : getXMLContent | async } as xml">
+                            <div id="translation-div-title" class="flex flex-row">
+                                <h2 class="font-medium">Translation</h2>
+                                
+                            </div>
+
+                            <div id="translation-div-panel" class="flex data-list" *ngIf="{data: getTranslation | async } as translation"> 
+
+                                <!-- {{translation.data | json}} -->
+                                <div *ngIf="!loadingTranslation">
+
+                                    <div class="grid m-3" *ngIf="translation.data.length > 0">
+                                        <div class="col-12 lg:col-6 font-light" *ngFor="let trans of translation.data" [innerHTML]="trans">
+    
+                                        </div>
+                                
+                                    </div>
+    
+                                    <div class="font-italic font-light m-3" *ngIf="translation.data.length == 0">
+                                        No translation
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            <div class="flex flex-row m-2 w-full" *ngIf="loadingTranslation">
+                                <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+                    
+                            </div>
+                        </div> 
 
                          <!-- SUPPORT -->
 

@@ -263,10 +263,12 @@ export class TextsComponent implements OnInit {
   getTextContentReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
   getInterpretativeReq$ : BehaviorSubject<XmlAndId> = new BehaviorSubject<XmlAndId>({} as XmlAndId);
   getDiplomaticReq$ : BehaviorSubject<XmlAndId> = new BehaviorSubject<XmlAndId>({} as XmlAndId);
-
+  getTranslationReq$ : BehaviorSubject<XmlAndId> = new BehaviorSubject<XmlAndId>({} as XmlAndId);
   getAnnotationReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
+
   loadingInterpretative : boolean = false;
   loadingDiplomatic : boolean = false;
+  loadingTranslation : boolean = false;
   
   currentElementId : number = NaN;
   currentTokensList : TextToken[] | undefined;
@@ -301,7 +303,10 @@ export class TextsComponent implements OnInit {
 
 
   getXMLContent : Observable<XmlAndId> = this.getTextContentReq$.pipe(
-    tap(x => this.loadingInterpretative = true),
+    tap(x => {
+      this.loadingInterpretative = true;
+      this.loadingTranslation = true;
+    }),
     tap(elementId => !isNaN(elementId) ? this.currentElementId = elementId : of()),
     switchMap(elementId => !isNaN(elementId) ? this.textService.getContent(elementId) : of()),
     tap((res) => {
@@ -309,6 +314,7 @@ export class TextsComponent implements OnInit {
         //console.log(res.xml)
         this.getInterpretativeReq$.next(res);
         this.getDiplomaticReq$.next(res);
+        this.getTranslationReq$.next(res);
         this.arrayDynamicComponents = [];
       }
     }),
@@ -349,6 +355,14 @@ export class TextsComponent implements OnInit {
       // console.log(x);
       this.loadingDiplomatic = false
     })
+  );
+
+  getTranslation : Observable<any> | undefined = this.getTranslationReq$.pipe(
+    filter(req => Object.keys(req).length > 0),
+    map(req => this.textService.mapXmlRequest(req)),
+    switchMap(req => req.xml != '' ? this.textService.getHTMLTeiNodeContent({xmlString : req.xml}) : of()),
+    map(res => getTranslation(res)),
+    tap(res => this.loadingTranslation = false)
   );
 
 
@@ -906,3 +920,30 @@ function buildCustomInterpretative(renderer : Renderer2, TEINodes : Array<Elemen
 
 }
 
+
+function getTranslation(rawHtml : string){
+  //console.log(rawHtml);
+
+  let translations : Array<string> = [];
+
+  let nodes = new DOMParser().parseFromString(rawHtml, "text/html");
+  let translationNodes = Array.from(nodes.querySelectorAll('#translation'));
+  
+  if(translationNodes.length> 0){
+    translationNodes.forEach(element=>{
+      //console.log(element);
+      let children = Array.from(element.children);
+      if(children.length>0){
+        children.forEach(child=>{
+          console.log(child);
+          if(child.nodeName == 'P'){
+            translations.push(child.innerHTML)
+          }
+        })
+      }
+    })
+  }
+
+  console.log(translations)
+  return translations;
+}
