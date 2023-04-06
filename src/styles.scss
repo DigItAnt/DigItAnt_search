@@ -29,7 +29,8 @@ app-root {
     box-sizing: border-box;
 }
 
-.p-autocomplete-panel {
+.p-autocomplete-panel,
+.p-overlaypanel {
     font-family: "M PLUS Rounded 1c", sans-serif !important;
 }
 
@@ -373,11 +374,10 @@ app-root {
         overflow-y: auto;
         height: 100px;
 
-        #interpretative-text {
-            span.ab {
-                span.linenumber {
-                    display: none;
-                }
+        #interpretative-text,
+        #diplomatic-text {
+            span.linenumber {
+                display: none;
             }
         }
     }

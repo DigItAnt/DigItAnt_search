@@ -177,7 +177,7 @@ export class LexiconComponent implements OnInit {
   
   getChildren : Observable<TreeNode[]> = this.loadNode$.pipe(
     filter(event => Object.keys(event.node).length > 0),
-    switchMap(event => this.lexiconService.getForms(event.node.data.lexicalEntryInstanceName).pipe(
+    switchMap(event => this.lexiconService.getForms(event.node.data.lexicalEntry).pipe(
       map(forms=> this.mapFormElement(forms)),
       map(formsNodes => event.node.children = formsNodes),
     )),
@@ -272,7 +272,7 @@ export class LexiconComponent implements OnInit {
     switchMap(instanceName => instanceName != ''  ? this.lexiconService.getEtymologiesList(instanceName).pipe(catchError(err => this.thereWasAnError())) : of()),
     tap(etymologies => {
       if(etymologies.length > 0){
-        etymologies.forEach(etymology => this.getEtymologyDataReq$.next(etymology.etymologyInstanceName))
+        etymologies.forEach(etymology => this.getEtymologyDataReq$.next(etymology.etymology))
       }else{
         this.getEtymologyDataReq$.next('')
       }
@@ -290,7 +290,8 @@ export class LexiconComponent implements OnInit {
     take(1),
     tap(x => this.noCognates = false),
     switchMap(instanceName => instanceName != ''  ? this.lexiconService.getCognates(instanceName).pipe(catchError(err => this.thereWasAnError(err, 'cognates'))) : of()),
-    map(cognates => this.mapCognates(cognates))
+    map(cognates => this.mapCognates(cognates)),
+    tap(x=> console.log(x))
   )
   noCognates: boolean = false;
 
@@ -365,17 +366,17 @@ export class LexiconComponent implements OnInit {
 
     let node : TreeNode = event.node;
     let lexicalInstanceName : string = '';
-    let formInstanceName : string = '';
+    let form : string = '';
     this.somethingWrong = false;
-    if(node.data.lexicalEntryInstanceName != undefined && node.data.formInstanceName == undefined){
-      lexicalInstanceName = node.data.lexicalEntryInstanceName;
+    if(node.data.lexicalEntry != undefined && node.data.form == undefined){
+      lexicalInstanceName = node.data.lexicalEntry;
       this.route.navigate(['/lexicon'], { queryParams: { word: lexicalInstanceName } });
     }
 
-    if(node.data.lexicalEntryInstanceName != undefined && node.data.formInstanceName != undefined){
-      lexicalInstanceName = node.data.lexicalEntryInstanceName;
-      formInstanceName = node.data.formInstanceName;
-      this.route.navigate(['/lexicon'], { queryParams: { word: lexicalInstanceName, form: formInstanceName } });
+    if(node.data.lexicalEntry != undefined && node.data.form != undefined){
+      lexicalInstanceName = node.data.lexicalEntry;
+      form = node.data.form;
+      this.route.navigate(['/lexicon'], { queryParams: { word: lexicalInstanceName, form: form } });
     }
 
     
@@ -419,10 +420,8 @@ export class LexiconComponent implements OnInit {
     return cognates.map((cog : CognateElement) => ({
       inferred : cog.inferred,
       label : cog.label,
-      language : this.mapCognatesLanguage(cog.lexicalEntityInstanceName),
-      lexicalEntity : cog.lexicalEntity,
-      lexicalEntityInstanceName : cog.lexicalEntityInstanceName,
-      lexicalType : cog.lexicalType,
+      entity : cog.entity,
+      entityType : cog.entityType,
       link : cog.link,
       linkType : cog.linkType,
     }))

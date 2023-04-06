@@ -1,14 +1,16 @@
-import {  Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
+import {  Component, ComponentRef, ElementRef, NgZone, OnInit, Renderer2, ViewChild, ViewContainerRef } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import * as L from 'leaflet';
 import { circle, tileLayer } from 'leaflet';
 import { Paginator } from 'primeng/paginator';
-import { map, tap, Subject, takeUntil, BehaviorSubject, Observable, switchMap, take, filter, debounceTime, timeout, catchError, iif, throwError, of, EMPTY, shareReplay } from 'rxjs';
+import { map, tap, Subject, takeUntil, BehaviorSubject, Observable, switchMap, take, filter, debounceTime, timeout, catchError, iif, throwError, of, EMPTY, shareReplay, mergeMap, flatMap, delay } from 'rxjs';
 import { CenturyPipe } from 'src/app/pipes/century-pipe/century-pipe.pipe';
+import { FormElement, LexiconService } from 'src/app/services/lexicon/lexicon.service';
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
 import { PopupService } from 'src/app/services/maps/popup/popup.service';
-import { TextMetadata, TextsService } from 'src/app/services/text/text.service';
+import { ListAndId, TextMetadata, TextsService, TextToken, XmlAndId } from 'src/app/services/text/text.service';
+import { DynamicOverlayComponent } from './dynamic-overlay/dynamic-overlay.component';
 
 
 export interface CenturiesCounter {
@@ -259,12 +261,20 @@ export class TextsComponent implements OnInit {
   getFileByIndexReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
 
   getTextContentReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
-  getLeidenReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getInterpretativeReq$ : BehaviorSubject<XmlAndId> = new BehaviorSubject<XmlAndId>({} as XmlAndId);
+  getDiplomaticReq$ : BehaviorSubject<XmlAndId> = new BehaviorSubject<XmlAndId>({} as XmlAndId);
 
+  getAnnotationReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
   loadingInterpretative : boolean = false;
+  loadingDiplomatic : boolean = false;
+  
+  currentElementId : number = NaN;
+  currentTokensList : TextToken[] | undefined;
 
   @ViewChild('interpretativeText') interpretativeText!: ElementRef;
-
+  @ViewChild('diplomaticText') diplomaticText!: ElementRef;
+  @ViewChild('dynamicOverlay', { read: ViewContainerRef }) container : ViewContainerRef | undefined;
+  arrayDynamicComponents : Array<FormElement> = [];
 
   getTextPaginationIndex : Observable<number> = this.getTextPaginationIndexReq$.pipe(
     switchMap(fileId => fileId != '' ? this.textService.getIndexOfText(fileId) : of()),
@@ -290,26 +300,59 @@ export class TextsComponent implements OnInit {
   )
 
 
-  getXMLContent : Observable<string> = this.getTextContentReq$.pipe(
+  getXMLContent : Observable<XmlAndId> = this.getTextContentReq$.pipe(
     tap(x => this.loadingInterpretative = true),
+    tap(elementId => !isNaN(elementId) ? this.currentElementId = elementId : of()),
     switchMap(elementId => !isNaN(elementId) ? this.textService.getContent(elementId) : of()),
-    tap((xml) => {
-      if(xml != '') {
-        this.getLeidenReq$.next(xml);
-        
+    tap((res) => {
+      if(res.xml != '') {
+        //console.log(res.xml)
+        this.getInterpretativeReq$.next(res);
+        this.getDiplomaticReq$.next(res);
+        this.arrayDynamicComponents = [];
       }
     }),
+    //switchMap(x => '')
     
   )
   
-  getInterpretativeContent : Observable<string> = this.getLeidenReq$.pipe(
-    map(rawXml => this.textService.mapXmlRequest(rawXml)),
-    switchMap(leidenRequest => leidenRequest.xmlString != '' ? this.textService.getHTMLContent(leidenRequest) : of()),
-    map(html => leidenInterpretativeBuilder(html)),
-    tap(x => this.loadingInterpretative = false)
+  getInterpretativeContent : Observable<string> = this.getInterpretativeReq$.pipe(
+    filter(req => Object.keys(req).length > 0),
+    map(req => this.textService.mapXmlRequest(req)),
+    map(req =>  getTeiChildren(req)),
+    switchMap(arrayNodes => this.textService.getCustomInterpretativeData(arrayNodes)),
+    tap(data => this.currentTokensList = data.tokens),
+    map(data => buildCustomInterpretative(this.renderer, data.teiNodes, data.leidenNodes, data.tokens)),
+    tap(x => this.getAnnotationReq$.next(this.currentElementId))
   );
 
-  //TODO ottenere diplomatica, interpretativa, traduzione
+  getAnnotations : Observable<any> = this.getAnnotationReq$.pipe(
+    filter(elementId => !isNaN(elementId)),
+    tap(id => console.log(id)),
+    switchMap(id => this.textService.getAnnotation(id)),
+    switchMap(results =>  iif(
+      () => results.length != 0, 
+      this.textService.getForms(results),
+      this.stopRequest(),
+    )),
+    tap(formsAndAnnotations=> this.mapNodes(formsAndAnnotations)),
+    tap(x => this.loadingInterpretative = false)
+  )
+
+
+  getDiplomaticContent : Observable<string> = this.getDiplomaticReq$.pipe(
+    filter(req => Object.keys(req).length > 0),
+    map(rawXml => this.textService.mapXmlRequest(rawXml)),
+    switchMap(req => req.xml != '' ? this.textService.getHTMLContent(req) : of()),
+    map(html => leidenDiplomaticBuilder(html)),
+    tap(x => {
+      // console.log(x);
+      this.loadingDiplomatic = false
+    })
+  );
+
+
+  //TODO ottenere traduzione
 
   searchForm: FormGroup = new FormGroup({
     fullText: new FormControl(null),
@@ -334,9 +377,11 @@ export class TextsComponent implements OnInit {
   constructor(private route: Router,
               private activatedRoute: ActivatedRoute,
               private textService: TextsService,
+              private lexiconService : LexiconService,
               private mapsService : MapsService,
               private ngZone : NgZone,
               private popupService : PopupService,
+              private renderer : Renderer2,
   ) { }
 
   ngOnInit(): void {
@@ -390,6 +435,11 @@ export class TextsComponent implements OnInit {
 
 
     
+  }
+
+  stopRequest() {
+    this.loadingInterpretative = false;
+    return EMPTY;
   }
 
  
@@ -516,7 +566,21 @@ export class TextsComponent implements OnInit {
 
   showHideRestorations(){
     let interpretativeDiv : Array<HTMLElement> = Array.from(this.interpretativeText.nativeElement.getElementsByClassName('gap'));
+    let diplomaticDiv : Array<HTMLElement> = Array.from(this.diplomaticText.nativeElement.getElementsByClassName('gap'));
     interpretativeDiv.forEach(
+      element=> {
+        if(element.style.opacity == '0'){
+
+          element.setAttribute('style', 'opacity: 1');
+        }else{
+          element.setAttribute('style', 'opacity: 0');
+
+        }
+      
+      }
+    )
+
+    diplomaticDiv.forEach(
       element=> {
         if(element.style.opacity == '0'){
 
@@ -537,11 +601,114 @@ export class TextsComponent implements OnInit {
   }
 
 
+  loadOverlayPanel(evt : any){
+    console.log(evt.target);
+    let formId = evt.target.attributes.formid.nodeValue;
+    this.container?.clear();
+
+    let formData = null;
+
+    this.arrayDynamicComponents.forEach(
+      element=>{
+        if(element.form == formId){
+          formData = element;
+        }
+      }
+    )
+    
+    const componentRef : ComponentRef<DynamicOverlayComponent> | undefined = this.container?.createComponent(DynamicOverlayComponent);
+    (<DynamicOverlayComponent>componentRef?.instance).label = formId;
+    if(formData != undefined){
+      (<DynamicOverlayComponent>componentRef?.instance).formData = formData;
+    }
+    (<DynamicOverlayComponent>componentRef?.instance).toggleOverlayPanel(evt);
+  }
+
+  mapNodes(data : any[] | unknown){
+    console.log(data);
+    if(Array.isArray(data)){
+      
+      let nodes = document.querySelectorAll('[tokenid]');
+      
+      if(nodes.length>0){
+        nodes.forEach(node=>{
+          let tokenid = node.getAttribute('tokenid');
+  
+          data.forEach(
+            element => {
+              let annotation = element.annotation;
+              let lexicalEntry = annotation.attributes.lexicalEntry;
+              let formid = annotation.value;
+  
+              if(annotation.attributes.node_id == tokenid){
+  
+                node.setAttribute('lexicalentry', lexicalEntry);
+                node.setAttribute('formid', formid);
+                node.classList.add('notation');
+                node.addEventListener('click', this.loadOverlayPanel.bind(this));
+                this.arrayDynamicComponents.push(element.form);
+                
+                // https://stackblitz.com/edit/angular-mcbbub?file=src%2Fapp%2Fapp.component.html !!!!
+  
+                //TODO: (1) Creare un componente corrispondente a un overlay panel con template e proprietà per visualizzare i dati in entrata
+  
+                //TODO: (2) Una volta creato il componente. Ecco un esempio:
+                
+                  //const factory = this.factory.resolveComponentFactory(NomeComponente);
+                  //const componentRef = this.vc.createComponent(factory);
+  
+                //TODO: (3) Per sicurezza mettere il componente in un array per poi eventualmente distruggere le istanze una volta usciti dal componente
+                  
+                  //this.arrayComponents.push(componentRef);
+  
+                //TODO: (4) Popolare il componente con i dati
+  
+                  // (<FormPanelComponent>componentRef.instance).formId = formId;
+                  // (<FormPanelComponent>componentRef.instance).id = idAnnotation;
+                  // ...
+  
+                //TODO: (5) Attaccare un event listner click allo span
+                
+                // https://stackoverflow.com/questions/41609937/how-to-bind-event-listener-for-rendered-elements-in-angular-2
+  
+                //TODO: (6) Attaccare la funzione per visualizzare l'overlay panel che ho precedente creato nel componente
+  
+                // https://stackoverflow.com/questions/60775447/do-toggle-operation-onoverlaypanel-in-ts
+  
+                //TODO: (7) La logica è: clicco sulla parola, compare overlay panel, se voglio andare alla parola creo un bottone per andarci, fine.
+              }
+            }
+          )
+        })
+      }
+   
+    }
+  
+  }
+
+
 }
 
-function leidenInterpretativeBuilder(html : string){
+function getTeiChildren(req : XmlAndId) : ListAndId{
+
+  let array : Array<Element> = [];
+  let divFaces = Array.from(new DOMParser().parseFromString(req.xml, "text/xml").querySelectorAll('div[subtype="interpretative"] div'));
+  divFaces.forEach(
+    divFacesElement=>{
+      let abChildren = Array.from(divFacesElement.querySelectorAll('ab')[0].children);
+      abChildren.forEach(
+        abChildrenElement => {
+          array.push(abChildrenElement)
+        }
+      )
+    }
+  )
+  return {list : array, id : req.nodeId};
+}
+
+function leidenDiplomaticBuilder(html : string){
   let nodes = new DOMParser().parseFromString(html, "text/html").querySelectorAll('#edition .textpart');
-  return nodes[0].innerHTML;
+  return nodes[1].innerHTML;
 }
 
 function groupByCenturies(texts: TextMetadata[]) : CenturiesCounter[]{
@@ -656,3 +823,86 @@ function groupMaterial(texts : TextMetadata[]) : MaterialCounter[]{
   
   return tmp;
 }
+
+function buildCustomInterpretative(renderer : Renderer2, TEINodes : Array<Element>, LeidenNodes : Array<string>, token : TextToken[]) : string{
+  
+  let HTML = '';
+  TEINodes.forEach(
+    element=> {
+      let begin : number = NaN, end : number = NaN, tokenId : number = NaN, nodeId : number = NaN, xmlId : string | null = null, nodeValue: string | null;
+      if(element.getAttribute('xml:id')!= null){
+        nodeValue = element.getAttribute('xml:id');
+        
+        token.forEach(t=> {
+          if(t.xmlid == nodeValue){
+            begin = t.begin;
+            end = t.end;
+            tokenId = t.id;
+            nodeId = t.node;
+            xmlId = t.xmlid;
+          }
+        })
+        
+      }
+      if(!isNaN(tokenId) && xmlId != null){
+        
+        //LeidenNodes[TEINodes.indexOf(element)];
+        let body = new DOMParser().parseFromString(LeidenNodes[TEINodes.indexOf(element)], "text/html").querySelector('body');
+        if(body != null){
+          Array.from(body.childNodes).forEach((sub:any) => {
+            if(sub instanceof HTMLElement){
+              if(/[\a-z*]/.test(sub.outerText)){
+                HTML += sub.outerHTML;
+              }else{
+                HTML += sub.outerHTML;
+              }
+            } 
+            if(sub instanceof Text){ 
+              if(sub.textContent != null && /[\a-z*]/.test(sub.textContent)){
+                token.forEach(
+                  tok => {
+                    if(tok.xmlid == nodeValue){
+                      let span = renderer.createElement('span') as Element;
+                      let text = renderer.createText(sub.textContent != null ? sub.textContent : 'null');
+                      renderer.setAttribute(span, 'tokenId', tokenId?.toString());
+                      renderer.setAttribute(span, 'nodeId', nodeId?.toString());
+                      renderer.setAttribute(span, 'start', begin?.toString());
+                      renderer.setAttribute(span, 'end', end?.toString());
+                      renderer.setAttribute(span, 'xmlId', xmlId != undefined ? xmlId.toString() : 'null');
+                      renderer.appendChild(span, text)
+                      HTML += span.outerHTML;
+                      //console.log(span.outerHTML)
+                    }
+                  }
+                )
+                
+              }
+            }
+            
+          });
+        }
+
+
+      }else{
+        
+        let body = new DOMParser().parseFromString(LeidenNodes[TEINodes.indexOf(element)], "text/html").querySelector('body');
+        if(body != null){
+          Array.from(body.childNodes).forEach((sub:any) => {
+
+            if(sub instanceof HTMLElement){//nodo span o altro 
+              HTML += sub.outerHTML;
+            } 
+            if(sub instanceof Text){ //-- textContent
+              HTML += sub.textContent;
+            }
+          });
+        }
+        
+      }
+    }
+  )
+
+  return HTML;
+
+}
+

@@ -5,13 +5,19 @@
         "changeOrigin": true,
         "logLevel": "debug"
     },
-    "/cash_old/*": {
+    "/cash_demo/*": {
         "target": "https://digitant.ilc.cnr.it",
         "secure": true,
         "changeOrigin": true,
         "logLevel": "debug"
     },
     "/leiden_demo/*": {
+        "target": "https://digitant.ilc.cnr.it",
+        "secure": true,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/leiden_itant/*": {
         "target": "https://digitant.ilc.cnr.it",
         "secure": true,
         "changeOrigin": true,

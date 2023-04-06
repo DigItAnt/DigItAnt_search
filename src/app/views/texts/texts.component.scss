@@ -13,9 +13,27 @@
         color: $black;
     }
 }
-#interpretative-text {
-    
-    margin: 1rem!important;
-    
+
+
+
+:host {
+    ::ng-deep .text-panel {
+       
+        font-family: "M PLUS Rounded 1c", sans-serif !important;
+        
+    }    
 }
 
+.notation {
+    cursor: pointer;
+    border-bottom: 2px solid $red;
+    border-bottom-style: dashed;
+
+}
+
+.notation:hover {
+    cursor: pointer;
+    border-bottom: 2px solid $dark-red;
+    border-bottom-style: dashed;
+
+}

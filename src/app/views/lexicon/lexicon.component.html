@@ -140,7 +140,7 @@
 
                                 <!-- LEXICAL ENTRY -->
                                 <span class="flex justify-content-between"
-                                    *ngIf="node.data?.lexicalEntry != undefined && node.data?.formInstanceName == undefined">
+                                    *ngIf="node.data?.lexicalEntry != undefined && node.data?.form == undefined">
                                     <b>{{node.label}}</b>
                                     &nbsp;&nbsp;
                                     <span class="font-normal text-red-500">@{{node.data.language}}</span>
@@ -157,13 +157,13 @@
 
                                 <!-- FORM -->
                                 <span
-                                    *ngIf="node.data?.lexicalEntry != undefined && node.data?.formInstanceName != undefined">
+                                    *ngIf="node.data?.lexicalEntry != undefined && node.data?.form != undefined">
                                     <b>{{node.label}}</b>
                                     &nbsp;&nbsp;
                                     <span class="font-normal">
 
                                         <span *ngIf="node.data?.morphology[0].value != ''" class="text-primary-500">
-                                            {{node.data?.morphology[0].value}}
+                                            {{node.data?.morphology[0].value.split('#')[1]}}
                                         </span>
                                         <span *ngIf="node.data?.morphology[0].value == ''"
                                             class="font-italic text-secondary-500">
@@ -173,7 +173,7 @@
                                 </span>
 
                                 <span
-                                    *ngIf="node.data?.lexicalEntry == undefined && node.data?.formInstanceName == undefined">
+                                    *ngIf="node.data?.lexicalEntry == undefined && node.data?.form == undefined">
                                     <span class="font-light font-italic">No children</span>
                                 </span>
                             </ng-template>
@@ -268,8 +268,8 @@
             </div>
 
             <a class="flex no-underline lexicon-item m-2" *ngFor="let item of paginationItems | async" routerLink="./"
-                [href]="'/lexicon?word='+item.lexicalEntryInstanceName"
-                [queryParams]="{word : item.lexicalEntryInstanceName}">
+                [href]="'/lexicon?word='+item.lexicalEntry"
+                [queryParams]="{word : item.lexicalEntry}">
                 <div class="flex flex-row">
                     <div class="flex text-item-id p-2">
                         {{item.label}}
@@ -278,7 +278,7 @@
                     <div class="flex flex-column text-item-preview p-2">
 
                         <div class="text-item-preview-top">
-                            {{item.lexicalEntryInstanceName}}
+                            {{item.lexicalEntry}}
                         </div>
 
                         <div class="text-item-preview-bottom flex flex-column mt-3">
@@ -303,7 +303,7 @@
         </div>
 
 
-        <div class="flex flex-row flex-wrap flex-auto lexicon-item-container m-5 "
+        <div class="flex flex-row flex-wrap flex-auto lexicon-item-container m-5 mr-0"
             *ngIf="lexicon.wordOrLetter == 'word'  && !somethingWrong">
 
             <div class="flex w-full h-full" *ngIf="!lexicon.activeForm && lexicon.activeWord">
@@ -311,7 +311,7 @@
 
                 <div class="flex w-full h-full" *ngIf="{data : getLexicalEntry | async} as lexicalEntry">
                     <div class="flex flex-column w-full h-full"
-                        *ngIf="lexicalEntry.data && lexicon.activeWord == lexicalEntry.data.lexicalEntryInstanceName">
+                        *ngIf="lexicalEntry.data && lexicon.activeWord == lexicalEntry.data.lexicalEntry">
                         <span id="lexical-entry-title" class="text-6xl font-bold pb-3">{{lexicalEntry.data.label}}</span>
                         <div class="flex flex-row align-items-baseline" *ngIf="{data : getSenses | async} as senses">
                             
@@ -401,12 +401,12 @@
 
                                         <div class="pb-2" *ngFor="let etyLink of etymologyElement.data.etyLinks">
                                             <span class="text-2xl font-light text-color-secondary"
-                                                *ngIf="etyLink.etySourceInstanceName != ''">
+                                                *ngIf="etyLink.etySource != ''">
 
-                                                {{etyLink.etySourceInstanceName.includes('PIE') ? 'PIE' : 'PIT'}}:
+                                                {{etyLink.etySource.includes('PIE') ? 'PIE' : 'PIT'}}:
                                             </span>
                                             <span class="text-2xl font-medium etyLink" routerLink="./"
-                                                [queryParams]="{word : etyLink.etySourceInstanceName}"
+                                                [queryParams]="{word : etyLink.etySource}"
                                                 *ngIf="etyLink.etySourceLabel != ''">
 
                                                 {{etyLink.etySourceLabel}}
@@ -455,12 +455,12 @@
                                 <span class="pt-2 text-xl font-light">
                                     Cognates:
                                 </span>
-
+                                <!-- {{cognates.data | json}} -->
                                 <span class="flex flex-row" *ngFor="let cognate of cognates.data">
 
                                     <span class="px-2 text-2xl font-medium etyLink" routerLink="./"
-                                        [queryParams]="{word : cognate.lexicalEntityInstanceName}">
-                                        {{cognate.label}}@{{cognate.language}}
+                                        [queryParams]="{word : cognate.entity}">
+                                        {{cognate.label}}<!-- @{{cognate.language}} -->
                                     </span>
                                     <span class=" px-2 text-2xl font-light font-italic" *ngIf="cognate.label == ''">
                                         No label
@@ -493,8 +493,8 @@
 
                                     <li (click)="attestationsList.show($event)"
                                         class="flex flex-row align-items-baseline list-disc text-2xl font-medium etyLink"
-                                        *ngIf="form.formInstanceName != ''">
-                                        <!-- routerLink="./" [queryParams]="{word : form.lexicalEntryInstanceName, form : form.formInstanceName}" -->
+                                        *ngIf="form.form != ''">
+                                        <!-- routerLink="./" [queryParams]="{word : form.lexicalEntryInstanceName, form : form.form}" -->
 
                                         {{form.label}}
 
@@ -502,7 +502,7 @@
                                         
 
                                         <span *ngFor="let morpho of form.morphology" class="text-xl font-light">
-                                            <span class="pl-2 text-blue-900" *ngIf="morpho.trait == 'partOfSpeech'">@{{morpho.value}}</span>
+                                            <span class="pl-2 text-blue-900" *ngIf="morpho.trait == 'partOfSpeech'">@{{morpho.value.split('#')[1]}}</span>
                                             <span class="pl-2 text-secondary-500" *ngIf="morpho.trait == 'case'">case: {{morpho.value}}</span>
                                         </span>
                                     </li>
@@ -510,11 +510,11 @@
                                     <p-overlayPanel #attestationsList appendTo="body">
 
                                         <div>
-                                            {{form.formInstanceName}}
+                                            {{form.form}}
                                         </div>
                                         <div class="flex flex-auto">
                                             <button routerLink="./"
-                                                [queryParams]="{word: form.lexicalEntryInstanceName, form: form.formInstanceName}"
+                                                [queryParams]="{word: form.lexicalEntry, form: form.form}"
                                                 class="w-full" pButton type="button" label="Go to form"></button>
                                         </div>
 
@@ -539,7 +539,7 @@
                     </div>
 
                     <div class="flex w-full h-full"
-                        *ngIf="lexicon.activeWord != lexicalEntry.data?.lexicalEntryInstanceName">
+                        *ngIf="lexicon.activeWord != lexicalEntry.data?.lexicalEntry">
                         <p-progressSpinner class="flex flex-1"></p-progressSpinner>
                     </div>
                 </div>
@@ -549,7 +549,7 @@
                 <div class="flex w-full" *ngIf="{data : getForm | async} as form">
 
                     <div class="flex flex-column flex-auto"
-                        *ngIf="form.data && lexicon.activeForm == form.data.formInstanceName">
+                        *ngIf="form.data && lexicon.activeForm == form.data.form">
 
                         <span id="lexical-entry-title" class="text-6xl font-bold pb-3">
                             <span *ngFor="let label of form.data.label">
@@ -578,7 +578,7 @@
                                 </span>
                                 <span *ngFor="let pos of form.data.inheritedMorphology">
                                     <span *ngIf="pos.value != ''" class=" pt-2 text-xl font-medium text-blue-900">
-                                        {{pos.value}}
+                                        {{pos.value.split('#')[1]}}
                                     </span>
                                     <span *ngIf="pos.value == ''" class=" pt-2 text-lg font-light font-italic">
                                         No info
@@ -590,9 +590,8 @@
 
 
                         </div>
-                        <!-- {{form.data | json}} -->
                     </div>
-                    <div class="flex w-full" *ngIf="lexicon.activeForm != form.data?.formInstanceName">
+                    <div class="flex w-full" *ngIf="lexicon.activeForm != form.data?.form">
                         <p-progressSpinner class="flex flex-1"></p-progressSpinner>
                     </div>
                 </div>

@@ -211,20 +211,20 @@
             <ul class="home-menu" *ngIf="text.activeFile">
         
                 <!-- ATTESTATIONS -->
-                <a  class="categories no-underline">
+                <!-- <a  class="categories no-underline">
                     <li class="pl-4 flex align-items-center">
                         <span class="icon"></span>
                         <span class="route flex-1">Attestations</span>
                     </li>
-                </a>
+                </a> -->
 
                 <!-- HOW TO CITE -->
-                <a  class="categories no-underline">
+                <!-- <a  class="categories no-underline">
                     <li class="pl-4 flex align-items-center">
                         <span class="icon"></span>
                         <span class="route flex-1">How to cite</span>
                     </li>
-                </a>
+                </a> -->
                 <!-- SHOW XML -->
                 <a  class="categories no-underline">
                     <li class="pl-4 flex align-items-center">
@@ -468,20 +468,36 @@
 
                         <!-- TEXT -->
 
-                        <div id="edition-div" class="flex flex-column flex-auto" *ngIf="{raw : getXMLContent | async} as xml">
+                        <div id="edition-div" class="flex flex-column flex-auto" *ngIf="{raw : getXMLContent | async } as xml">
                             <div id="edition-div-title" class="flex flex-row">
                                 <h2 class="font-medium">Text</h2>
                                 
                             </div>
 
-                            <div id="edition-div-panel" class="flex data-list  pt-3" *ngIf="{interpretative: getInterpretativeContent | async} as leiden">
-                                <div #interpretativeText id="interpretative-text" *ngIf="!loadingInterpretative" [innerHTML]="leiden.interpretative">
+                            <div id="edition-div-panel" class="flex data-list  pt-3" *ngIf="{interpretative: getInterpretativeContent | async,
+                                                                                             diplomatic : getDiplomaticContent | async,
+                                                                                             annotations: getAnnotations | async} as leiden"> 
+                                <p-tabView styleClass="text-panel" [hidden]="loadingInterpretative && loadingDiplomatic">
+                                    <p-tabPanel header="Intepretative">
+                                        <div #interpretativeText id="interpretative-text" [hidden]="loadingInterpretative" [innerHTML]="leiden.interpretative | noSanitize " >
 
-                                </div>
-                                <div class="flex flex-row m-2 w-full" *ngIf="loadingInterpretative">
-                                    <p-progressSpinner class="flex flex-1"></p-progressSpinner>
-                        
-                                </div>
+                                            
+                                        </div>
+                                        <div #dynamicOverlay></div>
+                                    </p-tabPanel>
+                                    <p-tabPanel header="Diplomatic">
+                                        <div #diplomaticText id="diplomatic-text" [hidden]="loadingDiplomatic" [innerHTML]="leiden.diplomatic">
+
+                                        </div>
+                                    </p-tabPanel>
+    
+                                </p-tabView>                              
+                                 
+                                
+                            </div>
+                            <div class="flex flex-row m-2 w-full" *ngIf="loadingInterpretative || loadingDiplomatic">
+                                <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+                    
                             </div>
                         </div>  
 
@@ -519,3 +535,4 @@
         </div>
 
 </div>
+

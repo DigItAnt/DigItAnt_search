@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
-import { debounceTime, filter, map, Observable, of, shareReplay, Subject, switchMap, tap, timeout } from 'rxjs';
+import { debounceTime, filter, forkJoin, map, Observable, of, shareReplay, Subject, switchMap, tap, timeout } from 'rxjs';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { FormElement, LexiconService } from '../lexicon/lexicon.service';
 
 export interface DocumentSystem {
   documentSystem : Text[]
@@ -133,6 +134,66 @@ export interface LeidenResponse {
   xml : string,
 }
 
+export interface TextToken {
+  begin : number,
+  end : number,
+  id : number,
+  imported : boolean,
+  node : number,
+  position : number,
+  source : string,
+  text : string,
+  xmlid : string
+}
+
+export interface GetTokensResponse extends GetContentResponse {
+  tokens : Array<TextToken>
+}
+
+export interface XmlAndId {
+  xml : string,
+  nodeId : number,
+}
+
+export interface ListAndId {
+  list : Array<Element>,
+  id : number,
+}
+
+export interface AnnotationResponse{
+  requestUUID : string,
+  annotations : Annotation[]
+}
+
+export interface AnnotationAttributes {
+  author : string,
+  confidence : number,
+  creator : string,
+  externalRef : string,
+  form_id : string;
+  label : string,
+  node_id : number,
+  node : string,
+  timestamp : string,
+  validity : string
+}
+
+export interface Span {
+  start : number,
+  end : number,
+}
+export interface Annotation {
+  attributes : AnnotationAttributes,
+  id : number,
+  imported : boolean,
+  layer : string,
+  spans : Span[],
+  value : string
+}
+
+
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -140,6 +201,7 @@ export class TextsService {
 
   private baseUrl = environment.cashUrl;
   private leidenUrl = environment.leidenUrl;
+  private lexoUrl = environment.lexoUrl;
   private documentSystem: DocumentSystem[] = [];
 
   texts$ : Observable<TextMetadata[]> = this.getTextCollection().pipe(
@@ -150,6 +212,7 @@ export class TextsService {
 
   constructor(
     private http: HttpClient,
+    private lexiconService : LexiconService
   ) { }
 
 
@@ -271,25 +334,108 @@ export class TextsService {
     )
   }
 
-  getContent(nodeId : number) : Observable<string> {
+  getContent(nodeId : number) : Observable<XmlAndId> {
     return this.http.get<GetContentResponse>(`${this.baseUrl}api/public/getcontent?requestUUID=11&nodeid=${nodeId}`).pipe(
-      map(x => x.text)
+      map(x => ({xml : x.text, nodeId : nodeId}))
     );
   }
   
-  getHTMLContent(rawXmlData : LeidenRequest) : Observable<string>{
-    return this.http.post<LeidenResponse>('/leiden_demo/', rawXmlData).pipe(
+  getHTMLContent(rawXmlData : XmlAndId) : Observable<string>{
+    return this.http.post<LeidenResponse>( this.leidenUrl, {xmlString : rawXmlData.xml}).pipe(
       map(leidenResponse => leidenResponse.xml)
     );
-    
   }
 
-  mapXmlRequest(rawXml : string) : LeidenRequest {
+  getHTMLTeiNodeContent(rawXmlData : LeidenRequest) : Observable<string>{
+    return this.http.post<LeidenResponse>( '/leiden_itant/', rawXmlData).pipe(
+      map(leidenResponse => leidenResponse.xml)
+    );
+  }
+
+  getTokens(nodeId : number) : Observable<Array<TextToken>> {
+    return this.http.get<GetTokensResponse>(`${this.baseUrl}api/public/token?requestUUID=11&nodeid=${nodeId}`).pipe(
+      map(x => x.tokens)
+    )
+  }
+
+  getAnnotation(id : number) : Observable<Annotation[]>{
+    return this.http.get<AnnotationResponse>(this.baseUrl + 'api/public/annotation?requestUUID=test123&nodeid='+id).pipe(
+      map(results => results.annotations.filter(
+        anno=> anno.layer == 'attestation'
+      )),
+    );
+  }
+
+  mapXmlRequest(res : XmlAndId) : XmlAndId {
     let object = {
-      xmlString : rawXml
+      xml : res.xml,
+      nodeId : res.nodeId,
     }
 
     return object;
   }
 
+  getCustomInterpretativeData(req : ListAndId){
+    let teiNodeContent : Array<string> = [];
+    return forkJoin(
+      req.list.map(
+        (node: any) => {
+          return this.getHTMLTeiNodeContent({xmlString : node.outerHTML}).pipe(map(x => x))
+        }
+      ),
+      
+    ).pipe(
+      tap(x => teiNodeContent = x),
+      switchMap(x => this.getTokens(req.id)),
+      map(tokens => {
+        return {
+          teiNodes: req.list, 
+          leidenNodes : teiNodeContent, 
+          tokens : tokens
+        }
+      })
+    )
+  }
+
+  getForms(annotations : Annotation[]){
+    return forkJoin(
+      annotations.map(
+        (anno : Annotation) => {
+
+          return this.lexiconService.getFormData(anno.value).pipe(
+            map(res => {
+              return {
+                annotation : anno,
+                form : res
+              }
+            })
+          )
+        }
+      )
+    ).pipe(
+      tap(res => res)
+    )
+  }
+
+  getLexicalEntries(formsAndAnno : any){
+    return forkJoin(
+      formsAndAnno.map(
+        (formAndAnno : any) => {
+
+          return this.lexiconService.getLexicalEntryData(formAndAnno.form.lexicalEntry).pipe(
+            map(res => {
+              return {
+                annotation : formAndAnno.annotation,
+                lexicalEntry : res
+              }
+            })
+          )
+        }
+      )
+    ).pipe(
+      tap(res => res)
+    )
+  }
+
 }
+

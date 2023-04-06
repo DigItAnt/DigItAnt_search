@@ -57,6 +57,8 @@ import { CitationsComponent } from './views/home/citations/citations.component';
 //PIPES
 import { CenturyPipe } from './pipes/century-pipe/century-pipe.pipe';
 import { UrlDecoderPipe } from './pipes/url-decoder/url-decoder.pipe';
+import { NoSanitizePipe } from './pipes/no-sanitize/no-sanitize.pipe';
+import { DynamicOverlayComponent } from './views/texts/dynamic-overlay/dynamic-overlay.component';
 
 
 @NgModule({
@@ -78,6 +80,8 @@ import { UrlDecoderPipe } from './pipes/url-decoder/url-decoder.pipe';
     CitationsComponent,
     CenturyPipe,
     UrlDecoderPipe,
+    NoSanitizePipe,
+    DynamicOverlayComponent
   ],
   imports: [
     BrowserModule,

@@ -19,7 +19,6 @@ export interface LexicalElement {
   language: string,
   lastUpdate: string,
   lexicalEntry: string,
-  lexicalEntryInstanceName: string,
   morphology: Array<Morphology>,
   note: string,
   pos: string,
@@ -35,16 +34,13 @@ export interface FormElementTree {
   creator: string,
   creationDate: string,
   form: string,
-  formInstanceName: string,
   label: string,
   lastUpdate: string,
   lexicalEntry: string,
-  lexicalEntryInstanceName: string,
   morphology: Array<Morphology>,
   note: string,
   phoneticRep: string,
   targetSense: string,
-  targetSenseInstanceName: string,
   type: string
 }
 
@@ -53,18 +49,16 @@ export interface FormElement {
   creator: string,
   creationDate: string,
   form: string,
-  formInstanceName: string,
   inheritedMorphology : Array<Morphology>,
   label: Array<FormElementLabels>,
   language : string,
   lastUpdate: string,
   lexicalEntry: string,
-  lexicalEntryInstanceName: string,
+  lexicalEntryLabel : string,
   morphology: Array<Morphology>,
   note: string,
   phoneticRep: string,
   targetSense: string,
-  targetSenseInstanceName: string,
   type: string
 }
 
@@ -75,7 +69,6 @@ export interface FormElementLabels {
 
 export interface SenseElement {
   concept : string,
-  conceptInstanceName : string,
   confidence : number,
   creationDate : string,
   creator: string,
@@ -88,12 +81,10 @@ export interface SenseElement {
   lastUpdate : string,
   lemma : string,
   lexicalEntry : string,
-  lexicalEntryInstanceName : string,
   note : string,
   pos : string,
   sense : string,
   senseExample : string,
-  senseInstanceName : string,
   senseTranslation : string,
   usage : string,
 }
@@ -103,13 +94,11 @@ export interface EtymologyTreeElement {
   creationDate : string,
   creator : string,
   etymology : string,
-  etymologyInstanceName : string,
   hypotesisOf : string,
   id : number,
   label : string,
   lastUpdate : string,
   lexicalEntry : string,
-  lexicalEntryInstanceName : string,
   note : string,
 }
 
@@ -127,13 +116,10 @@ export interface EtyLinkElement {
   creator : string,
   etyLinkType : string,
   etySource : string,
-  etySourceInstanceName : string,
   etySourceLabel : string,
   etyTarget : string,
-  etyTargetInstanceName : string,
   etyTargetLabel : string,
   etymologicalLink : string,
-  etymologicalLinkInstanceName : string,
   externalIRI : boolean,
   label : string,
   lastUpdate : string,
@@ -145,7 +131,6 @@ export interface EtymologyData {
   creationDate : string,
   creator : string,
   etymology : string,
-  etymologyInstancename : string,
   hypotesisOf : string,
   label : string,
   lastUpdate : string,
@@ -156,10 +141,8 @@ export interface EtymologyData {
 export interface CognateElement {
   inferred : boolean,
   label : string,
-  language : string,
-  lexicalEntity : string,
-  lexicalEntityInstanceName : string,
-  lexicalType : Array<string>,
+  entity : string,
+  entityType : Array<string>,
   link : string | null,
   linkType : string,
 }
@@ -245,49 +228,49 @@ export class LexiconService {
   }
 
   getLexicalEntryData(instanceName: string): Observable<LexicalElement> {
-    return this.http.get<LexicalElement>(`${this.baseUrl}lexicon/data/${instanceName}/lexicalEntry?key=lexodemo&aspect=core`).pipe(
+    return this.http.get<LexicalElement>(`${this.baseUrl}lexicon/data/lexicalEntry?key=lexodemo&aspect=core&id=${encodeURIComponent(instanceName)}`).pipe(
       map((res) => res),
       shareReplay(),
     )
   }
 
   getFormData(instanceName: string): Observable<FormElement> {
-    return this.http.get<FormElement>(`${this.baseUrl}lexicon/data/${instanceName}/form?key=lexodemo&aspect=core`).pipe(
+    return this.http.get<FormElement>(`${this.baseUrl}lexicon/data/form?key=lexodemo&aspect=core&id=${encodeURIComponent(instanceName)}`).pipe(
       map((res) => res),
       shareReplay(),
     )
   }
 
   getForms(instanceName: string): Observable<FormElementTree[]> {
-    return this.http.get<FormElementTree[]>(`${this.baseUrl}lexicon/data/${instanceName}/forms`).pipe(
+    return this.http.get<FormElementTree[]>(`${this.baseUrl}lexicon/data/forms?id=${encodeURIComponent(instanceName)}`).pipe(
       map((res) => res),
       shareReplay(),
     )
   }
 
   getSenses(instanceName: string): Observable<SenseElement[]> {
-    return this.http.get<SenseElement[]>(`${this.baseUrl}lexicon/data/${instanceName}/senses`).pipe(
+    return this.http.get<SenseElement[]>(`${this.baseUrl}lexicon/data/senses?id=${encodeURIComponent(instanceName)}`).pipe(
       map((res) => res),
       shareReplay(),
     )
   }
 
   getEtymologiesList(instanceName: string): Observable<EtymologyTreeElement[]> {
-    return this.http.get<EtymologyTreeElement[]>(`${this.baseUrl}lexicon/data/${instanceName}/etymologies`).pipe(
+    return this.http.get<EtymologyTreeElement[]>(`${this.baseUrl}lexicon/data/etymologies?id=${encodeURIComponent(instanceName)}`).pipe(
       map((res) => res),
       shareReplay(),
     )
   }
 
   getEtymologyData(instanceName: string): Observable<EtymologyElement> {
-    return this.http.get<EtymologyElement>(`${this.baseUrl}lexicon/data/${instanceName}/etymology`).pipe(
+    return this.http.get<EtymologyElement>(`${this.baseUrl}lexicon/data/etymology?id=${encodeURIComponent(instanceName)}`).pipe(
       map((res) => res),
       shareReplay(),
     )
   }
 
   getCognates(instanceName : string) : Observable<CognateElement[]>{
-    return this.http.get<CognateElement[]>(`${this.baseUrl}lexicon/data/${instanceName}/linguisticRelation?key=lexodemo&property=cognate`).pipe(
+    return this.http.get<CognateElement[]>(`${this.baseUrl}lexicon/data/linguisticRelation?key=lexodemo&property=cognate&id=${encodeURIComponent(instanceName)}`).pipe(
       map((res) => res),
       shareReplay(),
     )
