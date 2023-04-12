@@ -15,11 +15,13 @@ export interface TextMetadata {
   authority : string,
   autopsy : string,
   autopsyAuthor : string,
-  bodytextpart : Array<BodyTextPart>,
+  autopsyDate : string,
+  bodytextpart : BodyTextPart[] & BodyTextPart,
   condition : string,
   conditionDesc : string,
   conservationInstitution : ConservationInstitution,
   dateOfOrigin : string,
+  dateOfOriginNotAfter : string,
   dateOfOriginNotBefore : string,
   datingCertainty : string,
   decoration : string,
@@ -53,6 +55,8 @@ export interface TextMetadata {
   title: string,
   traditionalIDs : Array<TraditionalIDs>,
   trismegistos : Trismegistos,
+  wordDivisionType : string,
+  writingSystem : string,
 }
 
 export interface Trismegistos {
@@ -191,7 +195,26 @@ export interface Annotation {
   value : string
 }
 
+export interface Book {
+  author : BookAuthor,
+  editor : BookEditor,
+  title : string,
+  url : string,
+}
 
+export interface BookAuthor {
+  name : string,
+  surname : string
+}
+
+export interface BookEditor extends BookAuthor{
+
+}
+
+export interface Graphic {
+  description : string,
+  url : string
+}
 
 
 @Injectable({
@@ -239,6 +262,7 @@ export class TextsService {
       ancientFindSpotName : text.metadata.ancientFindSpotName,
       authority : text.metadata.authority,
       autopsy: text.metadata.autopsy,
+      autopsyDate : text.metadata.autopsyDate,
       autopsyAuthor : text.metadata.autopsyAuthor,
       bodytextpart : text.metadata.bodytextpart,
       condition : text.metadata.condition,
@@ -246,6 +270,7 @@ export class TextsService {
       conservationInstitution : text.metadata.conservationInstitution,
       dateOfOrigin : text.metadata.dateOfOrigin,
       dateOfOriginNotBefore : text.metadata.dateOfOriginNotBefore,
+      dateOfOriginNotAfter : text.metadata.dateOfOriginNotAfter,
       datingCertainty : text.metadata.datingCertainty,
       decoration: text.metadata.decoration,
       detailedFindSpot : text.metadata.detailedFindSpot,
@@ -278,6 +303,8 @@ export class TextsService {
       title: text.metadata.title,
       traditionalIDs : text.metadata.traditionalIDs,
       trismegistos : text.metadata.trismegistos,
+      wordDivisionType : text.metadata.wordDivisionType,
+      writingSystem : text.metadata.writingSystem,
     }))
   }
 
@@ -336,7 +363,8 @@ export class TextsService {
 
   getContent(nodeId : number) : Observable<XmlAndId> {
     return this.http.get<GetContentResponse>(`${this.baseUrl}api/public/getcontent?requestUUID=11&nodeid=${nodeId}`).pipe(
-      map(x => ({xml : x.text, nodeId : nodeId}))
+      map(x => ({xml : x.text, nodeId : nodeId})),
+      shareReplay()
     );
   }
   
@@ -354,7 +382,8 @@ export class TextsService {
 
   getTokens(nodeId : number) : Observable<Array<TextToken>> {
     return this.http.get<GetTokensResponse>(`${this.baseUrl}api/public/token?requestUUID=11&nodeid=${nodeId}`).pipe(
-      map(x => x.tokens)
+      map(x => x.tokens),
+      shareReplay()
     )
   }
 
@@ -363,6 +392,7 @@ export class TextsService {
       map(results => results.annotations.filter(
         anno=> anno.layer == 'attestation'
       )),
+      shareReplay()
     );
   }
 
@@ -393,7 +423,8 @@ export class TextsService {
           leidenNodes : teiNodeContent, 
           tokens : tokens
         }
-      })
+      }),
+      shareReplay()
     )
   }
 
@@ -433,7 +464,8 @@ export class TextsService {
         }
       )
     ).pipe(
-      tap(res => res)
+      tap(res => res),
+      shareReplay()
     )
   }
 

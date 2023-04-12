@@ -31,6 +31,7 @@ import {SelectButtonModule} from 'primeng/selectbutton';
 import {CheckboxModule} from 'primeng/checkbox';
 import {TreeModule} from 'primeng/tree';
 import {AccordionModule} from 'primeng/accordion';
+import {ImageModule} from 'primeng/image';
 
 
 //LEAFLET
@@ -53,12 +54,12 @@ import { ProjectComponent } from './views/home/project/project.component';
 import { AboutComponent } from './views/home/about/about.component';
 import { ContactComponent } from './views/home/contact/contact.component';
 import { CitationsComponent } from './views/home/citations/citations.component';
+import { DynamicOverlayComponent } from './views/texts/dynamic-overlay/dynamic-overlay.component';
 
 //PIPES
 import { CenturyPipe } from './pipes/century-pipe/century-pipe.pipe';
 import { UrlDecoderPipe } from './pipes/url-decoder/url-decoder.pipe';
 import { NoSanitizePipe } from './pipes/no-sanitize/no-sanitize.pipe';
-import { DynamicOverlayComponent } from './views/texts/dynamic-overlay/dynamic-overlay.component';
 
 
 @NgModule({
@@ -112,7 +113,8 @@ import { DynamicOverlayComponent } from './views/texts/dynamic-overlay/dynamic-o
     SelectButtonModule,
     CheckboxModule,
     TreeModule,
-    AccordionModule
+    AccordionModule,
+    ImageModule
   ],
   providers: [],
   bootstrap: [AppComponent]

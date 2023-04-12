@@ -327,6 +327,8 @@ app-root {
         min-height: 5rem;
         overflow-y: auto;
         color: #64748b;
+        background: white;
+        z-index: 999;
 
         @keyframes blinkdot {
             0% {

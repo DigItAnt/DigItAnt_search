@@ -350,7 +350,7 @@
             </div>
         
             <!-- TEXTS LIST -->
-            <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="(text.totalRecords != 0 && !somethingWrong) && !text.activeFile">
+            <div class="flex flex-row flex-wrap flex-auto text-item-container" *ngIf="(text.totalRecords != 0 && !somethingWrong) && !text.activeFile">
                 <div class="flex flex-row m-2 w-full" *ngIf="!text.totalRecords">
                     <p-progressSpinner class="flex flex-1"></p-progressSpinner>
         
@@ -388,7 +388,7 @@
 
 
             <!-- TEXT VIEW -->
-            <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="((text.totalRecords != 0 && !somethingWrong) && text.activeFile) 
+            <div class="flex flex-row flex-wrap flex-auto text-item-container" *ngIf="((text.totalRecords != 0 && !somethingWrong) && text.activeFile) 
                                                                                         && {index : getTextPaginationIndex | async,
                                                                                             fileID: getFileIdByIndex | async, 
                                                                                             file : getFileByIndex | async} as textView">
@@ -420,7 +420,7 @@
                     </div>         
                     
                     
-                    <div class="main-section flex flex-column m-3" *ngIf="textView.file">
+                    <div class="main-section flex flex-column p-3 m-3" *ngIf="textView.file">
 
 
                         <!-- GENERAL -->
@@ -429,9 +429,9 @@
                                 <h2 class="font-medium">General data:</h2>
                             </div>
                             
-                            <div id="general-data-div-list" class="flex grid data-list  pt-3 ">
+                            <div  class="flex grid data-list  pt-3 ">
                                 <div class="flex col-3 justify-content-end">
-                                    <span class="font-bold">ID:</span>
+                                    <span class="font-bold text-right">ID:</span>
                                 </div>
                                 <div class="flex flex-row col-9">
 
@@ -452,9 +452,9 @@
                             </div>
 
 
-                            <div id="general-data-div-list" class="flex grid data-list">
+                            <div  class="flex grid data-list">
                                 <div class="flex col-3 justify-content-end">
-                                    <span class="font-bold">Title:</span>
+                                    <span class="font-bold text-right">Title:</span>
                                 </div>
                                 <div class="flex flex-row col-9">
 
@@ -502,7 +502,7 @@
                         </div> 
                         
                         
-                        <div id="translation-div" class="flex flex-column flex-auto pt-3" *ngIf="{raw : getXMLContent | async } as xml">
+                        <div id="translation-div" class="flex flex-column flex-auto pt-3">
                             <div id="translation-div-title" class="flex flex-row">
                                 <h2 class="font-medium">Translation</h2>
                                 
@@ -532,13 +532,441 @@
                             </div>
                         </div> 
 
+                        <!-- TEXT-DATA -->
+
+                        <div id="text-data-div" class="flex flex-column flex-auto pt-3">
+                            <div id="text-data-div-title" class="flex flex-row">
+                                <h2 class="font-medium">Text Data</h2>
+                                
+                            </div>
+
+                            <div class="flex grid data-list pt-3">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">Autopsy date:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <span class="font-normal" *ngIf="textView.file.autopsyDate">{{textView.file.autopsyDate}}</span>
+                                    <span class="font-italic" *ngIf="textView.file.autopsyDate == undefined">No info</span>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">Autopsy author:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <span class="font-normal" *ngIf="textView.file.autopsyAuthor">{{textView.file.autopsyAuthor}}</span>
+                                    <span class="font-italic" *ngIf="textView.file.autopsyAuthor == undefined">No info</span>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">Language:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column" *ngIf="textView.file.language.length > 0">
+
+                                        <div class="flex flex-column">
+                                            <a class="font-bold text-red-800 " *ngFor="let lang of textView.file.language" [href]="lang.source" target="_blank">{{lang.ident}}</a>
+
+                                        </div>
+                                        
+                                    </div>
+
+                                    <div class="flex flex-column" *ngIf="textView.file.language.length == 0">
+
+                                        <div class="flex flex-column">
+                                            <span class="font-italic " >No info</span>
+
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="flex grid data-list">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">Alphabet:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column" *ngIf="textView.file.alphabet != undefined">
+
+                                        <div class="flex flex-column">
+                                            <a class="font-bold text-red-800 " [href]="textView.file.alphabet_url" target="_blank">{{textView.file.alphabet}}</a>
+
+                                        </div>
+                                        
+                                    </div>
+
+                                    <div class="flex flex-column" *ngIf="textView.file.alphabet == undefined">
+
+                                        <div class="flex flex-column">
+                                            <span class="font-italic " >No info</span>
+
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">Word division type:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <span class="font-normal" *ngIf="textView.file.wordDivisionType">{{textView.file.wordDivisionType}}</span>
+                                    <span class="font-italic" *ngIf="textView.file.wordDivisionType == undefined">No info</span>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">Paleographic notes:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <span class="font-normal" *ngIf="textView.file.paleographicNotes">{{textView.file.paleographicNotes}}</span>
+                                    <span class="font-italic" *ngIf="textView.file.paleographicNotes == undefined">No info</span>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">Inscription type:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <span class="font-normal" *ngIf="textView.file.inscriptionType">{{textView.file.inscriptionType}}</span>
+                                    <span class="font-italic" *ngIf="textView.file.inscriptionType == undefined">No info</span>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">Execution:</span>
+                                </div>
+                                <div class="flex flex-column col-9" *ngIf="isBodyTextPartArray">
+
+                                    <div class="flex flex-column mb-3" *ngFor="let ductus of textView.file.bodytextpart">
+                                        <div>
+                                            <span class="font-bold text-red-800 ">Ductus:</span> <span class="font-normal ">{{ductus.ductus}}</span>
+                                        </div>
+                                        <div>
+                                            <span class="font-bold text-red-800 ">Section:</span> <span class="font-normal ">{{ductus.section}}</span>
+                                        </div>
+                                        <div>
+                                            <span class="font-bold text-red-800 ">Text direction:</span> <span class="font-normal ">{{ductus.textDirection}}</span>
+                                        </div>
+
+                                    </div>
+                                    
+                                </div>
+
+                                <div class="flex flex-column col-9" *ngIf="!isBodyTextPartArray">
+
+                                    <div>
+                                        <span class="font-bold text-red-800 ">Ductus:</span> <span class="font-normal ">{{textView.file.bodytextpart.ductus}}</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-bold text-red-800 ">Section:</span> <span class="font-normal ">{{textView.file.bodytextpart.section}}</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-bold text-red-800 ">Text direction:</span> <span class="font-normal ">{{textView.file.bodytextpart.textDirection}}</span>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list align-items-baseline">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold" [pTooltip]="'Dating certainty: '+textView.file.datingCertainty" tooltipPosition="top">Date<sup><i class="fa-solid fa-question fa-2xs"></i></sup>:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <span class="font-normal">{{textView.file.dateOfOriginNotBefore != undefined ? textView.file.dateOfOriginNotBefore : 'No info'}} - {{textView.file.dateOfOriginNotAfter != undefined ? textView.file.dateOfOriginNotAfter : 'No info'}}</span>
+                                    
+                                    
+                                </div>
+                            </div>
+                            
+                        </div> 
+
                          <!-- SUPPORT -->
+
+                        <div id="text-data-div" class="flex flex-column flex-auto pt-3">
+                            <div id="text-data-div-title" class="flex flex-row">
+                                <h2 class="font-medium">Support</h2>
+                                
+                            </div>
+
+                            <div class="flex grid data-list pt-3" *ngIf="textView.file.support.objectType != undefined">
+
+                                <div class="flex col-3 justify-content-end" >
+                                    <span class="font-bold text-right">Object type:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column">
+                                        <a class="font-bold text-red-800 " [href]="textView.file.support.objectType_conceptUrl" target="_blank">{{textView.file.support.objectType}}</a>
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list" *ngIf="textView.file.support.material != undefined">
+
+                                <div class="flex col-3 justify-content-end" >
+                                    <span class="font-bold ">Material:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column">
+                                        <a class="font-bold text-red-800 " [href]="textView.file.support.material_conceptUrl" target="_blank">{{textView.file.support.material}}</a>
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list" *ngIf="textView.file.dimensions != undefined">
+
+                                <div class="flex col-3 justify-content-end" >
+                                    <span class="font-bold text-right">Dimensions:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column">
+                                        <span class="font-normal ">{{textView.file.dimensions}}</span>
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list" *ngIf="textView.file.layoutNotes != undefined">
+
+                                <div class="flex col-3 justify-content-end" >
+                                    <span class="font-bold text-right">Layout notes:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column">
+                                        <span class="font-normal" *ngIf="textView.file.layoutNotes != ''">{{textView.file.layoutNotes}}</span>
+                                        <span class="font-italic" *ngIf="textView.file.layoutNotes == ''">No info</span>
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list">
+
+                                <div class="flex col-3 justify-content-end" *ngIf="textView.file.condition != undefined">
+                                    <span class="font-bold text-right">Condition:</span>
+                                </div>
+                                <div class="flex flex-column col-9">
+
+                                    <div class="flex flex-column">
+                                        <span class="font-normal" *ngIf="textView.file.condition != ''">{{textView.file.condition}}</span>
+                                        <span class="font-italic" *ngIf="textView.file.condition == ''">No info</span>
+
+                                    </div>
+
+                                    <div class="flex flex-column" *ngIf="textView.file.conditionDesc != undefined">
+                                        <span class="font-normal" *ngIf="textView.file.conditionDesc != ''">{{textView.file.conditionDesc}}</span>
+                                        <span class="font-italic" *ngIf="textView.file.conditionDesc == ''">No info</span>
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list" *ngIf="textView.file.decoration != undefined">
+
+                                <div class="flex col-3 justify-content-end" >
+                                    <span class="font-bold text-right">Decoration:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column">
+                                        <span class="font-normal" *ngIf="textView.file.decoration != ''">{{textView.file.decoration}}</span>
+                                        <span class="font-italic" *ngIf="textView.file.decoration == ''">No info</span>
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            
+                        </div> 
 
                         <!-- ORIGIN AND CONSERVATION -->
 
+
+                        <div id="text-data-div" class="flex flex-column flex-auto pt-3">
+                            <div id="text-data-div-title" class="flex flex-row">
+                                <h2 class="font-medium">Origin and Preservation</h2>
+                                
+                            </div>
+
+                            <div class="flex grid data-list pt-3" *ngIf="textView.file.originalPlace.ancientName != undefined">
+
+                                <div class="flex col-3 justify-content-end" *ngIf="textView.file.originalPlace.ancientName != ''">
+                                    <span class="font-bold text-right">Ancient find spot name:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column">
+                                        <a class="font-bold text-red-800 " [href]="textView.file.originalPlace.ancientNameUrl" target="_blank">{{textView.file.originalPlace.ancientName}}</a>
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list pt-3" *ngIf="textView.file.originalPlace.modernName != undefined">
+
+                                <div class="flex col-3 justify-content-end" *ngIf="textView.file.originalPlace.modernName != ''">
+                                    <span class="font-bold text-right">Modern find spot name:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column">
+                                        <a class="font-bold text-red-800 " [href]="textView.file.originalPlace.modernNameUrl" target="_blank">{{textView.file.originalPlace.modernName}}</a>
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+
+                            <div class="flex grid data-list pt-3" *ngIf="textView.file.discoveryYear != undefined">
+
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">Discovery year:</span>
+                                </div>
+                                <div class="flex flex-column col-9">
+
+                                    <div>
+                                        <span class="font-bold text-red-800 " *ngIf="textView.file.discoveryYear.when != ''">When:</span> <span class="font-normal ">{{textView.file.discoveryYear.when}}</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-bold text-red-800 " *ngIf="textView.file.discoveryYear.notAfter != ''">Not after:</span> <span class="font-normal ">{{textView.file.discoveryYear.notAfter}}</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-bold text-red-800 " *ngIf="textView.file.discoveryYear.notBefore != ''">Not before:</span> <span class="font-normal ">{{textView.file.discoveryYear.notBefore}}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="flex grid data-list pt-3" *ngIf="textView.file.settlement.placeOfConservation != undefined">
+
+                                <div class="flex col-3 justify-content-end" *ngIf="textView.file.settlement.placeOfConservation != ''">
+                                    <span class="font-bold text-right">Place of conservation:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column">
+                                        <a class="font-bold text-red-800 " [href]="textView.file.settlement.placeOfConservationExternalReference" target="_blank">{{textView.file.settlement.placeOfConservation}}</a>
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+
+                            <div class="flex grid data-list pt-3" *ngIf="textView.file.conservationInstitution != undefined">
+
+                                <div class="flex col-3 justify-content-end" *ngIf="textView.file.conservationInstitution.name != ''">
+                                    <span class="font-bold text-right">Conservation institution:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column">
+                                        <a class="font-bold text-red-800 " [href]="textView.file.conservationInstitution.URL" target="_blank">{{textView.file.conservationInstitution.name}}</a>
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list" *ngIf="textView.file.inventoryNumber != undefined">
+
+                                <div class="flex col-3 justify-content-end" >
+                                    <span class="font-bold text-right">Inventory number:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column">
+                                        <span class="font-normal" *ngIf="textView.file.inventoryNumber != ''">{{textView.file.inventoryNumber}}</span>
+                                        <span class="font-italic" *ngIf="textView.file.inventoryNumber == ''">No info</span>
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div> 
                         <!-- BIBLIOGRAPHY -->
 
+
+                        <div id="bibliography-div" class="flex flex-column flex-auto pt-3" *ngIf="{books : getBibliography | async } as bibliography">
+                            <div id="bibliography-div-title" class="flex flex-row">
+                                <h2 class="font-medium">Bibliography</h2>
+                                
+                            </div>
+                            <div id="bibliography-div-panel" *ngIf="!loadingBibliography" class="flex flex-column ml-3 pt-3"> 
+                            
+                                <div class="flex flex-row align-items-baseline book-element" *ngFor="let book of bibliography.books">
+                                    <i class="fa-solid fa-circle fa-2xs"></i>
+                                    <a class="font-bold ml-3 no-underline" [href]="book.url" target="_blank">
+                                        <span class="font-bold text-red-800">{{book.title}}</span>
+                                        <span class="font-normal text-900 pl-2" *ngIf="book.author != undefined">({{book.author.name}} {{book.author.surname}})</span>
+                                        <span class="font-normal text-900 pl-2" *ngIf="book.editor != undefined && book.author == undefined">({{book.editor.name}} {{book.editor.surname}})</span>
+                                    </a>
+
+                                </div>
+                                 
+                            </div>
+                            <div class="flex flex-row m-2 w-full" *ngIf="loadingBibliography">
+                                <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+                    
+                            </div>
+                        </div> 
+
                         <!-- ICONOGRAPHIC APPARATUS -->
+
+                        <div id="facsimile-div" class="flex flex-column flex-auto pt-3" *ngIf="{facsimile : getFacsimile | async } as images">
+                            <div id="facsimile-div-title" class="flex flex-row">
+                                <h2 class="font-medium">Facsimile</h2>
+                                
+                            </div>
+                            <div id="facsimile-div-panel" *ngIf="!loadingFacsimile" class="flex ml-3 pt-3"> 
+                            
+                                <div class="flex flex-row align-items-baseline book-element pl-2" *ngFor="let img of images.facsimile">
+                                    <p-image [src]="img.url" alt="Image" width="250" [preview]="true"></p-image>
+
+
+                                </div>
+                                 
+                            </div>
+                            <div class="flex flex-row m-2 w-full" *ngIf="loadingFacsimile">
+                                <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+                    
+                            </div>
+                        </div> 
                     </div>
                     
 
@@ -556,11 +984,11 @@
                 (onPageChange)="pagination($event, (text.activeTab || null), (text.activeDate || null), (text.activeLocation || null), (text.activeType || null))"
                 [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[6,12,24]"></p-paginator>
         
-            <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="text.totalRecords == 0 && !somethingWrong">
+            <div class="flex flex-row flex-wrap flex-auto text-item-container" *ngIf="text.totalRecords == 0 && !somethingWrong">
                 no entries
             </div>
 
-            <div class="flex flex-row flex-wrap flex-auto text-item-container p-3" *ngIf="somethingWrong">
+            <div class="flex flex-row flex-wrap flex-auto text-item-container" *ngIf="somethingWrong">
                 Something went wrong
             </div>
         </div>

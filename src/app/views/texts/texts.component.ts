@@ -9,7 +9,7 @@ import { CenturyPipe } from 'src/app/pipes/century-pipe/century-pipe.pipe';
 import { FormElement, LexiconService } from 'src/app/services/lexicon/lexicon.service';
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
 import { PopupService } from 'src/app/services/maps/popup/popup.service';
-import { ListAndId, TextMetadata, TextsService, TextToken, XmlAndId } from 'src/app/services/text/text.service';
+import { Book, BookAuthor, BookEditor, Graphic, ListAndId, TextMetadata, TextsService, TextToken, XmlAndId } from 'src/app/services/text/text.service';
 import { DynamicOverlayComponent } from './dynamic-overlay/dynamic-overlay.component';
 
 
@@ -265,10 +265,15 @@ export class TextsComponent implements OnInit {
   getDiplomaticReq$ : BehaviorSubject<XmlAndId> = new BehaviorSubject<XmlAndId>({} as XmlAndId);
   getTranslationReq$ : BehaviorSubject<XmlAndId> = new BehaviorSubject<XmlAndId>({} as XmlAndId);
   getAnnotationReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
+  getBibliographyReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getFacsimileReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+
 
   loadingInterpretative : boolean = false;
   loadingDiplomatic : boolean = false;
   loadingTranslation : boolean = false;
+  loadingBibliography : boolean = false;
+  loadingFacsimile : boolean = false;
   
   currentElementId : number = NaN;
   currentTokensList : TextToken[] | undefined;
@@ -292,11 +297,14 @@ export class TextsComponent implements OnInit {
     }),
   )
 
+  isBodyTextPartArray : boolean = false;
+
   getFileByIndex : Observable<TextMetadata> = this.getFileByIndexReq$.pipe(
     switchMap(index => !isNaN(index) ? this.textService.getFileByIndex(index) : of()),
     tap(file => {
       if(file){
         this.getTextContentReq$.next(file['element-id']);
+        this.isBodyTextPartArray = Array.isArray(file.bodytextpart)
       }
     })
   )
@@ -306,6 +314,8 @@ export class TextsComponent implements OnInit {
     tap(x => {
       this.loadingInterpretative = true;
       this.loadingTranslation = true;
+      this.loadingBibliography = true;
+      this.loadingFacsimile = true;
     }),
     tap(elementId => !isNaN(elementId) ? this.currentElementId = elementId : of()),
     switchMap(elementId => !isNaN(elementId) ? this.textService.getContent(elementId) : of()),
@@ -315,10 +325,11 @@ export class TextsComponent implements OnInit {
         this.getInterpretativeReq$.next(res);
         this.getDiplomaticReq$.next(res);
         this.getTranslationReq$.next(res);
+        this.getBibliographyReq$.next(res.xml);
+        this.getFacsimileReq$.next(res.xml);
         this.arrayDynamicComponents = [];
       }
     }),
-    //switchMap(x => '')
     
   )
   
@@ -363,6 +374,18 @@ export class TextsComponent implements OnInit {
     switchMap(req => req.xml != '' ? this.textService.getHTMLTeiNodeContent({xmlString : req.xml}) : of()),
     map(res => getTranslation(res)),
     tap(res => this.loadingTranslation = false)
+  );
+
+  getBibliography : Observable<Book[]> | undefined = this.getBibliographyReq$.pipe(
+    filter(xml => xml != ''),
+    map(xml => getBibliography(xml)),
+    tap(biblio => this.loadingBibliography = false)
+  );
+
+  getFacsimile : Observable<Graphic[]> | undefined = this.getBibliographyReq$.pipe(
+    filter(xml => xml != ''),
+    map(xml => getFacsimile(xml)),
+    tap(facsimile => this.loadingFacsimile = false)
   );
 
 
@@ -662,34 +685,7 @@ export class TextsComponent implements OnInit {
                 node.addEventListener('click', this.loadOverlayPanel.bind(this));
                 this.arrayDynamicComponents.push(element.form);
                 
-                // https://stackblitz.com/edit/angular-mcbbub?file=src%2Fapp%2Fapp.component.html !!!!
-  
-                //TODO: (1) Creare un componente corrispondente a un overlay panel con template e proprietà per visualizzare i dati in entrata
-  
-                //TODO: (2) Una volta creato il componente. Ecco un esempio:
                 
-                  //const factory = this.factory.resolveComponentFactory(NomeComponente);
-                  //const componentRef = this.vc.createComponent(factory);
-  
-                //TODO: (3) Per sicurezza mettere il componente in un array per poi eventualmente distruggere le istanze una volta usciti dal componente
-                  
-                  //this.arrayComponents.push(componentRef);
-  
-                //TODO: (4) Popolare il componente con i dati
-  
-                  // (<FormPanelComponent>componentRef.instance).formId = formId;
-                  // (<FormPanelComponent>componentRef.instance).id = idAnnotation;
-                  // ...
-  
-                //TODO: (5) Attaccare un event listner click allo span
-                
-                // https://stackoverflow.com/questions/41609937/how-to-bind-event-listener-for-rendered-elements-in-angular-2
-  
-                //TODO: (6) Attaccare la funzione per visualizzare l'overlay panel che ho precedente creato nel componente
-  
-                // https://stackoverflow.com/questions/60775447/do-toggle-operation-onoverlaypanel-in-ts
-  
-                //TODO: (7) La logica è: clicco sulla parola, compare overlay panel, se voglio andare alla parola creo un bottone per andarci, fine.
               }
             }
           )
@@ -718,6 +714,102 @@ function getTeiChildren(req : XmlAndId) : ListAndId{
     }
   )
   return {list : array, id : req.nodeId};
+}
+
+function getBibliography(rawXml : string) : Array<any> {
+
+  let biblio_array : Array<any> = [];
+  let nodes = Array.from(new DOMParser().parseFromString(rawXml, "text/xml").querySelectorAll('biblStruct'))
+  
+  nodes.forEach(element=> {
+    let book_obj = {} as Book;
+    
+    let title = Array.from(element.querySelectorAll('title'));
+    let author = Array.from(element.querySelectorAll('author'));
+    let editor = Array.from(element.querySelectorAll('editor'));
+    let url = element.attributes.getNamedItem('corresp');
+
+    if(title.length > 0){
+      title.forEach(t => {
+        book_obj.title = t.innerHTML;
+        return true;
+      })
+    }
+
+    if(author.length > 0){
+      author.forEach(aut => {
+        let name = aut.querySelector('forename');
+        let surname = aut.querySelector('surname');
+        if(name != undefined && surname != undefined){
+          book_obj.author = {} as BookAuthor;
+          book_obj.author.name = name.innerHTML;
+          book_obj.author.surname = surname.innerHTML;
+          return true;
+        }else{
+          return false;
+        }
+        
+      })
+    }
+
+    if(editor.length > 0){
+      editor.forEach(edit => {
+        let name = edit.querySelector('forename');
+        let surname = edit.querySelector('surname');
+        if(name != undefined && surname != undefined){
+          book_obj.editor = {} as BookEditor;
+          book_obj.editor.name = name.innerHTML;
+          book_obj.editor.surname = surname.innerHTML;
+          return true;
+        }else{
+          return false;
+        }
+        
+      })
+    }
+
+    if(url){
+      if(url.nodeValue != undefined){
+        book_obj.url = url.nodeValue;
+      }
+    }
+
+    //console.log(book_obj);
+    biblio_array.push(book_obj)
+  })
+  return biblio_array;
+}
+
+function getFacsimile(rawXml : string) : Array<Graphic> {
+
+  let graphic_array : Array<Graphic> = [];
+  let nodes = Array.from(new DOMParser().parseFromString(rawXml, "text/xml").querySelectorAll('facsimile graphic'))
+  
+  nodes.forEach(element=> {
+    let graphic_obj = {} as Graphic;
+    
+    let desc = Array.from(element.querySelectorAll('desc'));
+    let url = element.getAttribute('url');
+    
+    if(desc.length > 0){
+      desc.forEach(d => {
+        if(d.innerHTML != undefined || d.innerHTML != ''){
+          graphic_obj.description = d.innerHTML
+        }else{
+          graphic_obj.description = 'No description'
+        }
+       
+      })
+    }
+
+    if(url){
+      graphic_obj.url = url;
+    }
+    
+    //console.log(graphic_obj);
+    graphic_array.push(graphic_obj)
+  })
+  return graphic_array;
 }
 
 function leidenDiplomaticBuilder(html : string){
