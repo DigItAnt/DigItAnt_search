@@ -6,6 +6,7 @@ import { CognateElement, EtymologyElement, EtymologyTreeElement, FormElement, Fo
 import {TreeNode} from 'primeng/api';
 import { FormControl, FormGroup } from '@angular/forms';
 import { HttpResponseBase } from '@angular/common/http';
+import { Annotation, TextsService } from 'src/app/services/text/text.service';
 
 export interface TreeEvent {
   node : TreeNode,
@@ -223,6 +224,7 @@ export class LexiconComponent implements OnInit {
   getEtymologyDataReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
   getCognatesReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
   getFormsListReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getAttestationsReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
 
   formRequestComplete : boolean = false;
 
@@ -237,11 +239,10 @@ export class LexiconComponent implements OnInit {
         this.getEtymologiesListReq$.next(instanceName);
         this.getCognatesReq$.next(instanceName);
         this.getFormsListReq$.next(instanceName);
-        
-        
       }
     }),
     switchMap(instanceName => (instanceName != '' && instanceName == this.currentLexicalEntry) ? this.lexiconService.getLexicalEntryData(instanceName).pipe(catchError(err => this.thereWasAnError())) : of()),
+    tap(lex => console.log(lex))
   ) 
   
 
@@ -293,11 +294,35 @@ export class LexiconComponent implements OnInit {
     map(cognates => this.mapCognates(cognates)),
     tap(x=> console.log(x))
   )
+
   noCognates: boolean = false;
+
+  getAttestations : Observable<any> | undefined = this.getAttestationsReq$.pipe(
+    
+    filter(instanceName => instanceName != ''),
+    switchMap(instanceName => this.textService.searchAttestations(instanceName)),
+    map(res => {
+      let idSet = new Set();
+      let arrayFromSet : any[] = [];
+      res.forEach(element=>{idSet.add(JSON.stringify({nodeId: element.nodeId, nodePath : element.nodePath}))})
+      idSet.forEach(
+        (element : any)=> {
+          let el = JSON.parse(element);
+          arrayFromSet.push(el.nodePath)
+        }
+      );
+      return arrayFromSet;
+    }),
+    map(paths => paths.map(el=>el.split('/')[el.split('/').length -1])),
+    map(res => res.map(el=>el.split('.xml')[0])),
+    tap(res => console.log(res))
+   
+  )
 
   constructor(private route: Router,
     private activatedRoute: ActivatedRoute,
-    private lexiconService: LexiconService
+    private lexiconService: LexiconService,
+    private textService : TextsService,
   ) { }
 
   ngOnInit(): void {
@@ -332,7 +357,8 @@ export class LexiconComponent implements OnInit {
 
             //è una form
             if(keys.length == 2){
-              this.getFormReq$.next(values[1])
+              this.getFormReq$.next(values[1]);
+              this.getAttestationsReq$.next(values[1])
             }
 
           }
@@ -533,6 +559,16 @@ function groupAlphabet(lexicalElements : LexicalElement[]) : AlphaCounter[]{
     tmp.reduce((acc, object) => ({...acc, [object.letter] : object}), {})
   )
 
+  tmp.sort((a, b) => {
+    if (a.letter < b.letter) {
+      return -1;
+    }
+    if (a.letter > b.letter) {
+      return 1;
+    }
+    return 0;
+  });
+  
   return tmp;
 }
 

@@ -260,7 +260,7 @@
 
 
         <!-- CONTENT -->
-        <div class="flex flex-row flex-wrap flex-auto lexicon-item-container p-3"
+        <div class="flex flex-row flex-wrap flex-auto lexicon-item-container ml-2 p-3"
             *ngIf="lexicon.wordOrLetter == '' || lexicon.wordOrLetter != 'word'">
             <div class="flex flex-row m-2 w-full" *ngIf="!lexicon.totalRecords">
                 <p-progressSpinner class="flex flex-1"></p-progressSpinner>
@@ -303,7 +303,7 @@
         </div>
 
 
-        <div class="flex flex-row flex-wrap flex-auto lexicon-item-container m-5 mr-0"
+        <div class="flex flex-row flex-wrap flex-auto lexicon-item-container m-5 mr-0 mb-0"
             *ngIf="lexicon.wordOrLetter == 'word'  && !somethingWrong">
 
             <div class="flex w-full h-full" *ngIf="!lexicon.activeForm && lexicon.activeWord">
@@ -313,7 +313,7 @@
                     <div class="flex flex-column w-full h-full"
                         *ngIf="lexicalEntry.data && lexicon.activeWord == lexicalEntry.data.lexicalEntry">
                         <span id="lexical-entry-title" class="text-6xl font-bold pb-3">{{lexicalEntry.data.label}}</span>
-                        <div class="flex flex-row align-items-baseline" *ngIf="{data : getSenses | async} as senses">
+                        <div class="flex flex-row align-items-baseline mr-5" *ngIf="{data : getSenses | async} as senses">
                             
                             <div *ngIf="!senses.data" class="pl-2">
                                 <i class="fas fa-spinner fa-pulse"></i>
@@ -322,7 +322,7 @@
 
                                 <span *ngFor="let sense of senses.data; let i = index;">
                                     <span class="pr-2 text-2xl font-light" *ngIf="sense.definition != ''">
-                                        ({{i+1}}) {{sense.definition}}
+                                        <b>({{i+1}})</b> {{sense.definition}}
                                     </span>
                                     <span class="pr-2 text-2xl font-light font-italic" *ngIf="sense.definition == ''">
                                         No definitions
@@ -489,14 +489,15 @@
                                     Forms list:
                                 </div>
 
-                                <span class="pb-2 list-disc" *ngFor="let form of formsList.data">
+                                <span class="pb-2" *ngFor="let form of formsList.data">
 
-                                    <li (click)="attestationsList.show($event)"
-                                        class="flex flex-row align-items-baseline list-disc text-2xl font-medium etyLink"
+                                    <li routerLink="./"
+                                        [queryParams]="{word: form.lexicalEntry, form: form.form}"
+                                        class="flex flex-row align-items-baseline  text-2xl font-medium etyLink ml-2"
                                         *ngIf="form.form != ''">
-                                        <!-- routerLink="./" [queryParams]="{word : form.lexicalEntryInstanceName, form : form.form}" -->
-
-                                        {{form.label}}
+                                        
+                                        <span class="pl-3"> <i class="fa-solid fa-circle fa-2xs"></i> &nbsp; {{form.label}}</span>
+                                       
 
 
                                         
@@ -507,18 +508,7 @@
                                         </span>
                                     </li>
 
-                                    <p-overlayPanel #attestationsList appendTo="body">
-
-                                        <div>
-                                            {{form.form}}
-                                        </div>
-                                        <div class="flex flex-auto">
-                                            <button routerLink="./"
-                                                [queryParams]="{word: form.lexicalEntry, form: form.form}"
-                                                class="w-full" pButton type="button" label="Go to form"></button>
-                                        </div>
-
-                                    </p-overlayPanel>
+                                    
 
                                     <li class="pl-2 text-xl font-light font-italic" *ngIf="form.label == ''">
 
@@ -546,7 +536,7 @@
             </div>
 
             <div class="flex w-full" *ngIf="lexicon.activeForm">
-                <div class="flex w-full" *ngIf="{data : getForm | async} as form">
+                <div class="flex w-full" *ngIf="{data : getForm | async, attestations : getAttestations | async } as form">
 
                     <div class="flex flex-column flex-auto"
                         *ngIf="form.data && lexicon.activeForm == form.data.form">
@@ -558,6 +548,8 @@
                                 </span>
                             </span>
                         </span>
+
+                        
 
                         <div class="flex flex-row align-items-baseline">
                             <span id="lexical-entry-language">
@@ -590,6 +582,42 @@
 
 
                         </div>
+
+                        <div class="flex flex-row align-items-baseline">
+        
+                            <span class="pt-2 text-xl font-light">
+                                Morphology:
+                            </span>
+
+                            <div class="flex flex-column align-items-baseline pl-3">
+                                <div class="flex flex-row" *ngFor="let morpho of form.data.morphology">
+                                    <span class="text-xl font-normal">{{morpho.trait.split('#')[1]}}:</span>
+                                    <span class="text-xl font-light">{{morpho.value.split('#')[1]}}:</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-column align-items-baseline" >
+        
+                            <span class="pt-2 text-xl font-light">
+                                Attested in:
+                            </span>
+
+                            <div class="flex flex-column align-items-baseline pl-3" *ngIf="form.attestations != undefined && form.attestations.length > 0">
+                                <div class="flex flex-row attestation" *ngFor="let attestation of form.attestations">
+                                    <a class="text-xl font-normal" [href]="'/texts?file='+attestation" routerLink="../texts" [queryParams]="{file: attestation}">{{attestation}}:</a>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex flex-column align-items-baseline pl-3">
+                                <span  class=" pt-2 text-lg font-light font-italic">
+                                    No attestations
+                                </span>
+                            </div>
+                        </div>
+
+                        
                     </div>
                     <div class="flex w-full" *ngIf="lexicon.activeForm != form.data?.form">
                         <p-progressSpinner class="flex flex-1"></p-progressSpinner>

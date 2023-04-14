@@ -210,31 +210,26 @@
 
             <ul class="home-menu" *ngIf="text.activeFile">
         
-                <!-- ATTESTATIONS -->
-                <!-- <a  class="categories no-underline">
-                    <li class="pl-4 flex align-items-center">
-                        <span class="icon"></span>
-                        <span class="route flex-1">Attestations</span>
-                    </li>
-                </a> -->
-
-                <!-- HOW TO CITE -->
-                <!-- <a  class="categories no-underline">
-                    <li class="pl-4 flex align-items-center">
-                        <span class="icon"></span>
-                        <span class="route flex-1">How to cite</span>
-                    </li>
-                </a> -->
+                
                 <!-- SHOW XML -->
                 <a  class="categories no-underline">
-                    <li class="pl-4 flex align-items-center">
+                    <li class="pl-4 flex align-items-center" (click)="showModal()">
                         <span class="icon"></span>
                         <span class="route flex-1">Show XML</span>
+
+                       
                     </li>
+
+                    <p-dialog [appendTo]="'body'" [autoZIndex]="true" [header]="text.activeFile" [(visible)]="displayModal" [modal]="true" [style]="{width: '80vw'}"
+                             [draggable]="false" [resizable]="false" (onHide)="hideModal()">
+
+                             <pre><code [highlight]="code" [lang]="'xml'" *ngIf="code != ''"></code></pre>
+                             <span *ngIf="code == ''">Loading...</span>
+                    </p-dialog>
                 </a>
                 <!-- PRINT/PDF ? -->
                 <a  class="categories no-underline">
-                    <li class="pl-4 flex align-items-center">
+                    <li class="pl-4 flex align-items-center" (click)="printDocument()">
                         <span class="icon"></span>
                         <span class="route flex-1">Print/Save PDF</span>
                     </li>
@@ -350,7 +345,7 @@
             </div>
         
             <!-- TEXTS LIST -->
-            <div class="flex flex-row flex-wrap flex-auto text-item-container" *ngIf="(text.totalRecords != 0 && !somethingWrong) && !text.activeFile">
+            <div class="flex flex-row flex-wrap ml-5 flex-auto text-item-container" *ngIf="(text.totalRecords != 0 && !somethingWrong) && !text.activeFile">
                 <div class="flex flex-row m-2 w-full" *ngIf="!text.totalRecords">
                     <p-progressSpinner class="flex flex-1"></p-progressSpinner>
         
@@ -493,6 +488,22 @@
     
                                 </p-tabView>                              
                                  
+                                <div class="grid  print-version">
+                                    
+                                    <div class="col-6 font-light" >
+                                        Interpretative
+                                        <div [innerHTML]="leiden.interpretative | noSanitize" ></div>
+
+                                    </div>
+
+                                    
+                                    <div class="col-6 font-light">
+                                        Diplomatic
+                                        <div [innerHTML]="leiden.diplomatic | noSanitize" ></div>
+
+                                    </div>
+                            
+                                </div>
                                 
                             </div>
                             <div class="flex flex-row m-2 w-full" *ngIf="loadingInterpretative || loadingDiplomatic">

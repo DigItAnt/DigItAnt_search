@@ -568,6 +568,8 @@ p-tabview.normal-tabview {
             font-size: 0.85rem !important;
             background: $black !important;
 
+            
+
             .p-tabview-nav-link {
                 font-family: "M PLUS Rounded 1c", sans-serif !important;
                 background: transparent !important;
@@ -622,6 +624,10 @@ p-tabview.normal-tabview {
             box-shadow: none !important;
         }
     }
+}
+
+.p-tabview .p-tabview-nav .p-tabview-ink-bar{
+    z-index: 0 !important;
 }
 
 p-tree {
@@ -856,6 +862,7 @@ app-footer {
 //PRINT CSS
 @media print {
     app-navbar,
+    app-footer,
     #left-bar {
         display: none !important;
     }
@@ -864,7 +871,23 @@ app-footer {
     .text-item-container,
     #main-content {
         width: 100% !important;
+        height: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
+        overflow:hidden !important;
+    }
+
+    .print-version {
+        display: flex !important;
+        width: 100%;
+    }
+
+    #edition-div-panel > p-tabView {
+        display: none !important;
+    }
+
+    .linenumber,
+    .notation {
+        display: none !important;
     }
 }

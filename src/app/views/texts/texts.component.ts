@@ -274,6 +274,8 @@ export class TextsComponent implements OnInit {
   loadingTranslation : boolean = false;
   loadingBibliography : boolean = false;
   loadingFacsimile : boolean = false;
+
+  displayModal : boolean = false;
   
   currentElementId : number = NaN;
   currentTokensList : TextToken[] | undefined;
@@ -309,6 +311,8 @@ export class TextsComponent implements OnInit {
     })
   )
 
+  code : string = '';
+
 
   getXMLContent : Observable<XmlAndId> = this.getTextContentReq$.pipe(
     tap(x => {
@@ -321,7 +325,8 @@ export class TextsComponent implements OnInit {
     switchMap(elementId => !isNaN(elementId) ? this.textService.getContent(elementId) : of()),
     tap((res) => {
       if(res.xml != '') {
-        //console.log(res.xml)
+        //console.log(res.xml);
+        this.code = res.xml;
         this.getInterpretativeReq$.next(res);
         this.getDiplomaticReq$.next(res);
         this.getTranslationReq$.next(res);
@@ -661,6 +666,14 @@ export class TextsComponent implements OnInit {
     (<DynamicOverlayComponent>componentRef?.instance).toggleOverlayPanel(evt);
   }
 
+  showModal(){
+    this.displayModal = true;
+  }
+
+  hideModal(){
+    this.displayModal = false;
+  }
+
   mapNodes(data : any[] | unknown){
     console.log(data);
     if(Array.isArray(data)){
@@ -696,6 +709,9 @@ export class TextsComponent implements OnInit {
   
   }
 
+  printDocument(){
+    window.print();
+  }
 
 }
 
@@ -996,7 +1012,12 @@ function buildCustomInterpretative(renderer : Renderer2, TEINodes : Array<Elemen
           Array.from(body.childNodes).forEach((sub:any) => {
 
             if(sub instanceof HTMLElement){//nodo span o altro 
-              HTML += sub.outerHTML;
+              if(sub.tagName == 'BR' && sub.id == 'al1'){
+                null;
+              }else{
+                HTML += sub.outerHTML;
+              }
+              
             } 
             if(sub instanceof Text){ //-- textContent
               HTML += sub.textContent;
@@ -1008,6 +1029,7 @@ function buildCustomInterpretative(renderer : Renderer2, TEINodes : Array<Elemen
     }
   )
 
+  
   return HTML;
 
 }

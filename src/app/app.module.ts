@@ -32,6 +32,7 @@ import {CheckboxModule} from 'primeng/checkbox';
 import {TreeModule} from 'primeng/tree';
 import {AccordionModule} from 'primeng/accordion';
 import {ImageModule} from 'primeng/image';
+import {DialogModule} from 'primeng/dialog';
 
 
 //LEAFLET
@@ -60,6 +61,7 @@ import { DynamicOverlayComponent } from './views/texts/dynamic-overlay/dynamic-o
 import { CenturyPipe } from './pipes/century-pipe/century-pipe.pipe';
 import { UrlDecoderPipe } from './pipes/url-decoder/url-decoder.pipe';
 import { NoSanitizePipe } from './pipes/no-sanitize/no-sanitize.pipe';
+import { HighlightModule, HIGHLIGHT_OPTIONS } from 'ngx-highlightjs';
 
 
 @NgModule({
@@ -114,9 +116,22 @@ import { NoSanitizePipe } from './pipes/no-sanitize/no-sanitize.pipe';
     CheckboxModule,
     TreeModule,
     AccordionModule,
-    ImageModule
+    ImageModule,
+    HighlightModule,
+    DialogModule
   ],
-  providers: [],
+  providers: [
+    {
+      provide: HIGHLIGHT_OPTIONS,
+      useValue: {
+        coreLibraryLoader: () => import('highlight.js/lib/core'),
+        //lineNumbersLoader: () => import('highlightjs-line-numbers.js'), // Optional, only if you want the line numbers
+        languages: {
+          xml: () => import('highlight.js/lib/languages/xml')
+        },
+      }
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -125,6 +125,17 @@ export interface LanguageMetadata {
   source: string,
 }
 
+export interface AnnotationsRows {
+  requestUUID : string | null | undefined,
+  rows: Array<Attestation>,
+}
+
+export interface Attestation {
+  nodeId : number,
+  nodePath : string,
+  tokens : Array<Span>
+}
+
 export interface GetContentResponse {
   requestUUID : string,
   text: string,
@@ -243,6 +254,12 @@ export class TextsService {
     
     return this.http.get<DocumentSystem>(this.baseUrl + "api/public/getDocumentSystem?requestUUID=11").pipe(
       map(res => res.documentSystem),
+    )
+  }
+
+  searchAttestations(formId: string): Observable<Attestation[]> {
+    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?query="+encodeURIComponent('[attestation="'+formId+'"]'), null).pipe(
+      map(res => res.rows)
     )
   }
 
@@ -464,6 +481,23 @@ export class TextsService {
         }
       )
     ).pipe(
+      tap(res => res),
+      shareReplay()
+    )
+  }
+
+
+  getAnnotations(setIds: any){
+    
+    return forkJoin(
+      setIds.map(
+        (id : any) => {
+
+          return this.getAnnotation(id)
+        }
+      )
+    ).pipe(
+      map((arrays : any) => [].concat(...arrays)),
       tap(res => res),
       shareReplay()
     )
