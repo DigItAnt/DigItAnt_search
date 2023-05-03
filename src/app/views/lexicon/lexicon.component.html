@@ -312,7 +312,7 @@
                 <div class="flex w-full h-full" *ngIf="{data : getLexicalEntry | async} as lexicalEntry">
                     <div class="flex flex-column w-full h-full"
                         *ngIf="lexicalEntry.data && lexicon.activeWord == lexicalEntry.data.lexicalEntry">
-                        <span id="lexical-entry-title" class="text-6xl font-bold pb-3">{{lexicalEntry.data.label}}</span>
+                        <span id="lexical-entry-title" class="text-4xl font-bold pb-3">{{lexicalEntry.data.label}}</span>
                         <div class="flex flex-row align-items-baseline mr-5" *ngIf="{data : getSenses | async} as senses">
                             
                             <div *ngIf="!senses.data" class="pl-2">
@@ -321,15 +321,15 @@
                             <div *ngIf="senses.data">
 
                                 <span *ngFor="let sense of senses.data; let i = index;">
-                                    <span class="pr-2 text-2xl font-light" *ngIf="sense.definition != ''">
+                                    <span class="pr-2 text-base font-light" *ngIf="sense.definition != ''">
                                         <b>({{i+1}})</b> {{sense.definition}}
                                     </span>
-                                    <span class="pr-2 text-2xl font-light font-italic" *ngIf="sense.definition == ''">
+                                    <span class="pr-2 text-base font-light font-italic" *ngIf="sense.definition == ''">
                                         No definitions
                                     </span>
                                 </span>
                                 <span *ngIf="senses.data.length == 0">
-                                    <span class="pr-2 text-xl font-light font-italic">
+                                    <span class="pr-2 text-base font-light font-italic">
                                         No definitions
                                     </span>
                                 </span>
@@ -339,11 +339,11 @@
                         </div>
                         <div class="flex flex-row align-items-baseline">
                             <span id="lexical-entry-language">
-                                <span class="pt-2 text-xl font-light">
+                                <span class="pt-2 text-base font-light">
                                     Language:
                                 </span>
                                 <span *ngIf="lexicalEntry.data.language != ''"
-                                    class="pt-2 text-xl font-medium text-red-900">
+                                    class="pt-2 text-base font-medium text-red-900">
                                     {{lexicalEntry.data.language}}
                                 </span>
                                 <span *ngIf="lexicalEntry.data.language == ''"
@@ -353,11 +353,11 @@
                             </span>
 
                             <span id="lexical-entry-pos" class="pl-2">
-                                <span class="pt-2 text-xl font-light">
+                                <span class="pt-2 text-base font-light">
                                     Pos:
                                 </span>
                                 <span *ngIf="lexicalEntry.data.pos != ''"
-                                    class=" pt-2 text-xl font-medium text-blue-900">
+                                    class=" pt-2 text-base font-medium text-blue-900">
                                     {{lexicalEntry.data.pos}}
                                 </span>
                                 <span *ngIf="lexicalEntry.data.pos == ''" class=" pt-2 text-lg font-light font-italic">
@@ -367,11 +367,11 @@
                             </span>,
 
                             <span id="lexical-entry-stemtype" class="pl-2">
-                                <span class="pt-2 text-xl font-light">
+                                <span class="pt-2 text-base font-light">
                                     Stem type:
                                 </span>
                                 <span *ngIf="lexicalEntry.data.stemType != ''"
-                                    class="pt-2 text-xl font-medium text-blue-900">
+                                    class="pt-2 text-base font-medium text-blue-900">
                                     {{lexicalEntry.data.stemType}}
                                 </span>
                                 <span *ngIf="lexicalEntry.data.stemType == ''"
@@ -400,25 +400,25 @@
                                     <div *ngIf="etymologyElement.data">
 
                                         <div class="pb-2" *ngFor="let etyLink of etymologyElement.data.etyLinks">
-                                            <span class="text-2xl font-light text-color-secondary"
+                                            <span class="text-base font-light text-color-secondary"
                                                 *ngIf="etyLink.etySource != ''">
 
                                                 {{etyLink.etySource.includes('PIE') ? 'PIE' : 'PIT'}}:
                                             </span>
-                                            <span class="text-2xl font-medium etyLink" routerLink="./"
+                                            <span class="text-base font-medium etyLink" routerLink="./"
                                                 [queryParams]="{word : etyLink.etySource}"
                                                 *ngIf="etyLink.etySourceLabel != ''">
 
                                                 {{etyLink.etySourceLabel}}
                                             </span>
 
-                                            <span class="text-xl font-light text-800" routerLink="./"
+                                            <span class="text-base font-light text-800" routerLink="./"
                                                 *ngIf="etyLink.etyLinkType != ''">
 
                                                 ({{etyLink.etyLinkType}})
                                             </span>
 
-                                            <span class="pl-2 text-xl font-light font-italic"
+                                            <span class="pl-2 text-base font-light font-italic"
                                                 *ngIf="etyLink.etySourceLabel == ''">
 
                                                 No label
@@ -452,17 +452,17 @@
                             <div class="flex flex-row align-items-baseline"
                                 *ngIf="cognates.data && cognates.data.length != 0">
 
-                                <span class="pt-2 text-xl font-light">
+                                <span class="pt-2 text-base font-light">
                                     Cognates:
                                 </span>
                                 <!-- {{cognates.data | json}} -->
                                 <span class="flex flex-row" *ngFor="let cognate of cognates.data">
 
-                                    <span class="px-2 text-2xl font-medium etyLink" routerLink="./"
+                                    <span class="px-2 text-base font-medium etyLink" routerLink="./"
                                         [queryParams]="{word : cognate.entity}">
                                         {{cognate.label}}<!-- @{{cognate.language}} -->
                                     </span>
-                                    <span class=" px-2 text-2xl font-light font-italic" *ngIf="cognate.label == ''">
+                                    <span class=" px-2 text-base font-light font-italic" *ngIf="cognate.label == ''">
                                         No label
                                     </span>
                                 </span>
@@ -482,30 +482,31 @@
                                 <span class="text-2xl font-light">Loading forms list...</span>
                                 <i class="pl-2 fas fa-spinner fa-pulse"></i>
                             </div>
+                            <div class="mb-3 text-base font-light">
+                                Forms list:
+                            </div>
 
-                            <div *ngIf="formsList.data && formsList.data.length != 0">
+                            <div class="flex flex-wrap" style="width: 89%;" *ngIf="formsList.data && formsList.data.length != 0">
 
-                                <div class="mb-3 text-xl font-light">
-                                    Forms list:
-                                </div>
+                               
 
                                 <span class="pb-2" *ngFor="let form of formsList.data">
 
                                     <li routerLink="./"
                                         [queryParams]="{word: form.lexicalEntry, form: form.form}"
-                                        class="flex flex-row align-items-baseline  text-2xl font-medium etyLink ml-2"
-                                        *ngIf="form.form != ''">
+                                        class="flex flex-row align-items-baseline  text-base font-medium etyLink ml-2"
+                                        *ngIf="form.form != ''" [pTooltip]="form.leidenString" tooltipPosition="top" [escape]="false">
                                         
-                                        <span class="pl-3"> <i class="fa-solid fa-circle fa-2xs"></i> &nbsp; {{form.label}}</span>
+                                        <span class="pl-3" > <i class="fa-solid fa-circle fa-2xs"></i> &nbsp; {{form.label}}</span>
                                        
 
 
                                         
 
-                                        <span *ngFor="let morpho of form.morphology" class="text-xl font-light">
-                                            <span class="pl-2 text-blue-900" *ngIf="morpho.trait == 'partOfSpeech'">@{{morpho.value.split('#')[1]}}</span>
-                                            <span class="pl-2 text-secondary-500" *ngIf="morpho.trait == 'case'">case: {{morpho.value}}</span>
-                                        </span>
+                                        <!-- <span *ngFor="let leiden of form.leidenContainer" class="text-base font-light">
+                                            <span class="pl-2 text-blue-900" *ngIf="leiden != ''">@{{leiden}}</span>
+                                            
+                                        </span> -->
                                     </li>
 
                                     
@@ -541,7 +542,7 @@
                     <div class="flex flex-column flex-auto"
                         *ngIf="form.data && lexicon.activeForm == form.data.form">
 
-                        <span id="lexical-entry-title" class="text-6xl font-bold pb-3">
+                        <span id="lexical-entry-title" class="text-4xl font-bold pb-3">
                             <span *ngFor="let label of form.data.label">
                                 <span *ngIf="label.propertyID == 'writtenRep'">
                                     {{label.propertyValue}}
@@ -610,7 +611,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex flex-column align-items-baseline pl-3">
+                            <div class="flex flex-column align-items-baseline pl-3" *ngIf="form.attestations != undefined && form.attestations.length == 0">
                                 <span  class=" pt-2 text-lg font-light font-italic">
                                     No attestations
                                 </span>

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { debounceTime, filter, forkJoin, map, Observable, of, shareReplay, Subject, switchMap, tap, timeout } from 'rxjs';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { FormElement, LexiconService } from '../lexicon/lexicon.service';
+import { FormElement, FormElementTree, LexiconService } from '../lexicon/lexicon.service';
 
 export interface DocumentSystem {
   documentSystem : Text[]
@@ -187,6 +187,7 @@ export interface AnnotationAttributes {
   externalRef : string,
   form_id : string;
   label : string,
+  leiden : string,
   node_id : number,
   node : string,
   timestamp : string,
@@ -444,6 +445,84 @@ export class TextsService {
       shareReplay()
     )
   }
+
+  getAnnotationsByForms(forms: FormElementTree[]) {
+    return forkJoin(
+      forms.map(form => {
+        return this.searchAttestations(form.form).pipe(
+          switchMap(res => {
+            if (res.length > 0) {
+              let idSet = new Set();
+              res.forEach(element => {
+                idSet.add(JSON.stringify({ nodeId: element.nodeId, nodePath: element.nodePath }));
+              });
+              let arrayFromSet: any[] = [];
+              idSet.forEach((element: any) => {
+                let el = JSON.parse(element);
+                arrayFromSet.push(el.nodeId);
+              });
+              form.idContainer = arrayFromSet;
+  
+              // Usare un altro forkJoin per ottenere le attestazioni
+              return forkJoin(
+                arrayFromSet.map(nodeId => {
+                  // Chiamare la funzione per ottenere l'attestazione per un nodeId specifico
+                  return this.getAnnotation(nodeId).pipe(
+                    map(attestations => {
+                      const filtered = attestations.filter(attestation=>attestation.value == form.form)
+                      return filtered;
+                    })
+                  );
+                })
+              ).pipe(
+                map(res => {
+                  form.leidenContainer = [];
+                  res.forEach(
+                    att=>{
+                      att.forEach(
+                        a => {
+                          form.leidenContainer.push(a.attributes.leiden)
+                        }
+                      )
+                    }
+                  )
+                  let leidenTooltip = '';
+                  if(form.leidenContainer.length>0){
+                    leidenTooltip = `<div class="flex flex-column">
+                                        <span class="text-base font-medium">Variants:</span>
+                                          <ul>`;
+                    form.leidenContainer.forEach(span=> {
+                      leidenTooltip += `<li class="font-light">&#x2022; ${span}</li>`
+                    })
+                    leidenTooltip += `</ul>
+                                      </div>`
+                  }else{
+                    leidenTooltip = ""
+                  }
+                  
+
+                  form.leidenString = leidenTooltip
+                  return form;
+                })
+              );
+            } else {
+              form.idContainer = [];
+              form.leidenContainer = [];
+              return of(form);
+            }
+          })
+        );
+      })
+    ).pipe(
+      // Concatenare l'output in un unico array
+      map(results => {
+        let output : Array<any> = [];
+        results.forEach(form => output.push(form));
+        return output;
+      })
+    );
+  }
+  
 
   getForms(annotations : Annotation[]){
     return forkJoin(

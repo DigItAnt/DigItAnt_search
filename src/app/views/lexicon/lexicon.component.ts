@@ -264,6 +264,7 @@ export class LexiconComponent implements OnInit {
   getFormsList : Observable<FormElementTree[]> = this.getFormsListReq$.pipe(
     distinctUntilChanged(),
     switchMap(instanceName => (instanceName != '' && instanceName == this.currentLexicalEntry) ? this.lexiconService.getForms(instanceName) : of()),
+    switchMap(forms => this.textService.getAnnotationsByForms(forms)),
     tap(forms => console.log(forms))
   )
 
