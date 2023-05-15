@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
-import { debounceTime, filter, forkJoin, map, Observable, of, shareReplay, Subject, switchMap, tap, timeout } from 'rxjs';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { BehaviorSubject, catchError, combineLatest, debounceTime, EMPTY, filter, forkJoin, map, Observable, of, shareReplay, Subject, switchMap, take, tap, timeout, withLatestFrom } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpParams, HttpResponseBase } from '@angular/common/http';
 import { FormElement, FormElementTree, LexiconService } from '../lexicon/lexicon.service';
 
 export interface DocumentSystem {
@@ -245,6 +245,10 @@ export class TextsService {
     shareReplay()
   )
 
+  private attestationsSubject = new BehaviorSubject<TextMetadata[]>([]);
+  attestations$: Observable<TextMetadata[]> = this.attestationsSubject.asObservable();
+  somethingWrong: boolean = false;
+
   constructor(
     private http: HttpClient,
     private lexiconService : LexiconService
@@ -262,6 +266,62 @@ export class TextsService {
     return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?query="+encodeURIComponent('[attestation="'+formId+'"]'), null).pipe(
       map(res => res.rows)
     )
+  }
+
+
+  filterAttestations(query : string): Observable<TextMetadata[]> {
+    
+
+    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?query="+encodeURIComponent(query), null).pipe(
+      
+      map(res => res.rows),
+      map(postData => Array.from(postData.reduce((map, obj) => map.set(obj.nodeId, obj), new Map()).values())), // Aggiunto per rimuovere duplicati
+      withLatestFrom(this.texts$),
+      map(([postData, texts]) => {
+        let tmp : TextMetadata[] = [];
+        postData.forEach(
+          el=>{
+            texts.forEach(
+              t=>{
+                if(el.nodeId == t['element-id'])tmp.push(t)
+              }
+            )
+          }
+        )
+        this.attestationsSubject.next(tmp);
+        return tmp
+      }),
+      shareReplay()
+    )
+
+  }
+
+  thereWasAnError(err? : HttpResponseBase, source? : string){
+    if(err?.status != 200){
+      this.somethingWrong = true;
+      return EMPTY;
+    }
+    
+
+    return of()
+  }
+
+  restoreFilterAttestations(){
+    this.attestationsSubject.next([])
+  }
+
+  sliceFilteredAttestations(pageIndex: number, pageSize: number): Observable<TextMetadata[]> {
+    return this.attestations$.pipe(
+      switchMap(attestations => {
+        if(attestations && attestations.length > 0) {
+          return of(attestations.slice(pageIndex, pageSize));
+        } else {
+          return this.texts$.pipe(
+            map(allAttestations => allAttestations.slice(pageIndex , pageSize))
+          );
+        }
+      })
+    );
   }
 
 

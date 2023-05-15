@@ -1,5 +1,5 @@
 import {  Component, ComponentRef, ElementRef, NgZone, OnInit, Renderer2, ViewChild, ViewContainerRef } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import * as L from 'leaflet';
 import { circle, tileLayer } from 'leaflet';
@@ -9,7 +9,7 @@ import { CenturyPipe } from 'src/app/pipes/century-pipe/century-pipe.pipe';
 import { FormElement, LexiconService } from 'src/app/services/lexicon/lexicon.service';
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
 import { PopupService } from 'src/app/services/maps/popup/popup.service';
-import { Book, BookAuthor, BookEditor, Graphic, ListAndId, TextMetadata, TextsService, TextToken, XmlAndId } from 'src/app/services/text/text.service';
+import { AnnotationsRows, Book, BookAuthor, BookEditor, Graphic, ListAndId, TextMetadata, TextsService, TextToken, XmlAndId } from 'src/app/services/text/text.service';
 import { DynamicOverlayComponent } from './dynamic-overlay/dynamic-overlay.component';
 
 
@@ -89,7 +89,7 @@ export class TextsComponent implements OnInit {
   isActiveInterval : boolean = false;
   first: number = 0;
   rows : number = 6;
-  allowedFilters : string[] = ['all', 'date', 'location', 'type'];
+  allowedFilters : string[] = ['all', 'date', 'location', 'type', 'search'];
   allowedOperators: string[] = ['filter', 'date', 'place', 'type', 'file'];
   searchOptions : Array<string> = ['start', 'equals', 'contains', 'ends']
 
@@ -393,24 +393,19 @@ export class TextsComponent implements OnInit {
     tap(facsimile => this.loadingFacsimile = false)
   );
 
-
-  //TODO ottenere traduzione
-
   searchForm: FormGroup = new FormGroup({
-    fullText: new FormControl(null),
-    fullTextExactMatch: new FormControl(false),
-    greekMode: new FormControl(false),
+    word: new FormControl(null),
     title: new FormControl(null),
     titleExactMatch: new FormControl(false),
     id: new FormControl(null),
     idExactMatch: new FormControl(false),
     language: new FormControl(null),
-    fromDate: new FormControl(null),
-    toDate: new FormControl(null),
-    place: new FormControl(null),
+    dateOfOriginNotBefore: new FormControl(null),
+    dateOfOriginNotAfter: new FormControl(null),
+    ancientName: new FormControl(null),
     inscriptionType: new FormControl(null),
     objectType: new FormControl(null),
-    materials: new FormControl(null)
+    material: new FormControl(null)
   });
 
 
@@ -419,7 +414,6 @@ export class TextsComponent implements OnInit {
   constructor(private route: Router,
               private activatedRoute: ActivatedRoute,
               private textService: TextsService,
-              private lexiconService : LexiconService,
               private mapsService : MapsService,
               private ngZone : NgZone,
               private popupService : PopupService,
@@ -427,6 +421,8 @@ export class TextsComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+
+    
 
     this.activatedRoute.queryParams.pipe(takeUntil(this.destroy$)).subscribe(
       (event)=>{
@@ -475,8 +471,125 @@ export class TextsComponent implements OnInit {
       center: [42.296818, 12.254809]
     };
 
+    
+    this.searchForm.valueChanges.pipe(
+      takeUntil(this.destroy$),
+      delay(100),
+      debounceTime(1000),).subscribe(
+      data=>{
+        if(this.searchForm.touched){
+          this.buildTextQuery(data)
+        }
+      }
+      )
+  }
+
+  buildTextQuery(formData : any){
+    this.somethingWrong = false;
+    this.route.navigate(
+      [],
+      {
+        relativeTo: this.activatedRoute,
+        queryParams: {filter : 'search'}, 
+        queryParamsHandling: 'merge',
+      }
+    )
+    let queryParts: string[] = [];
+
+    if (formData.word) {
+      queryParts.push(`word="${formData.word}"`);
+    }
+
+    if (formData.title) {
+      queryParts.push(`_doc__title="${formData.title}"`);
+    }
+
+    if (formData.id) {
+      queryParts.push(`_doc__id="${formData.id}"`);
+    }
+
+    if (formData.dateOfOriginNotBefore) {
+      queryParts.push(`_doc__dateOfOriginNotBefore="${formData.dateOfOriginNotBefore}"`);
+    }
+
+    if (formData.dateOfOriginNotAfter) {
+      queryParts.push(`_doc__dateOfOriginNotAfter="${formData.dateOfOriginNotAfter}"`);
+    }
+
+    if (formData.ancientName) {
+      queryParts.push(`_doc__originalPlace__ancientName="${formData.ancientName}"`);
+    }
+
+    if (formData.language) {
+      queryParts.push(`_doc__language__ident="${formData.language}"`);
+    }
+
+    if (formData.inscriptionType) {
+      queryParts.push(`_doc__inscriptionType="${formData.inscriptionType}"`);
+    }
+
+    if (formData.objectType) {
+      queryParts.push(`_doc__support__objectType="${formData.objectType}"`);
+    }
+
+    if (formData.material) {
+      queryParts.push(`_doc__support__material="${formData.material}"`);
+    }
+
+    const query = queryParts.length > 0 ? `[${queryParts.join(' &')}]` : '';
+    console.log(query)
+    this.first = 0;
+    this.rows = 6;
+    if(query != ''){
+     
+      this.paginationItems = this.textService.filterAttestations(query).pipe(
+        catchError(error => {
+          console.error('An error occurred:', error);
+          if(error.status != 200) this.thereWasAnError() // Stampa l'errore sulla console
+          return of([])// Ritorna un Observable con una struttura di AnnotationsRows vuota
+        }),
+        map(texts => texts.slice(0, 6))
+      );
+      this.totalRecords = this.textService.filterAttestations(query).pipe(map(texts=>texts.length || 0))
+    }else{
+      this.textService.restoreFilterAttestations();
+      this.paginationItems = this.textService.texts$.pipe(map(texts => texts.slice(0, 6)));
+      this.totalRecords = this.textService.texts$.pipe(map(texts=>texts.length || 0))
+    }
+    
 
     
+  }
+
+  clearDates(){
+    this.searchForm.get('dateOfOriginNotAfter')?.setValue(null, {emitEvent: true})
+  }
+
+  clearLocation(){
+    this.searchForm.get('ancientName')?.setValue(null, {emitEvent: true})
+  }
+
+  handleAutocompleteFilter(evt: any){
+    
+    this.searchForm.markAllAsTouched();
+
+    if(evt.ancientPlaceLabel != ''){
+      this.searchForm.get('ancientName')?.setValue(evt.ancientPlaceLabel, {emitEvent: false})
+    }
+
+    this.searchForm.updateValueAndValidity({ onlySelf: false, emitEvent: true })
+  }
+
+  markAsTouched(){
+    this.searchForm.markAllAsTouched();
+  }
+
+  resetFields(){
+    this.searchForm.reset();
+    this.first = 0;
+    this.rows = 6;
+    this.paginationItems = this.textService.texts$.pipe(map(texts => texts.slice(0, 6)));
+    this.totalRecords = this.textService.texts$.pipe(map(texts=>texts.length || 0))
   }
 
   stopRequest() {
@@ -553,7 +666,12 @@ export class TextsComponent implements OnInit {
     let rows = (this.first != this.rows) && (this.first < this.rows) ? this.rows : this.first + this.rows;
     if(args.length>0){args =args.filter(query=>query != null)}
     if(args.length==1){
-      this.getAllData(this.first, rows);
+      if(args[0] == 'all'){
+        this.getAllData(this.first, rows);
+      }else if(args[0]=='search'){
+        this.paginationItems = this.textService.sliceFilteredAttestations(this.first, rows);
+      }
+      
       return;
     }
     if(args.length>1){
