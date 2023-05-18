@@ -43,7 +43,7 @@ export class BibliographyComponent implements OnInit {
         of([]) 
     )),
     takeUntil(this.destroy$),
-    /* map((lexicon) => lexicon.length || 0), */
+    map((lexicon) => lexicon.length || 0),
   );
 
   thereWasAnError(err? : HttpResponseBase, source? : string){
