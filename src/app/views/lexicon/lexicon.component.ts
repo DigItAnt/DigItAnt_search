@@ -32,6 +32,7 @@ export interface LexiconFilter {
   form: string,
   language: string,
   pos : string,
+  book : string
 }
 
 export interface StatisticsCounter {
