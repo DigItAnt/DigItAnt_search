@@ -231,14 +231,14 @@ export class LexiconService {
   }
 
   getLexicalEntryData(instanceName: string): Observable<LexicalElement> {
-    return this.http.get<LexicalElement>(`${this.baseUrl}lexicon/data/lexicalEntry?key=lexodemo&aspect=core&id=${encodeURIComponent(instanceName)}`).pipe(
+    return this.http.get<LexicalElement>(`${this.baseUrl}lexicon/data/lexicalEntry?key=lexodemo&module=core&id=${encodeURIComponent(instanceName)}`).pipe(
       map((res) => res),
       shareReplay(),
     )
   }
 
   getFormData(instanceName: string): Observable<FormElement> {
-    return this.http.get<FormElement>(`${this.baseUrl}lexicon/data/form?key=lexodemo&aspect=core&id=${encodeURIComponent(instanceName)}`).pipe(
+    return this.http.get<FormElement>(`${this.baseUrl}lexicon/data/form?key=lexodemo&module=core&id=${encodeURIComponent(instanceName)}`).pipe(
       map((res) => res),
       shareReplay(),
     )
