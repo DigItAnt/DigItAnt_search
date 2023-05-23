@@ -1,156 +1,183 @@
-<div id="left-bar" class="flex flex-column">
-    <form class="flex" id="search-form" [formGroup]="search_form">
-        <ul class="flex-1">
-            <li class="p-3 pb-0 flex-column start">
-                <h4>Text</h4>
-                <div id="text-radio-button" class="pt-2 p-inputgroup">
-                    <input id="float-input" type="text" [placeholder]="!search_form.get('greek_mode')?.value  ? 'Eg: legù' : 'Eg: λεγϋ'" formControlName="text" pInputText>   <!-- [(ngModel)]="value2" -->
-                    <p-toggleButton formControlName="greek_mode" onIcon="omega" offIcon="latin" [pTooltip]="search_form.get('greek_mode')?.value ? 'Greek Keyboard' : 'Normal keyboard'" tooltipPosition="right"></p-toggleButton>
-                </div>
-                <div class="grid mt-4">
-                    <div class="lg:col-6 md:col-12 sm:col-12 field-radiobutton">
-                        <p-radioButton name="search_text_mode" inputId="equals" value="equals" formControlName="search_text_mode"></p-radioButton>
-                        <label for="equals">Equals</label>
-                    </div>
-                    <div class="lg:col-6 md:col-12 sm:col-12 field-radiobutton">
-                        <p-radioButton name="search_text_mode" inputId="start" value="start" formControlName="search_text_mode"></p-radioButton>
-                        <label for="start">Start</label>
-                    </div>
-                    <div class="lg:col-6 md:col-12 sm:col-12 field-radiobutton">
-                        <p-radioButton name="search_text_mode" inputId="contains" value="contains" formControlName="search_text_mode"></p-radioButton>
-                        <label for="contains">Contains</label>
-                    </div>
-                    <div class="lg:col-6 md:col-12 sm:col-12 field-radiobutton">
-                        <p-radioButton name="search_text_mode" inputId="ends" value="ends" formControlName="search_text_mode"></p-radioButton>
-                        <label for="ends">Ends</label>
+<div class="flex flex-1 flex-row">
 
+    <div id="left-bar" class="flex flex-column normal-tabview">
+
+        <form id="search-form" class="flex flex-column flex-auto h-full" [formGroup]="advancedSearchForm">
+
+
+            <p-panel header="Full Text" [toggleable]="false">
+                <div class="flex-column start">
+                    <div id="text-radio-button" class="pt-2 p-inputgroup">
+                        <input id="float-input" type="text"
+                            
+                            name="word" pInputText /> 
+                        
                     </div>
-                </div>
-            </li>
-            <li class="p-3 flex-column start">
                 
-                <h4>Date</h4>
-                <div class="flex pt-2">
-                    <p-dropdown [showClear]="true" class="flex-auto" [options]="dates" formControlName="date" optionValue="code" optionLabel="label" placeholder="Eg: 6th century BC">
+                </div>
+            </p-panel>
+
+            <p-panel class="cursor-pointer" header="Title and Id's" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                <div class="flex-column start">
+                    <div id="text-radio-button" class="pt-2 p-inputgroup">
+                        <input id="float-input" type="text" 
+                           
+                            placeholder="Enter title..."
+                            pInputText /> 
+                        <p-toggleButton onIcon="exact" offIcon="contains"></p-toggleButton>
+                    </div>
+
+                    <div id="text-radio-button" class="pt-2 p-inputgroup">
+                        <input id="float-input" type="text"
+                            placeholder="Enter ID..."
+                             pInputText /> 
+                        <p-toggleButton  onIcon="exact" offIcon="contains"></p-toggleButton>
+                    </div>
+                   <!--  <div class="mt-4">
+                        <p-selectButton [options]="searchOptions" ></p-selectButton>
+                    </div> -->
+                </div>
+            </p-panel>
+
+            <p-panel class="cursor-pointer" header="Date" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                <div class="flex pt-3">
+                    <p-checkbox [binary]="true" label="Interval" ></p-checkbox>
+                </div>
+                <div class="flex pt-3">
+                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="[]" 
+                        optionValue="century" optionLabel="label" placeholder="Eg: 6th century BC">
                         <ng-template let-date pTemplate="item">
-                            <div class="country-item">
+                            <div class="century-item">
                                 <span class="counter">{{date.label}}</span>
                             </div>
                         </ng-template>
                     </p-dropdown>
                 </div>
-                
-            </li>
-            <li class="p-3 flex-column start">
-                
-                <h4>Location</h4>
-                <div class="flex pt-2">
-                    <p-dropdown [showClear]="true" class="flex-auto" [options]="grouped_location" formControlName="location" optionValue="code" optionLabel="label" placeholder="Eg: Padua" [group]="true">
-                        <ng-template let-group pTemplate="group">
-                            <div class="flex align-items-center">
-                                <span class="counter">{{group.label}}</span>
+
+                <div class="flex pt-3">
+                    <p-dropdown  appendTo="body"  [showClear]="true" class="flex-auto" [options]="[]" 
+                        optionValue="century" optionLabel="label" placeholder="Eg: 6th century BC">
+                        <ng-template let-date pTemplate="item">
+                            <div class="century-item">
+                                <span class="counter">{{date.label}}</span>
                             </div>
                         </ng-template>
+                    </p-dropdown>
+                </div>
+            </p-panel>
 
+            <p-panel class="cursor-pointer" header="Location" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                
+                <!-- (onClear)="clearLocation()"
+                (onSelect)="handleAutocompleteFilter($event)"
+                [suggestions]="(searchLocations | async) || []" 
+                (completeMethod)="autocomplete$.next($event)" -->
+                <p-autoComplete 
+                                
+                                field="ancientPlaceLabel"
+                                placeholder="Eg: Samnium"
+                                [showClear]="true">
+
+                                <ng-template let-item pTemplate="item">
+                                    <div>{{item.ancientPlaceLabel}}</div>
+                                    <sub>{{item.modernPlaceLabel}}</sub>
+                                </ng-template>
+                </p-autoComplete>
+
+            </p-panel>
+
+
+            <p-panel class="cursor-pointer" header="Language" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                
+                <div class="flex pt-3">
+                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="[]" 
+                        optionValue="language" optionLabel="language" placeholder="Select language...">
                         <ng-template let-item pTemplate="item">
-                            <div class="flex align-items-center">
-                                <span class="ml-5">{{item.label}}</span>
+                            <div class="language-item">
+                                <span class="counter">{{item.language}} - {{item.count}}</span>
                             </div>
                         </ng-template>
                     </p-dropdown>
                 </div>
-            </li>
-            
-            <li class="p-3 flex-column start">
-                
-                <h4>Type</h4>
-                <div class="flex pt-2">
-                    <p-dropdown [showClear]="true" class="flex-auto" [options]="types" formControlName="type" optionValue="code" optionLabel="label" placeholder="Eg: sacrifical">
-                        <ng-template let-date pTemplate="item">
-                            <div class="country-item">
-                                <span class="counter">{{date.label}}</span>
-                            </div>
-                        </ng-template>
-                    </p-dropdown>
-                </div>
-            </li>
-            <li class="p-3 flex-column start">
-                
-                <h4>Theme</h4>
-                <div class="flex pt-2">
-                    <p-dropdown [appendTo]="'body'" [showClear]="true" class="flex-auto" [options]="themes" formControlName="type" optionValue="code" optionLabel="label" placeholder="Eg: sacrifical">
-                        <ng-template let-theme pTemplate="item">
-                            <div class="country-item">
-                                <span class="counter">{{theme.label}}</span>
-                            </div>
-                        </ng-template>
-                    </p-dropdown>
-                </div>
-            </li>
-            <li class="p-3 flex-row start justify-content-between">
-                <button pButton pRipple type="button" label="Clear" class="p-button-danger p-button-text" (click)="resetForm()" ></button>
-                <button pButton type="button" class="p-button-primary" label="Search" (click)="search()"></button>
-            </li>
-        </ul>
-    </form>
-    
-</div>
 
-<div id="landing-content" class="flex flex-column flex-1" *ngIf="landing_mode">
-    <h1 class="mb-5">Landing Ipsum</h1>
-    <p class="mt-5">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ipsum nisl, lobortis ut vestibulum ut, feugiat at sem. In eget tristique sapien, vitae vestibulum lorem. Donec eget leo sem. Nulla mollis condimentum metus ut molestie. Vivamus et mi porttitor, sodales magna ac, volutpat neque. Morbi faucibus nibh eu neque semper, eu ornare risus gravida. Pellentesque id hendrerit felis.</p>
-</div>
 
-<div id="search-content" class="flex flex-column flex-1" *ngIf="!landing_mode">
-    <div class="flex flex-row align-items-center horizontal-list m-3">
-        <div class="occurrences m-3">
-            We found <span class="enphatize">{{current_occurences}}</span> files
-        </div>
-    </div>
-    
-    <div class="flex flex-column flex-1">
-        <div class="flex flex-column flex-auto text-item-container">
-            <a class="flex flex-row text-item m-2 " *ngFor="let item of pagination_items" [routerLink]="['/file/'+item.id]">
-            
-                <div class="flex text-item-id p-2">
-                    {{item.id}}
+            </p-panel>
+
+            <p-panel class="cursor-pointer" header="Inscription Types" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                
+                <div class="flex pt-3">
+                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="[]" 
+                        optionValue="inscriptionType" optionLabel="inscriptionType" placeholder="Select inscription type...">
+                        <ng-template let-inscriptionType pTemplate="item">
+                            <div class="language-item">
+                                <span class="counter">{{inscriptionType.inscriptionType}}</span>
+                            </div>
+                        </ng-template>
+                    </p-dropdown>
                 </div>
-        
-                <div class="text-item-preview flex-1 ml-3 p-2">
+
+
+            </p-panel>
+
+
+            <p-panel class="cursor-pointer" header="Object Types" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                
+                <div class="flex pt-3">
+                    <p-dropdown [appendTo]="'body'" [showClear]="true" class="flex-auto" [options]="[]" 
+                        optionValue="objectType" optionLabel="objectType" placeholder="Select object type...">
+                        <ng-template let-objectType pTemplate="item">
+                            <div class="language-item">
+                                <span class="counter">{{objectType.objectType}}</span>
+                            </div>
+                        </ng-template>
+                    </p-dropdown>
+                </div>
+
+
+            </p-panel>
+
+            <p-panel class="cursor-pointer" header="Materials" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                
+                <div class="flex pt-3">
+                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="[]" 
+                        optionValue="material" optionLabel="material" placeholder="Select material...">
+                        <ng-template let-materials pTemplate="item">
+                            <div class="language-item">
+                                <span class="counter">{{materials.material}}</span>
+                            </div>
+                        </ng-template>
+                    </p-dropdown>
+                </div>
+
+
+            </p-panel>
+
+
+            <div class="flex pt-3 mb-0 mt-auto search-button-div sticky bottom-0">
+                <button pButton 
                     
-                    <div class="text-item-preview-top">
-                        {{item.title}}
-                    </div>
-        
-                    <div class="text-item-preview-bottom flex flex-column justify-content-between mt-3">
-                        <div class="flex flex-row align-items-baseline">
-                            <i class="far fa-calendar-alt"></i>
-                            <span class="ml-2">{{item.date}}</span>
-                        </div>
-                        <div class="flex flex-row align-items-baseline">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span class="ml-2">{{item.place}}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="text-item-preview-transcription">
-                    <div class=" ml-3 p-2">
-                        <div class="text-item-preview-top-transcription">
-                            transcr_type
-                        </div>
-                        <div class="text-item-preview-bottom flex flex-column justify-content-between mt-3">
-                            <div class="flex flex-row align-items-baseline p-2 text-container">
-                                <p class="ml-3">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc venenatis vitae est a pretium. Integer commodo quis purus sed consequat. Sed ullamcorper ante et lacus la</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    type="button"
+                    label="Reset fields" 
+                    class="p-button-danger border-noround flex-1"
+                    icon="fa-solid fa-times" 
+                    iconPos="left">
+                </button>
                 
-            </a>
-        </div>
-        
-    
+            </div>
+
+
+        </form>
+
     </div>
-    <p-paginator #search_text_paginator [rows]="5"  [totalRecords]="filtered_items.length" (onPageChange)="pagination($event)" [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[5,10,15]" ></p-paginator>
+
+    <div id="search-container" class="flex flex-column flex-1">
+
+        <!-- FILTER -->
+
+       
+
+
+
+    </div>
+
 </div>

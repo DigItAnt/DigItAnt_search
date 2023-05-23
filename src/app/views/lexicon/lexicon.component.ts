@@ -25,7 +25,20 @@ export interface AlphaCounter {
   letter : string,
   count : number
 }
+
+export interface AuthorCounter {
+  name : string,
+  count : number
+}
+
+export interface DateCounter {
+  date : string,
+  count : number
+}
+
 export interface LexiconFilter {
+  name : string,
+  year : string,
   filter: string,
   letter: string,
   word: string,
@@ -322,9 +335,9 @@ export class LexiconComponent implements OnInit {
   )
 
   constructor(private route: Router,
-    private activatedRoute: ActivatedRoute,
-    private lexiconService: LexiconService,
-    private textService : TextsService,
+              private activatedRoute: ActivatedRoute,
+              private lexiconService: LexiconService,
+              private textService : TextsService,
   ) { }
 
   ngOnInit(): void {
