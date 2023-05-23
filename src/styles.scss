@@ -311,7 +311,8 @@ app-root {
 }
 
 #texts-container,
-#lexicon-container {
+#lexicon-container,
+#bibliography-container {
     //padding: 2rem;
     .text-container-top {
         min-height: 5rem;
@@ -371,7 +372,8 @@ app-root {
     }
 
     .text-item-container,
-    .lexicon-item-container {
+    .lexicon-item-container,
+    .bibliography-item-container {
         align-content: baseline;
         overflow-y: auto;
         height: 100px;
@@ -411,7 +413,8 @@ app-root {
     }
 
     .text-item,
-    .lexicon-item {
+    .lexicon-item,
+    .bibliography-item {
         padding: 1rem;
         border: 5px solid transparent;
         background: $light-gray;
@@ -429,7 +432,8 @@ app-root {
     }
 
     .text-item:hover,
-    .lexicon-item:hover {
+    .lexicon-item:hover,
+    .bibliography-item:hover {
         border-color: $red;
     }
 
@@ -623,6 +627,18 @@ p-tabview.normal-tabview {
         .search-button-div button:focus {
             box-shadow: none !important;
         }
+    }
+}
+
+.normal-tabview{
+    .search-button-div button {
+        background: $black;
+        color: white;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        border: none;
+        font-family: "M PLUS Rounded 1c", sans-serif;
+        font-size: 0.85rem;
     }
 }
 
