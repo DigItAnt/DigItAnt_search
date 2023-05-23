@@ -1,32 +1,39 @@
 <div class="flex flex-1 flex-row" *ngIf="{
+    activeAuthor : activeAuthor | async,
     activeTab : activeTab | async,
+    activeLetter : activeLetter | async,
+    activeBook : activeBook | async,
+    activeDate : activeDate | async,
     bookOrLetter : bookOrLetter | async,
+    groupAuthors : groupAuthors | async,
+    groupDates : groupDates | async,
+    groupTitles : groupTitles | async,
     totalRecords : totalRecords | async} as bibliography">
 
     <div id="left-bar" class="flex flex-column">
         <p-tabView class="normal-tabview">
-    
+
             <p-tabPanel header="Categories">
-    
+
                 <ul class="home-menu">
-                    <a *ngFor="let filter of allowedFilters" (click)="getAllData()" [href]="'/bibliography?filter='+filter"
-                    class="categories no-underline" routerLink="./" [queryParams]="{filter : filter}"
-                    routerLinkActive="active" [routerLinkActiveOptions]="{exact : false}">
-                    <li class="pl-4 flex align-items-center">
-                        <span class="icon"></span>
-                        <span class="route flex-1">{{filter | titlecase}}</span>
-                    </li>
-                </a>
-                    
+                    <a *ngFor="let filter of allowedFilters" (click)="getAllData()"
+                        [href]="'/bibliography?filter='+filter" class="categories no-underline" routerLink="./"
+                        [queryParams]="{filter : filter}"  [ngClass]="{'active': bibliography.activeTab === filter}">
+                        <li class="pl-4 flex align-items-center">
+                            <span class="icon"></span>
+                            <span class="route flex-1">{{filter | titlecase}}</span>
+                        </li>
+                    </a>
+
                 </ul>
             </p-tabPanel>
-    
+
             <p-tabPanel header="Simple search">
-                
+
             </p-tabPanel>
-    
+
         </p-tabView>
-    
+
     </div>
 
 
@@ -34,15 +41,16 @@
 
         <!-- FILTER -->
 
-        <div id="filter-letter-container" class="flex flex-column text-container-top"
+        <div id="filter-book-container" class="flex flex-column book-container-top"
             *ngIf="bibliography.activeTab == 'all' && bibliography.bookOrLetter != 'book'">
             <div class="flex flex-row align-items-center horizontal-list m-3 text-center">
-                <h2 class="flex-1 loading" *ngIf="!(bibliography.totalRecords) && !somethingWrong">Loading
+                <h2 class="flex-1 loading"
+                    *ngIf="!bibliography.totalRecords && !somethingWrong && bibliography.totalRecords != 0">Loading
                     <span>.</span><span>.</span><span>.</span>
                 </h2>
                 <h2 class="flex-1" *ngIf="somethingWrong">Ops!</h2>
-                <ul class="flex-wrap" *ngIf="(bibliography.totalRecords)  && !somethingWrong">
-                   <!--  <li [routerLink]="'./'" [queryParams]="{filter: 'all', letter: alpha.letter}"
+                <!-- <ul class="flex-wrap" *ngIf="(bibliography.totalRecords)  && !somethingWrong">
+                    <li [routerLink]="'./'" [queryParams]="{filter: 'all', letter: alpha.letter}"
                         routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}"
                         class="pl-1 py-2 letter-list-element align-items-center"
                         *ngFor="let alpha of groupAlphabet | async">
@@ -50,7 +58,62 @@
                             [href]="'lexicon/filter=all&letter='+alpha.letter">{{alpha.letter ==
                             '*' ?
                             '&#10043;' : alpha.letter | uppercase}}</a>
-                    </li> -->
+                    </li>
+                </ul> -->
+                <h2 class="flex-1"
+                    *ngIf="bibliography.totalRecords || bibliography.totalRecords == 0 && !somethingWrong"><span
+                        class="red">{{bibliography.totalRecords}} </span>books found
+                </h2>
+
+
+            </div>
+
+
+        </div>
+
+        <div id="filter-authors-container" class="flex flex-column" *ngIf="bibliography.activeTab == 'author'" 
+            (mousedown)="onMouseDown($event)" 
+            (mousemove)="onMouseMove($event)" 
+            (mouseup)="onMouseUp()"
+            [ngClass]="{'dragging': isDragging}">
+        
+            <div class="flex flex-row horizontal-list m-3 text-container-top justify-content-between resizer">
+    
+                <h2 class="loading text-center flex-1 flex align-items-center justify-content-center"
+                    *ngIf="!bibliography.groupAuthors">Loading <span>.</span><span>.</span><span>.</span>
+                </h2>
+                <ul class="flex-wrap align-items-center" *ngIf="bibliography.groupAuthors">
+                    <li *ngFor="let item of bibliography.groupAuthors"
+                        class="my-2 mr-2 align-items-center border-round-2xl century-list-element" routerLink="./"
+                        [class.active]="(bibliography.activeAuthor == item.name)"
+                        [queryParams]="{filter: 'author', name: item.name}">
+                        <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
+                        <a class="no-underline font-bold">{{item.name}}</a>
+    
+                    </li>
+                </ul>
+            </div>
+    
+        </div>
+
+
+        <div id="filter-letter-container" class="flex flex-column text-container-top"
+            *ngIf="bibliography.activeTab == 'title' && bibliography.bookOrLetter != 'book'">
+            <div class="flex flex-row align-items-center horizontal-list m-3 text-center">
+                <h2 class="flex-1 loading" *ngIf="!(bibliography.totalRecords) && !somethingWrong">Loading
+                    <span>.</span><span>.</span><span>.</span>
+                </h2>
+                <h2 class="flex-1" *ngIf="somethingWrong">Ops!</h2>
+                <ul class="flex-wrap" *ngIf="(bibliography.totalRecords)  && !somethingWrong">
+                    <li [routerLink]="'./'" [queryParams]="{filter: 'title', letter: alpha.letter}"
+                        routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}"
+                        class="pl-1 py-2 letter-list-element align-items-center"
+                        *ngFor="let alpha of groupTitles | async">
+                        <a class="letter" (click)="$event.preventDefault()"
+                            [href]="'bibliography?filter=title&letter='+alpha.letter">{{alpha.letter ==
+                            '*' ?
+                            '&#10043;' : alpha.letter | uppercase}}</a>
+                    </li>
                 </ul>
 
             </div>
@@ -58,13 +121,93 @@
 
         </div>
 
-
+        <div id="filter-authors-container" class="flex flex-column" *ngIf="bibliography.activeTab == 'date'" 
+            (mousedown)="onMouseDown($event)" 
+            (mousemove)="onMouseMove($event)" 
+            (mouseup)="onMouseUp()"
+            [ngClass]="{'dragging': isDragging}">
         
+            <div class="flex flex-row horizontal-list m-3 text-container-top justify-content-between resizer">
+    
+                <h2 class="loading text-center flex-1 flex align-items-center justify-content-center"
+                    *ngIf="!bibliography.groupDates">Loading <span>.</span><span>.</span><span>.</span>
+                </h2>
+                <ul class="flex-wrap align-items-center" *ngIf="bibliography.groupDates">
+                    <li *ngFor="let item of bibliography.groupDates"
+                        class="my-2 mr-2 align-items-center border-round-2xl century-list-element" routerLink="./"
+                        [class.active]="(bibliography.activeDate == item.date)"
+                        [queryParams]="{filter: 'date', year: item.date}">
+                        <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
+                        <a class="no-underline font-bold">{{item.date}}</a>
+    
+                    </li>
+                </ul>
+            </div>
+    
+        </div>
 
 
+        <div class="flex flex-row flex-wrap flex-auto bibliography-item-container ml-2 p-3"
+            *ngIf="bibliography.bookOrLetter == '' || bibliography.bookOrLetter != 'book'">
+            <div class="flex flex-row m-2 w-full" *ngIf="!bibliography.totalRecords">
+                <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+
+            </div>
+
+            <a class="flex no-underline lexicon-item m-2" *ngFor="let item of paginationItems | async" routerLink="./"
+                [href]="'/lexicon?book='+item.publisher"
+                [queryParams]="{book : item.publisher}">
+                <div class="flex flex-row">
+                    <div class="flex text-item-id p-2">
+                        {{item.publisher}}
+                    </div>
+
+                    <div class="flex flex-column text-item-preview p-2">
+
+                        <div class="text-item-preview-top">
+                            {{item.title}}
+                        </div>
+
+                        <div class="text-item-preview-bottom flex flex-column mt-3">
+                            <div class="flex flex-row align-items-baseline">
+                                <i class="far fa-calendar-alt"></i>
+                                <span class="ml-2">{{item.date}}</span>
+                            </div>
+                            <!-- <div class="flex flex-row align-items-baseline mt-2">
+                                <span class="pos"></span>
+                                <span class="ml-2" [class.font-italic]="item.pos == ''">{{item.pos != '' ? item.pos :
+                                    'no info'}}</span>
+                            </div> -->
+                            <div class="flex flex-row align-items-baseline mt-2">
+                                <i class="fas fa-user"></i>
+                                <span class="ml-2">{{item.author}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+
+        <p-paginator *ngIf="bibliography.totalRecords != 0 && !somethingWrong && bibliography.bookOrLetter != 'word'"
+        [dropdownAppendTo]="'body'" [first]="first" [rows]="rows" [totalRecords]="(totalRecords | async) || 0"
+        (onPageChange)="pagination($event, (bibliography.bookOrLetter || null), (bibliography.activeLetter || null), (bibliography.activeTab == 'author' ? 'name' : null || null), (bibliography.activeTab == 'date' ? 'year' : null || null), (bibliography.activeAuthor || null), (bibliography.activeDate || null))" 
+        [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[6,12,24]"></p-paginator> <!-- (bibliography.activeLanguage || null), (bibliography.activePos || null) -->
+
+        <div class="flex flex-row flex-wrap flex-auto text-item-container p-3"
+            *ngIf="bibliography.totalRecords == 0 && !somethingWrong && bibliography.bookOrLetter != 'word'">
+            no entries
+        </div>
+
+        <div class="flex flex-row flex-wrap flex-auto text-item-container m-5 text-2xl font-bold"
+            *ngIf="somethingWrong">
+            Sorry, but something went wrong
+            <!-- ¯\(°_o)/¯ -->
+        </div>
 
     </div>
 
+    
+
 </div>
-
-
