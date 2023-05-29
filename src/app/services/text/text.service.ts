@@ -182,6 +182,7 @@ export interface AnnotationResponse{
 
 export interface AnnotationAttributes {
   author : string,
+  bibliography : Array<any>,
   confidence : number,
   creator : string,
   externalRef : string,

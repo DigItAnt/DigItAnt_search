@@ -481,7 +481,7 @@ export class TextsComponent implements OnInit {
           this.buildTextQuery(data)
         }
       }
-      )
+    )
   }
 
   buildTextQuery(formData : any){
@@ -1152,6 +1152,8 @@ function buildCustomInterpretative(renderer : Renderer2, TEINodes : Array<Elemen
 
 }
 
+//TODO: ottenere commentario, apparatus
+//      renderizzare elementi tei (da discutere)
 
 function getTranslation(rawHtml : string){
   //console.log(rawHtml);

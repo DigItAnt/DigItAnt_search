@@ -31,7 +31,6 @@
         
                 <p-tabPanel class="flex flex-column flex-1" header="Simple search" [selected]="text.activeTab == 'search'">
 
-                    <!-- TODO: implementare servizi per ricerca testi -->
                     <form id="search-form" class="flex flex-column flex-auto h-full" [formGroup]="searchForm">
 
 
@@ -396,7 +395,7 @@
                                                                                             file : getFileByIndex | async} as textView">
                 
                 <div class="flex flex-column flex-auto ">
-                    <div class="flex flex-row horizontal-list m-3 text-container-top sticky top-0">
+                    <div [ngClass]="{'zIndex': text.activeFile}" class="flex flex-row horizontal-list m-3 text-container-top sticky top-0">
                         <p-paginator *ngIf="(text.totalRecords != 0 && !somethingWrong)"
                             id="text-view-paginator"
                             [dropdownAppendTo]="'body'" [first]="(textView.index) || 0" [rows]="1"

@@ -318,6 +318,15 @@ app-root {
         min-height: 5rem;
     }
 
+    .zIndex{
+        z-index: 9;
+    }
+
+    .horizontal-list.books{
+        min-height: 8rem !important;
+        max-height: 20rem!important;
+    }
+
     .horizontal-list {
         border-top: 2px solid #dee2e6;
         border-bottom: 2px solid #dee2e6;
@@ -329,7 +338,7 @@ app-root {
         overflow-y: auto;
         color: #64748b;
         background: white;
-        z-index: 999;
+        
 
         @keyframes blinkdot {
             0% {
@@ -556,6 +565,13 @@ app-root {
     }
 }
 
+p-tabview.noZIndex{
+    .p-tabview-nav-container{
+        z-index: 0 !important;
+
+    }
+}
+
 p-tabview.normal-tabview {
     display: flex !important;
     flex-direction: column !important;
@@ -594,6 +610,8 @@ p-tabview.normal-tabview {
             top: 0;
             z-index: 9999;
         }
+
+
 
         .p-tabview-panels {
             font-family: "M PLUS Rounded 1c", sans-serif !important;

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Paginator } from 'primeng/paginator';
-import { BehaviorSubject, catchError, debounceTime, distinctUntilChanged, EMPTY, filter, iif, map, mergeMap, Observable, of, repeat, retry, startWith, Subject, switchMap, take, takeLast, takeUntil, takeWhile, tap, throttle, throwError, timeout } from 'rxjs';
+import { BehaviorSubject, catchError, debounceTime, delay, distinctUntilChanged, EMPTY, filter, iif, map, mergeMap, Observable, of, repeat, retry, startWith, Subject, switchMap, take, takeLast, takeUntil, takeWhile, tap, throttle, throwError, timeout } from 'rxjs';
 import { CognateElement, EtymologyElement, EtymologyTreeElement, FormElement, FormElementLabels, FormElementTree, LexicalElement, LexiconQueryFilter, LexiconService, SenseElement } from 'src/app/services/lexicon/lexicon.service';
 import {TreeNode} from 'primeng/api';
 import { FormControl, FormGroup } from '@angular/forms';
@@ -66,7 +66,7 @@ export class LexiconComponent implements OnInit {
 
   selectedFile : TreeNode[] = [];
 
-  allowedFilters: string[] = ['all', 'language', 'pos', 'sense', 'concept'];
+  allowedFilters: string[] = ['all', 'language', 'pos',]; /*  'sense', 'concept' */
   allowedOperators: string[] = ['filter', 'letter', 'word', 'form', 'language', 'pos', 'senseType', 'conceptType'];
 
   first: number = 0;
@@ -246,6 +246,7 @@ export class LexiconComponent implements OnInit {
   currentForm : string = '';
 
   getLexicalEntry : Observable<LexicalElement> = this.getLexicalEntryReq$.pipe(
+    delay(100),
     takeUntil(this.destroy$),
     tap(instanceName => {
       if(instanceName != ''){
@@ -261,24 +262,24 @@ export class LexiconComponent implements OnInit {
   
 
   getForm : Observable<FormElement> = this.getFormReq$.pipe(
+    delay(100),
     takeUntil(this.destroy$),
-    switchMap(instanceName => (instanceName != '' && instanceName == this.currentForm) ? this.lexiconService.getFormData(instanceName) : of()),
+    switchMap(instanceName => (instanceName != '' && instanceName == this.currentForm) ? this.lexiconService.getFormData(instanceName).pipe(catchError(err => this.thereWasAnError())) : of()),
     tap(form => {
       console.log(form)
     })
   )
 
   getSenses : Observable<SenseElement[]> = this.getSensesReq$.pipe(
-    take(1),
-    switchMap(instanceName => instanceName != '' ? this.lexiconService.getSenses(instanceName) : of()),
+    switchMap(instanceName => instanceName != '' ? this.lexiconService.getSenses(instanceName).pipe(catchError(err => this.thereWasAnError())) : of([])),
     //tap(senses => console.log(senses))
   )
 
 
   getFormsList : Observable<FormElementTree[]> = this.getFormsListReq$.pipe(
     distinctUntilChanged(),
-    switchMap(instanceName => (instanceName != '' && instanceName == this.currentLexicalEntry) ? this.lexiconService.getForms(instanceName) : of()),
-    switchMap(forms => this.textService.getAnnotationsByForms(forms)),
+    switchMap(instanceName => (instanceName != '' && instanceName == this.currentLexicalEntry) ? this.lexiconService.getForms(instanceName) : of([])),
+    switchMap(forms => forms.length> 0 ? this.textService.getAnnotationsByForms(forms) : of([])),
     tap(forms => console.log(forms))
   )
 
@@ -341,7 +342,7 @@ export class LexiconComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.activatedRoute.queryParams.pipe(takeUntil(this.destroy$), debounceTime(500)).subscribe(
+    this.activatedRoute.queryParams.pipe(takeUntil(this.destroy$)).subscribe(
       (event) => {
         if (event) {
           const keys = Object.keys(event);
@@ -488,8 +489,8 @@ export class LexiconComponent implements OnInit {
     if (f && r) { this.first = f; rows = r; }
     if (!f && !r) { this.first = 0; this.rows = 6; }
 
-    this.paginationItems = this.lexiconService.filterByLetter((letter)||'').pipe(map(text=>text.slice(f, r)))
-    this.totalRecords = this.lexiconService.filterByLetter((letter)||'').pipe(map(texts=>texts.length || 0))
+    this.paginationItems = this.lexiconService.filterByLetter((letter)||'').pipe(tap(x=> this.somethingWrong=false),map(text=>text.slice(f, r)))
+    this.totalRecords = this.lexiconService.filterByLetter((letter)||'').pipe(tap(x=> this.somethingWrong=false),map(texts=>texts.length || 0))
     
   }
 

@@ -15,7 +15,7 @@
     authors : authorsList | async,
     languages : languagesList | async,
     status : statusList | async} as lexicon">
-
+    
     <div id="left-bar" class="flex flex-column">
 
         <p-tabView class="normal-tabview">
@@ -34,8 +34,8 @@
                     </a>
                 </ul>
             </p-tabPanel>
-
-            <p-tabPanel header="Simple search" id="lexicon-tree-search">
+            
+            <p-tabPanel header="Simple search" id="lexicon-tree-search" [selected]="lexicon.activeWord != ''">
 
 
                 <form *ngIf="lexicon.types && lexicon.pos && lexicon.authors && lexicon.languages && lexicon.status"
@@ -449,7 +449,7 @@
                                 <span class="text-2xl font-light">Loading cognates list...</span>
                                 <i class="pl-2 fas fa-spinner fa-pulse"></i>
                             </div>
-                            <div class="flex flex-row align-items-baseline"
+                            <div class="flex flex-row align-items-end"
                                 *ngIf="cognates.data && cognates.data.length != 0">
 
                                 <span class="pt-2 text-base font-light">
@@ -477,12 +477,11 @@
 
                         <div id="lexical-entry-forms" class="pt-5 flex flex-row align-items-baseline"
                             *ngIf="{data : getFormsList | async} as formsList">
-
                             <div *ngIf="!formsList.data && formsList.data != []">
                                 <span class="text-2xl font-light">Loading forms list...</span>
                                 <i class="pl-2 fas fa-spinner fa-pulse"></i>
                             </div>
-                            <div class="mb-3 text-base font-light">
+                            <div class="mb-3 text-base font-light" *ngIf="formsList.data && formsList.data.length > 0">
                                 Forms list:
                             </div>
 
