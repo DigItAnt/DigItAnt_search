@@ -1,11 +1,16 @@
 import { HttpResponseBase } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormControl, FormGroup } from '@angular/forms';
 import { Router, ActivatedRoute, Params } from '@angular/router';
+import { TreeNode } from 'primeng/api';
 import { Paginator } from 'primeng/paginator';
-import { catchError, debounceTime, EMPTY, filter, iif, map, Observable, of, Subject, Subscription, takeUntil, tap, timeout } from 'rxjs';
+import { BehaviorSubject, catchError, debounceTime, delay, EMPTY, filter, iif, map, Observable, of, Subject, Subscription, switchMap, takeUntil, tap, timeout } from 'rxjs';
 import { BibliographyService, Book } from 'src/app/services/bibliography/bibliography.service';
+import { FormElementTree, LexicalElement, LexiconService } from 'src/app/services/lexicon/lexicon.service';
+import { TextMetadata, TextsService } from 'src/app/services/text/text.service';
 import * as data from '../../../assets/mock/words.json'
-import { AlphaCounter, AuthorCounter, DateCounter, LexiconFilter } from '../lexicon/lexicon.component';
+import { AlphaCounter, AuthorCounter, DateCounter, LexiconFilter, TreeEvent } from '../lexicon/lexicon.component';
+import { AutoCompleteEvent, LocationsCounter, PaginatorEvent } from '../texts/texts.component';
 
 @Component({
   selector: 'app-bibliography',
@@ -15,13 +20,76 @@ import { AlphaCounter, AuthorCounter, DateCounter, LexiconFilter } from '../lexi
 export class BibliographyComponent implements OnInit {
 
   destroy$: Subject<boolean> = new Subject<boolean>();
+  autocomplete$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
   first: number = 0;
   rows: number = 6;
   somethingWrong: boolean = false;
+  treeLoading : boolean = true;
   currentBook: string = '';
 
-  allowedOperators: string[] = ['filter', 'author', 'name', 'letter', 'year', 'form', 'language', 'pos', 'senseType', 'conceptType'];
+  allowedOperators: string[] = ['filter', 'author', 'name', 'letter', 'year', 'book'];
   allowedFilters: string[] = ['all', 'author', 'title', 'date']; /* 'argument' */
+
+  lexiconTree : Observable<TreeNode[]> = this.lexiconService.lexicon$.pipe(
+    map(lexicon => this.mapLexicalElement(lexicon)),
+    tap(x => this.treeLoading = false)
+  );
+
+  selectedFile: any = undefined;
+
+  mapLexicalElement(lexicon : LexicalElement[]) : TreeNode[] {
+    return lexicon.map((lexEl : LexicalElement) => ({
+      label : lexEl.label,
+      data: lexEl,
+      children : [],
+      leaf : !lexEl.hasChildren,
+      draggable: false,
+      droppable: false
+    }))
+  }
+
+  resetLexicalChoices(){
+    this.selectedFile = undefined;
+  }
+
+  setLexicalInstanceName(){
+    console.log(this.selectedFile)
+
+    let nodeData = this.selectedFile.data;
+
+    let instanceName = nodeData.lexicalEntry && nodeData.form ? nodeData.form : nodeData.lexicalEntry
+    this.bibliographySearchForm.get('lexicalInstanceName')?.setValue(instanceName);
+    
+  }
+
+  loadNode$ : BehaviorSubject<TreeEvent> = new BehaviorSubject<TreeEvent>({node: {}, originalEvent: new PointerEvent('')});
+  getChildren : Observable<TreeNode[]> = this.loadNode$.pipe(
+    filter(event => Object.keys(event.node).length > 0),
+    switchMap(event => this.lexiconService.getForms(event.node.data.lexicalEntry).pipe(
+      map(forms=> this.mapFormElement(forms)),
+      map(formsNodes => event.node.children = formsNodes),
+    )),
+  )
+
+  mapFormElement(lexicon : FormElementTree[]) : TreeNode[] {
+    if(lexicon.length == 0){
+      return [{
+        label : 'No children',
+        data : null,
+        leaf : true,
+        draggable : false,
+        droppable : false,
+        selectable : false,
+      }]
+    }
+    return lexicon.map((lexEl : FormElementTree) => ({
+      label : lexEl.label,
+      data: lexEl,
+      leaf : true,
+      draggable: false,
+      droppable: false
+    }))
+  }
 
 
   activeTab: Observable<string> = this.activatedRoute.queryParams.pipe(
@@ -106,6 +174,10 @@ export class BibliographyComponent implements OnInit {
     map(books=> groupByDates(books)),
   )
 
+  groupTexts : Observable<TextMetadata[]> = this.textsService.texts$.pipe(
+    tap(x=> console.log(x))
+  );
+
   paginationItems: Observable<Book[]> = this.bibliographyService.books$.pipe(
     timeout(15000),
     catchError(err =>
@@ -145,12 +217,76 @@ export class BibliographyComponent implements OnInit {
 
   @ViewChild('paginator', { static: true }) paginator: Paginator | undefined
 
+  isActiveInterval : boolean = false;
+  displayModal : boolean = false;
+
+  bibliographySearchForm: FormGroup = new FormGroup({ 
+    title: new FormControl(null), 
+    id : new FormControl(null),
+    fromDate : new FormControl(null),
+    toDate : new FormControl(null),
+    author : new FormControl(null),
+    location : new FormControl(null),
+    inscriptionId : new FormControl(null),
+    word : new FormControl(null)
+  });
+
+  getBookPaginationIndexReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getBookByIndexReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
+  getBookIdByIndexReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
+
+  getBookPaginationIndex : Observable<number> = this.getBookPaginationIndexReq$.pipe(
+    switchMap(fileId => fileId != '' ? this.bibliographyService.getIndexOfText(fileId) : of()),
+    tap(index => this.getBookByIndexReq$.next(index))
+  )
+
+  getBookIdByIndex : Observable<string> = this.getBookIdByIndexReq$.pipe(
+    switchMap(index => !isNaN(index) ? this.bibliographyService.getBookKeyByIndex(index) : of()),
+    tap(bookId => {
+      if(bookId != ''){
+        this.route.navigate(['/bibliography'], {queryParams : {book : bookId}})
+      }
+    }),
+  )
+
+  getBookByIndex : Observable<Book> = this.getBookByIndexReq$.pipe(
+    switchMap(index => !isNaN(index) ? this.bibliographyService.getBookByIndex(index) : of()),
+    tap(book => {
+      if(book){
+        /* this.getTextContentReq$.next(file['element-id']);
+        this.isBodyTextPartArray = Array.isArray(file.bodytextpart) */
+      }
+    })
+  )
+
+  textPagination(event: PaginatorEvent){
+    let indexRequested = event.page;
+    this.getBookIdByIndexReq$.next(indexRequested);
+  }
 
   constructor(private activatedRoute: ActivatedRoute,
               private route: Router,
-              private bibliographyService : BibliographyService) { }
+              private bibliographyService : BibliographyService,
+              private textsService : TextsService,
+              private lexiconService : LexiconService) { }
 
   ngOnInit(): void {
+
+    this.bibliographySearchForm.valueChanges.pipe(
+      takeUntil(this.destroy$),
+      debounceTime(2000)).subscribe(
+      data=>{
+        if(this.bibliographySearchForm.touched){
+
+          let shouldStart = Object.values(data).some(value => value !== null && value !== '');
+          if(shouldStart){
+            this.buildBibliographyCrossQuery(data)
+          }else{
+            this.getAllData()
+          }
+        }
+      }
+    )
     
     this.activatedRoute.queryParams.pipe(takeUntil(this.destroy$)).subscribe(
       (event) => {
@@ -179,24 +315,101 @@ export class BibliographyComponent implements OnInit {
             this.goToDefaultUrlTitles();
           }
 
-          if(keys[0] == 'word'){
+          if(keys[0] == 'book'){
 
-            //è una lexical entry
-            /* if(keys.length == 1){
-              this.getLexicalEntryReq$.next(values[0])
-            } */
-
-            //è una form
-            /* if(keys.length == 2){
-              this.getFormReq$.next(values[1]);
-              this.getAttestationsReq$.next(values[1])
-            } */
+            let fileId = values[0];
+            this.getBookPaginationIndexReq$.next(fileId);
 
           }
         }
       }
     );
 
+  }
+
+
+
+  showModalDialog() {
+    this.selectedFile = undefined;
+    this.bibliographySearchForm.markAsTouched();
+    this.displayModal = true;
+  }
+
+  filteredResults : any;
+
+  buildBibliographyCrossQuery(formValues : FormGroup){
+    
+    this.paginationItems = of([]);
+    this.totalRecords = of(NaN)
+
+    this.route.navigate(
+      [],
+      {
+        relativeTo: this.activatedRoute,
+        queryParams: {filter : 'search'}, 
+        
+      }
+    )
+    
+    this.paginationItems = this.bibliographyService.combineResults(formValues).pipe(
+      catchError(error => {
+        console.error('An error occurred:', error);
+        if(error.status != 200) this.thereWasAnError() // Stampa l'errore sulla console
+        return of([])// Ritorna un Observable con una struttura di AnnotationsRows vuota
+      }),
+      tap(res => this.filteredResults = of(res)),
+      tap(res=> {
+        setTimeout(() => {
+          this.totalRecords = of(res.length)
+        }, 100);
+      }),
+      map(res => res.slice(0, 6))
+    )
+    
+  }
+
+  resetFields(){
+    this.bibliographySearchForm.reset();
+    this.first = 0;
+    this.rows = 6;
+    this.paginationItems = this.bibliographyService.books$.pipe(map(books => books.slice(0, 6)));
+    this.totalRecords = this.bibliographyService.books$.pipe(map(books=>books.length || 0))
+  }
+
+  clearDates(){
+    this.bibliographySearchForm.get('toDate')?.setValue(null, {emitEvent: true})
+  }
+
+  clearLocation(){
+    this.bibliographySearchForm.get('location')?.setValue(null, {emitEvent: true})
+  }
+
+  clearInscription(){
+    this.bibliographySearchForm.get('inscriptionId')?.setValue(null, {emitEvent: true})
+  }
+
+  handleAutocompleteFilter(evt: any){
+    
+    this.bibliographySearchForm.markAllAsTouched();
+
+    if(evt.ancientPlaceId != ''){
+      this.bibliographySearchForm.get('location')?.setValue(evt.ancientPlaceLabel)
+    }
+
+    this.bibliographySearchForm.updateValueAndValidity({ onlySelf: false, emitEvent: true })
+  }
+
+  autocompleteLocations: Array<LocationsCounter> = [];
+  searchLocations : Observable<LocationsCounter[]> = this.autocomplete$.pipe(
+    debounceTime(1000),
+    filter(autoCompleteEvent => autoCompleteEvent.query != ''),
+    switchMap(autoCompleteEvent=> this.textsService.searchLocation(autoCompleteEvent.query)),
+    map(texts=> groupLocations(texts, true)),
+    tap(results => this.autocompleteLocations = results)
+  )
+
+  markAsTouched(){
+    this.bibliographySearchForm.markAllAsTouched();
   }
 
   isDragging = false;
@@ -258,7 +471,14 @@ export class BibliographyComponent implements OnInit {
     let rows = (this.first != this.rows) && (this.first < this.rows) ? this.rows : this.first + this.rows;
     if (args.length > 0) { args = args.filter(query => query != null) }
     if(args.length==1){
-      this.getAllData(this.first, rows);
+      if(args[0] == 'all'){
+        this.getAllData(this.first, rows);
+      }else if(args[0]=='search'){
+        this.paginationItems = this.filteredResults.pipe(
+          map((res:any)=> res.slice(this.first, rows))
+        );
+      }
+      
       return;
     }
     if (args.length > 1) {
@@ -394,6 +614,34 @@ function groupByDates(books: Book[]): DateCounter[] {
   tmp = Object.values(
     tmp.reduce((acc, object) => ({ ...acc, [object.date]: object }), {})
   );
+
+  return tmp;
+}
+
+function groupLocations(texts : TextMetadata[], truncatePlaces?:boolean) : LocationsCounter[] {
+  let tmp : LocationsCounter[] = [];
+  let count : number = 0;
+
+  texts.forEach(text => {
+    count = texts.reduce((acc, cur) => cur.originalPlace.ancientNameUrl == text.originalPlace.ancientNameUrl ? ++acc : acc, 0);
+    if(count > 0) {
+      let ancientPlaceStripId = text.originalPlace.ancientNameUrl.split('/')[text.originalPlace.ancientNameUrl.split('/').length -1];
+      let modernPlaceStripId = text.originalPlace.modernNameUrl.split('/')[text.originalPlace.modernNameUrl.split('/').length -1];
+      tmp.push({
+        ancientPlaceUrl : text.originalPlace.ancientNameUrl, 
+        ancientPlaceId : ancientPlaceStripId, 
+        ancientPlaceLabel: (truncatePlaces? text.originalPlace.ancientName : text.originalPlace.ancientName.split(',')[0]), 
+        modernPlaceUrl: text.originalPlace.modernNameUrl, 
+        modernPlaceId: modernPlaceStripId, 
+        modernPlaceLabel: text.originalPlace.modernName, 
+        count : count
+      })
+    }
+  });
+
+  tmp = Object.values(
+    tmp.reduce((acc, object) => ({...acc, [object.ancientPlaceId] : object}), {})
+  )
 
   return tmp;
 }

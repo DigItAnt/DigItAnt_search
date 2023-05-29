@@ -8,17 +8,19 @@
     groupAuthors : groupAuthors | async,
     groupDates : groupDates | async,
     groupTitles : groupTitles | async,
+    groupTexts : groupTexts | async,
+    getChildren : getChildren | async,
     totalRecords : totalRecords | async} as bibliography">
 
     <div id="left-bar" class="flex flex-column">
-        <p-tabView class="normal-tabview">
+        <p-tabView  [ngClass]="{'noZIndex': displayModal}" class="normal-tabview">
 
-            <p-tabPanel header="Categories">
+            <p-tabPanel header="Categories" [selected]="bibliography.activeTab != 'search'">
 
                 <ul class="home-menu">
                     <a *ngFor="let filter of allowedFilters" (click)="getAllData()"
                         [href]="'/bibliography?filter='+filter" class="categories no-underline" routerLink="./"
-                        [queryParams]="{filter : filter}"  [ngClass]="{'active': bibliography.activeTab === filter}">
+                        [queryParams]="{filter : filter}" [ngClass]="{'active': bibliography.activeTab === filter}">
                         <li class="pl-4 flex align-items-center">
                             <span class="icon"></span>
                             <span class="route flex-1">{{filter | titlecase}}</span>
@@ -28,8 +30,198 @@
                 </ul>
             </p-tabPanel>
 
-            <p-tabPanel header="Simple search">
+            <p-tabPanel header="Simple search" class="flex flex-column flex-1"
+                [selected]="bibliography.activeTab == 'search'">
+                <form id="search-form" class="flex flex-column flex-auto h-full" [formGroup]="bibliographySearchForm">
 
+
+                    <p-panel header="Title and Id's" [toggleable]="false">
+                        <div class="flex-column start">
+                            <div id="text-radio-button" class="pt-2 p-inputgroup">
+                                <input id="float-input" type="text" (focus)="markAsTouched()"
+                                    placeholder="Enter title..." name="title" formControlName="title" pInputText />
+                            </div>
+
+                        </div>
+
+                        <div class="flex-column start">
+                            <div id="text-radio-button" class="pt-2 p-inputgroup">
+                                <input (focus)="markAsTouched()" id="float-input" type="text" placeholder="Enter ID..."
+                                    formControlName="id" pInputText />
+
+                            </div>
+                        </div>
+                    </p-panel>
+
+                    <p-panel class="cursor-pointer" header="Date" [toggleable]="true" [collapsed]="true"
+                        [toggler]="'header'">
+                        <div class="flex pt-3">
+                            <p-checkbox [(ngModel)]="isActiveInterval" [binary]="true" label="Interval"
+                                [ngModelOptions]="{standalone: true}"></p-checkbox>
+                        </div>
+                        <div class="flex pt-3">
+                            <p-dropdown (onClear)="clearDates()" appendTo="body" [showClear]="true" class="flex-auto"
+                                [options]="(bibliography.groupDates) || []" formControlName="fromDate"
+                                optionValue="date" optionLabel="date" placeholder="Eg: 6th century BC">
+                                <ng-template let-date pTemplate="item">
+                                    <div class="century-item">
+                                        <span class="counter">{{date.date}}</span>
+                                    </div>
+                                </ng-template>
+                            </p-dropdown>
+                        </div>
+
+                        <div class="flex pt-3" *ngIf="isActiveInterval">
+                            <p-dropdown [disabled]="bibliographySearchForm.get('fromDate')?.value == null"
+                                appendTo="body" [showClear]="true" class="flex-auto"
+                                [options]="(bibliography.groupDates) || []" formControlName="toDate" optionValue="date"
+                                optionLabel="date" placeholder="Eg: 6th century BC">
+                                <ng-template let-date pTemplate="item">
+                                    <div class="century-item">
+                                        <span class="counter">{{date.date}}</span>
+                                    </div>
+                                </ng-template>
+                            </p-dropdown>
+                        </div>
+                    </p-panel>
+
+
+                    <p-panel class="cursor-pointer" header="Author" [toggleable]="true" [collapsed]="true"
+                        [toggler]="'header'">
+
+                        <div class="flex pt-3">
+                            <p-dropdown appendTo="body" [showClear]="true" class="flex-auto"
+                                [options]="(bibliography.groupAuthors) || []" formControlName="author"
+                                optionValue="name" optionLabel="name" placeholder="Select author...">
+                                <ng-template let-item pTemplate="item">
+                                    <div class="language-item">
+                                        <span class="counter">{{item.name}}</span>
+                                    </div>
+                                </ng-template>
+                            </p-dropdown>
+                        </div>
+
+
+                    </p-panel>
+
+                    <p-panel class="cursor-pointer" header="Inscriptions" [toggleable]="true" [collapsed]="true"
+                        [toggler]="'header'">
+
+                        <div class="flex pt-3">
+                            <p-dropdown appendTo="body" (onClear)="clearInscription()" [disabled]="!bibliography.groupTexts" [showClear]="true"
+                                class="flex-auto" [options]="(bibliography.groupTexts) || []"
+                                formControlName="inscriptionId" optionValue="fileID" optionLabel="fileID"
+                                placeholder="Select inscription...">
+                                <ng-template let-inscription pTemplate="item">
+                                    <div class="language-item">
+                                        <span class="counter">{{inscription.fileID}}</span>
+                                    </div>
+                                </ng-template>
+                            </p-dropdown>
+                        </div>
+
+                        <div class="flex pt-3">
+                            <p-autoComplete (onClear)="clearLocation()" [disabled]="!bibliography.groupTexts" (onSelect)="handleAutocompleteFilter($event)"
+                                [suggestions]="(searchLocations | async) || []"
+                                (completeMethod)="autocomplete$.next($event)" field="ancientPlaceLabel"
+                                placeholder="Eg: Samnium" [showClear]="true" class="flex-1">
+
+                                <ng-template let-item pTemplate="item">
+                                    <div>{{item.ancientPlaceLabel}}</div>
+                                    <sub>{{item.modernPlaceLabel}}</sub>
+                                </ng-template>
+                            </p-autoComplete>
+                        </div>
+
+                        <div class="flex pt-3">
+                            <div id="text-radio-button"  class="pt-2 p-inputgroup">
+                                <input id="float-input" [disabled]="!bibliography.groupTexts" type="text" (focus)="markAsTouched()"
+                                    placeholder="Full text search" name="title" formControlName="word" pInputText />
+                            </div>
+
+                        </div>
+
+
+                    </p-panel>
+
+                    <!-- <p-panel class="cursor-pointer" header="Lexicon" [toggleable]="true" [collapsed]="true"
+                        [toggler]="'header'">
+                        <div class="flex pt-3">
+
+                            <div class="p-inputgroup">
+                                <input type="text" formControlName="lexicalInstanceName" pInputText placeholder="Select a lexical instance..." [ngClass]="{'disabled': !selectedFile}"  readonly>
+                                <button type="button" (click)="showModalDialog()" pButton pRipple icon="pi pi-refresh"
+                                    styleClass="p-button-warn"></button>
+                            </div>
+
+                            <p-dialog header="Select a lexical entry or a form" [(visible)]="displayModal" [modal]="true"
+                                [style]="{width: '50vw'}" [draggable]="false" [resizable]="false" (onHide)="resetLexicalChoices()">
+                                <p-tree [loading]="treeLoading" [value]="(lexiconTree|async) || []" [(selection)]="selectedFile"
+                                    selectionMode="single" (onNodeExpand)="loadNode$.next($event);"
+                                    class="block overflow-y-auto" scrollHeight="flex">
+
+                                    <ng-template let-node pTemplate="default">
+
+                                     <span class="flex justify-content-between"
+                                            *ngIf="node.data?.lexicalEntry != undefined && node.data?.form == undefined">
+                                            <b>{{node.label}}</b>
+                                            &nbsp;&nbsp;
+                                            <span class="font-normal text-red-500">@{{node.data.language}}</span>
+                                            &nbsp;&nbsp;
+                                            <span class="font-normal">
+                                                <span *ngIf="node.data.pos != ''" class="text-primary-500">
+                                                    {{node.data.pos}}
+                                                </span>
+                                                <span *ngIf="node.data.pos == ''"
+                                                    class="font-italic text-secondary-500">
+                                                    [No pos]
+                                                </span>
+                                            </span>
+                                        </span>
+
+                                      <span
+                                            *ngIf="node.data?.lexicalEntry != undefined && node.data?.form != undefined">
+                                            <b>{{node.label}}</b>
+                                            &nbsp;&nbsp;
+                                            <span class="font-normal">
+
+                                                <span *ngIf="node.data?.morphology[0].value != ''"
+                                                    class="text-primary-500">
+                                                    {{node.data?.morphology[0].value.split('#')[1]}}
+                                                </span>
+                                                <span *ngIf="node.data?.morphology[0].value == ''"
+                                                    class="font-italic text-secondary-500">
+                                                    [No pos]
+                                                </span>
+                                            </span>
+                                        </span>
+
+                                        <span
+                                            *ngIf="node.data?.lexicalEntry == undefined && node.data?.form == undefined">
+                                            <span class="font-light font-italic">No children</span>
+                                        </span>
+                                    </ng-template>
+
+
+                                </p-tree>
+                                <ng-template pTemplate="footer">
+                                    <p-button icon="pi pi-check" [disabled]="!selectedFile" (click)="setLexicalInstanceName(); displayModal=false" label="Ok"
+                                        styleClass="p-button-text"></p-button>
+                                </ng-template>
+                            </p-dialog>
+                        </div>
+                    </p-panel> -->
+
+
+                    <div class="flex pt-3 mb-0 mt-auto search-button-div sticky bottom-0">
+                        <button pButton (click)="resetFields()" type="button" label="Reset fields"
+                            class="p-button-danger border-noround flex-1" icon="fa-solid fa-times" iconPos="left">
+                        </button>
+
+                    </div>
+
+
+                </form>
             </p-tabPanel>
 
         </p-tabView>
@@ -42,24 +234,13 @@
         <!-- FILTER -->
 
         <div id="filter-book-container" class="flex flex-column book-container-top"
-            *ngIf="bibliography.activeTab == 'all' && bibliography.bookOrLetter != 'book'">
+            *ngIf="(bibliography.activeTab == 'all' || bibliography.activeTab == 'search') && bibliography.bookOrLetter != 'book' && !bibliography.activeBook">
             <div class="flex flex-row align-items-center horizontal-list m-3 text-center">
                 <h2 class="flex-1 loading"
                     *ngIf="!bibliography.totalRecords && !somethingWrong && bibliography.totalRecords != 0">Loading
                     <span>.</span><span>.</span><span>.</span>
                 </h2>
                 <h2 class="flex-1" *ngIf="somethingWrong">Ops!</h2>
-                <!-- <ul class="flex-wrap" *ngIf="(bibliography.totalRecords)  && !somethingWrong">
-                    <li [routerLink]="'./'" [queryParams]="{filter: 'all', letter: alpha.letter}"
-                        routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}"
-                        class="pl-1 py-2 letter-list-element align-items-center"
-                        *ngFor="let alpha of groupAlphabet | async">
-                        <a class="letter" (click)="$event.preventDefault()"
-                            [href]="'lexicon/filter=all&letter='+alpha.letter">{{alpha.letter ==
-                            '*' ?
-                            '&#10043;' : alpha.letter | uppercase}}</a>
-                    </li>
-                </ul> -->
                 <h2 class="flex-1"
                     *ngIf="bibliography.totalRecords || bibliography.totalRecords == 0 && !somethingWrong"><span
                         class="red">{{bibliography.totalRecords}} </span>books found
@@ -71,14 +252,12 @@
 
         </div>
 
-        <div id="filter-authors-container" class="flex flex-column" *ngIf="bibliography.activeTab == 'author'" 
-            (mousedown)="onMouseDown($event)" 
-            (mousemove)="onMouseMove($event)" 
-            (mouseup)="onMouseUp()"
+        <div id="filter-authors-container" class="flex flex-column" *ngIf="bibliography.activeTab == 'author'"
+            (mousedown)="onMouseDown($event)" (mousemove)="onMouseMove($event)" (mouseup)="onMouseUp()"
             [ngClass]="{'dragging': isDragging}">
-        
+
             <div class="flex flex-row horizontal-list m-3 text-container-top justify-content-between resizer">
-    
+
                 <h2 class="loading text-center flex-1 flex align-items-center justify-content-center"
                     *ngIf="!bibliography.groupAuthors">Loading <span>.</span><span>.</span><span>.</span>
                 </h2>
@@ -89,11 +268,11 @@
                         [queryParams]="{filter: 'author', name: item.name}">
                         <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
                         <a class="no-underline font-bold">{{item.name}}</a>
-    
+
                     </li>
                 </ul>
             </div>
-    
+
         </div>
 
 
@@ -121,14 +300,12 @@
 
         </div>
 
-        <div id="filter-authors-container" class="flex flex-column" *ngIf="bibliography.activeTab == 'date'" 
-            (mousedown)="onMouseDown($event)" 
-            (mousemove)="onMouseMove($event)" 
-            (mouseup)="onMouseUp()"
+        <div id="filter-authors-container" class="flex flex-column" *ngIf="bibliography.activeTab == 'date'"
+            (mousedown)="onMouseDown($event)" (mousemove)="onMouseMove($event)" (mouseup)="onMouseUp()"
             [ngClass]="{'dragging': isDragging}">
-        
+
             <div class="flex flex-row horizontal-list m-3 text-container-top justify-content-between resizer">
-    
+
                 <h2 class="loading text-center flex-1 flex align-items-center justify-content-center"
                     *ngIf="!bibliography.groupDates">Loading <span>.</span><span>.</span><span>.</span>
                 </h2>
@@ -139,14 +316,15 @@
                         [queryParams]="{filter: 'date', year: item.date}">
                         <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
                         <a class="no-underline font-bold">{{item.date}}</a>
-    
+
                     </li>
                 </ul>
             </div>
-    
+
         </div>
 
 
+        <!-- BIBLIO LIST -->
         <div class="flex flex-row flex-wrap flex-auto bibliography-item-container ml-2 p-3"
             *ngIf="bibliography.bookOrLetter == '' || bibliography.bookOrLetter != 'book'">
             <div class="flex flex-row m-2 w-full" *ngIf="!bibliography.totalRecords">
@@ -155,11 +333,10 @@
             </div>
 
             <a class="flex no-underline lexicon-item m-2" *ngFor="let item of paginationItems | async" routerLink="./"
-                [href]="'/lexicon?book='+item.publisher"
-                [queryParams]="{book : item.publisher}">
+                [href]="'/lexicon?book='+item.key" [queryParams]="{book : item.key}">
                 <div class="flex flex-row">
                     <div class="flex text-item-id p-2">
-                        {{item.publisher}}
+                        {{item.key}}
                     </div>
 
                     <div class="flex flex-column text-item-preview p-2">
@@ -190,10 +367,47 @@
         </div>
 
 
-        <p-paginator *ngIf="bibliography.totalRecords != 0 && !somethingWrong && bibliography.bookOrLetter != 'word'"
-        [dropdownAppendTo]="'body'" [first]="first" [rows]="rows" [totalRecords]="(totalRecords | async) || 0"
-        (onPageChange)="pagination($event, (bibliography.bookOrLetter || null), (bibliography.activeLetter || null), (bibliography.activeTab == 'author' ? 'name' : null || null), (bibliography.activeTab == 'date' ? 'year' : null || null), (bibliography.activeAuthor || null), (bibliography.activeDate || null))" 
-        [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[6,12,24]"></p-paginator> <!-- (bibliography.activeLanguage || null), (bibliography.activePos || null) -->
+        <!-- BIBLIO VIEW -->
+        <div class="flex flex-row flex-wrap flex-auto text-item-container" *ngIf="((bibliography.totalRecords != 0 && !somethingWrong) 
+                                                                                                                   && bibliography.activeBook) 
+                                                                                                                   && {index : getBookPaginationIndex | async,
+                                                                                                                       bookId : getBookIdByIndex | async, 
+                                                                                                                       book : getBookByIndex | async} as bookView">
+            
+            <div class="flex flex-column flex-auto ">
+                <div [ngClass]="{'zIndex': bibliography.activeBook}" class="flex flex-row horizontal-list books m-3 text-container-top sticky top-0">
+                    <p-paginator *ngIf="(bibliography.totalRecords != 0 && !somethingWrong)"
+                        id="text-view-paginator"
+                        [dropdownAppendTo]="'body'" [first]="(bookView.index) || 0" [rows]="1"
+                        [totalRecords]="(totalRecords | async) || 0"
+                        (onPageChange)="textPagination($event)"
+                        [showJumpToPageDropdown]="false" 
+                        [showPageLinks]="false">
+                
+                    </p-paginator>
+
+                    <div id="text-view-id" class="select-none absolute h-full flex justify-content-center align-items-center">
+                        
+                        <div *ngIf="!bookView.book">
+                            <i class="fas fa-spinner fa-pulse"></i>
+                        </div>
+                        <div class="flex flex-column align-items-center" *ngIf="bookView.book">
+                            <h2 class="font-bold">{{bookView.book?.author}}</h2>
+                            <h3 class="font-italic font-normal">{{bookView.book.title}}</h3>
+                        </div>
+                    </div>
+
+                    
+                </div>  
+            </div>
+        </div>
+
+
+        <p-paginator *ngIf="bibliography.totalRecords != 0 && !somethingWrong && bibliography.bookOrLetter != 'word'  &&!bibliography.activeBook"
+            [dropdownAppendTo]="'body'" [first]="first" [rows]="rows" [totalRecords]="(totalRecords | async) || 0"
+            (onPageChange)="pagination($event, (bibliography.bookOrLetter || null), (bibliography.activeLetter || null), (bibliography.activeTab == 'author' ? 'name' : null || null), (bibliography.activeTab == 'date' ? 'year' : null || null), (bibliography.activeTab == 'all' ? 'all' : null || null), (bibliography.activeTab == 'search' ? 'search' : null || null), (bibliography.activeAuthor || null))"
+            [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[6,12,24]"></p-paginator>
+        <!-- (bibliography.activeLanguage || null), (bibliography.activePos || null) -->
 
         <div class="flex flex-row flex-wrap flex-auto text-item-container p-3"
             *ngIf="bibliography.totalRecords == 0 && !somethingWrong && bibliography.bookOrLetter != 'word'">
@@ -208,6 +422,6 @@
 
     </div>
 
-    
+
 
 </div>
