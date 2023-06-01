@@ -26,7 +26,7 @@ export interface TextMetadata {
   datingCertainty : string,
   decoration : string,
   detailedFindSpot : string,
-  dimensions : string,
+  dimensions : ObjectDimension,
   discoveryYear : DiscoveryYear,
   "element-id" : number,
   editor : string,
@@ -57,6 +57,14 @@ export interface TextMetadata {
   trismegistos : Trismegistos,
   wordDivisionType : string,
   writingSystem : string,
+}
+
+export interface ObjectDimension {
+  depth: string,
+  height: string,
+  type: string,
+  unit: string,
+  width: string,
 }
 
 export interface Trismegistos {
@@ -228,6 +236,7 @@ export interface Graphic {
   description : string,
   url : string
 }
+
 
 
 @Injectable({

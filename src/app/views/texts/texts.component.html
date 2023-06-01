@@ -40,12 +40,7 @@
                                     <input (focus)="markAsTouched()" id="float-input" type="text"
                                         [placeholder]="!searchForm.get('greekMode')?.value  ? 'Eg: legù' : 'Eg: λεγϋ'"
                                         name="word" formControlName="word" pInputText /> 
-                                    <!-- <p-toggleButton styleClass="border-noround" formControlName="fullTextExactMatch" onIcon="exact" offIcon="contains"
-                                        [pTooltip]="searchForm.get('fullTextExactMatch')?.value ? 'Exact match: true' : 'Exact match: false'"
-                                        tooltipPosition="right"></p-toggleButton> -->
-                                    <!-- <p-toggleButton onIcon="omega" offIcon="latin"
-                                        [pTooltip]="searchForm.get('greekMode')?.value ? 'Greek keyboard' : 'Latin keyboard'"
-                                        tooltipPosition="right"></p-toggleButton> -->
+                                    
                                 </div>
                             
                             </div>
@@ -58,18 +53,18 @@
                                         (focus)="markAsTouched()"
                                         placeholder="Enter title..."
                                         formControlName="title" pInputText /> 
-                                    <p-toggleButton formControlName="titleExactMatch" onIcon="exact" offIcon="contains"
+                                    <!-- <p-toggleButton formControlName="titleExactMatch" onIcon="exact" offIcon="contains"
                                         [pTooltip]="searchForm.get('titleExactMatch')?.value ? 'Exact match: true' : 'Exact match: false'"
-                                        tooltipPosition="right"></p-toggleButton>
+                                        tooltipPosition="right"></p-toggleButton> -->
                                 </div>
 
                                 <div id="text-radio-button" class="pt-2 p-inputgroup">
                                     <input (focus)="markAsTouched()" id="float-input" type="text"
                                         placeholder="Enter ID..."
                                         formControlName="id" pInputText /> 
-                                    <p-toggleButton formControlName="idExactMatch" onIcon="exact" offIcon="contains"
+                                    <!-- <p-toggleButton formControlName="idExactMatch" onIcon="exact" offIcon="contains"
                                         [pTooltip]="searchForm.get('idExactMatch')?.value ? 'Exact match: true' : 'Exact match: false'"
-                                        tooltipPosition="right"></p-toggleButton>
+                                        tooltipPosition="right"></p-toggleButton> -->
                                 </div>
                                <!--  <div class="mt-4">
                                     <p-selectButton [options]="searchOptions" formControlName="searchMode"></p-selectButton>
@@ -304,8 +299,7 @@
                             [class.active]="(text.activeLocation == item.ancientPlaceId)"
                             [queryParams]="{filter: 'location', place: ((item.ancientPlaceId == '' || item.ancientPlaceId == 'unknown') ? item.modernPlaceId : item.ancientPlaceId)}">
                             <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
-                            <a class="no-underline font-bold">{{(item.ancientPlaceLabel == '' || item.ancientPlaceLabel ==
-                                'unknown') ? item.modernPlaceLabel : item.ancientPlaceLabel}}</a>
+                            <a class="no-underline font-bold">{{(item.modernPlaceLabel != '' || item.ancientPlaceLabel == 'unknown') ? item.modernPlaceLabel : item.ancientPlaceLabel}}</a>
         
                         </li>
                     </ul>
@@ -423,49 +417,26 @@
                     
                     <div class="main-section flex flex-column p-3 m-3" *ngIf="textView.file">
 
-
-                        <!-- GENERAL -->
-                        <div id="general-data-div" class="flex flex-column flex-auto">
-                            <div id="general-data-div-title" class="flex flex-row">
-                                <h2 class="font-medium">General data:</h2>
-                            </div>
+                        <div id="facsimile-div" class="flex flex-column flex-auto pt-3" *ngIf="{facsimile : getFacsimile | async } as images">
+                            <!-- <div id="facsimile-div-title" class="flex flex-row">
+                                <h2 class="font-medium">Facsimile</h2>
+                                
+                            </div> -->
+                            <div id="facsimile-div-panel" *ngIf="!loadingFacsimile" class="flex ml-3 pt-3 justify-content-center"> 
                             
-                            <div  class="flex grid data-list  pt-3 ">
-                                <div class="flex col-3 justify-content-end">
-                                    <span class="font-bold text-right">ID:</span>
+                                <div class="flex flex-row align-items-baseline book-element pl-2" *ngFor="let img of images.facsimile">
+                                    <p-image [src]="img.url" alt="Image" width="250" [preview]="true"></p-image>
+
+
                                 </div>
-                                <div class="flex flex-row col-9">
-
-                                    <span class="font-normal">{{textView.file.itAnt_ID}}</span>
-
-                                    <div class="flex flex-column" *ngIf="textView.file.traditionalIDs.length > 0">
-
-                                        <div class="flex flex-column">
-                                            <a class="font-bold text-red-800 pl-2" *ngFor="let traditionalIDs of textView.file.traditionalIDs" [href]="traditionalIDs.traditionalID_URL" target="_blank">{{traditionalIDs.traditionalID}}</a>
-
-                                        </div>
-                                        
-                                        <div class="flex flex-row pl-2" *ngIf="textView.file.trismegistos">
-                                            <a [href]="'//'+textView.file.trismegistos.trismegistosID_url" target="_blank" class="font-bold text-red-800">{{textView.file.trismegistos.trismegistosID}}</a>
-                                        </div>
-                                    </div>
-                                </div>
+                                 
                             </div>
-
-
-                            <div  class="flex grid data-list">
-                                <div class="flex col-3 justify-content-end">
-                                    <span class="font-bold text-right">Title:</span>
-                                </div>
-                                <div class="flex flex-row col-9">
-
-                                    <span class="font-normal">{{textView.file.title}}</span>
-
-                                    
-                                </div>
+                            <div class="flex flex-row m-2 w-full" *ngIf="loadingFacsimile">
+                                <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+                    
                             </div>
-                        </div>  
-
+                        </div> 
+                       
 
                         <!-- TEXT -->
 
@@ -477,9 +448,14 @@
 
                             <div id="edition-div-panel" class="flex data-list  pt-3" *ngIf="{interpretative: getInterpretativeContent | async,
                                                                                              diplomatic : getDiplomaticContent | async,
-                                                                                             annotations: getAnnotations | async} as leiden"> 
-                                <p-tabView styleClass="text-panel" [hidden]="loadingInterpretative && loadingDiplomatic">
+                                                                                             annotations: getAnnotations | async,
+                                                                                             apparatus : getApparatus | async} as leiden"> 
+                                <p-tabView styleClass="text-panel" [hidden]="loadingInterpretative || loadingDiplomatic">
                                     <p-tabPanel header="Intepretative">
+                                        <div class="flex flex-row m-2 w-full" *ngIf="loadingInterpretative && loadingDiplomatic">
+                                            <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+                                
+                                        </div>
                                         <div #interpretativeText id="interpretative-text" [hidden]="loadingInterpretative" [innerHTML]="leiden.interpretative | noSanitize " >
 
                                             
@@ -489,6 +465,12 @@
                                     <p-tabPanel header="Diplomatic">
                                         <div #diplomaticText id="diplomatic-text" [hidden]="loadingDiplomatic" [innerHTML]="leiden.diplomatic">
 
+                                        </div>
+                                    </p-tabPanel>
+
+                                    <p-tabPanel header="Apparatus">
+                                        <div #apparatusText id="apparatus-text" class="flex flex-column" [hidden]="loadingApparatus">
+                                            <p *ngFor="let app of leiden.apparatus" [innerHTML]="app"></p>
                                         </div>
                                     </p-tabPanel>
     
@@ -506,6 +488,12 @@
                                     <div class="col-6 font-light">
                                         Diplomatic
                                         <div [innerHTML]="leiden.diplomatic | noSanitize" ></div>
+
+                                    </div>
+
+                                    <div class="col-6 font-light">
+                                        Apparatus
+                                        <div [innerHTML]="leiden.apparatus" ></div>
 
                                     </div>
                             
@@ -614,10 +602,10 @@
                                 </div>
                                 <div class="flex flex-row col-9">
 
-                                    <div class="flex flex-column" *ngIf="textView.file.alphabet != undefined">
+                                    <div class="flex flex-column" *ngIf="textView.file.writingSystem != undefined">
 
                                         <div class="flex flex-column">
-                                            <a class="font-bold text-red-800 " [href]="textView.file.alphabet_url" target="_blank">{{textView.file.alphabet}}</a>
+                                            <a class="font-bold text-red-800 " [href]="textView.file.alphabet_url" target="_blank">{{textView.file.writingSystem}}</a>
 
                                         </div>
                                         
@@ -712,7 +700,7 @@
                                 </div>
                                 <div class="flex flex-row col-9">
 
-                                    <span class="font-normal">{{textView.file.dateOfOriginNotBefore != undefined ? textView.file.dateOfOriginNotBefore : 'No info'}} - {{textView.file.dateOfOriginNotAfter != undefined ? textView.file.dateOfOriginNotAfter : 'No info'}}</span>
+                                    <span class="font-normal">{{textView.file.dateOfOrigin != undefined ? textView.file.dateOfOrigin : 'No info'}}</span>
                                     
                                     
                                 </div>
@@ -763,13 +751,17 @@
                                 <div class="flex col-3 justify-content-end" >
                                     <span class="font-bold text-right">Dimensions:</span>
                                 </div>
-                                <div class="flex flex-row col-9">
+                                <div class="flex flex-column col-9">
 
-                                    <div class="flex flex-column">
-                                        <span class="font-normal ">{{textView.file.dimensions}}</span>
-
+                                    <div>
+                                        <span class="font-bold text-red-800 " *ngIf="textView.file.dimensions.width != ''">Width:</span> <span class="font-normal pl-3">{{textView.file.dimensions.width}} c.m.</span>
                                     </div>
-                                    
+                                    <div>
+                                        <span class="font-bold text-red-800 " *ngIf="textView.file.dimensions.height != ''">Height:</span> <span class="font-normal pl-3">{{textView.file.dimensions.height}} c.m.</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-bold text-red-800 " *ngIf="textView.file.dimensions.depth != ''">Depth:</span> <span class="font-normal pl-3">{{textView.file.dimensions.depth}} c.m.</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -936,6 +928,55 @@
                                 </div>
                             </div>
                         </div> 
+
+                        <div id="commentary-div" class="flex flex-column flex-auto pt-3" *ngIf="{data : getCommentary | async } as commentary">
+                            <div id="facsimile-div-title" class="flex flex-row">
+                                <h2 class="font-medium">Commentary</h2>
+                                
+                            </div>
+                            <div id="facsimile-div-panel" *ngIf="!loadingCommentary" class="flex ml-3 pt-3 justify-content-center"> 
+                            
+                                <div class="flex flex-column align-items-baseline pl-2" *ngIf="commentary.data && commentary.data.length > 0">
+                                   
+                                    <p class="font-normal pb-3" *ngFor="let note of commentary.data" [innerHTML]="note | noSanitize"></p>
+                                </div>
+
+                                <div class="flex flex-column align-items-baseline pl-2" *ngIf="commentary.data && commentary.data.length == 0">
+                                   
+                                    <p class="font-italic font-light pb-3">No info</p>
+                                </div>
+                                 
+                            </div>
+                            <div class="flex flex-row m-2 w-full" *ngIf="loadingCommentary">
+                                <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+                    
+                            </div>
+                        </div>
+
+                        <!-- <div id="apparatus-div" class="flex flex-column flex-auto pt-3" *ngIf="{data : getApparatus | async } as apparatus">
+                            <div id="apparatus-div-title" class="flex flex-row">
+                                <h2 class="font-medium">Apparatus</h2>
+                                
+                            </div>
+                            <div id="apparatus-div-panel" *ngIf="!loadingApparatus" class="flex ml-3 pt-3 justify-content-center"> 
+                            
+                                <div class="flex flex-column align-items-baseline pl-2" *ngIf="apparatus.data && apparatus.data.length > 0">
+                                   
+                                    <p class="font-normal pb-3" *ngFor="let note of apparatus.data" [innerHTML]="note | noSanitize"></p>
+                                </div>
+
+                                <div class="flex flex-column align-items-baseline pl-2" *ngIf="apparatus.data && apparatus.data.length == 0">
+                                   
+                                    <p class="font-italic font-light pb-3">No info</p>
+                                </div>
+                                 
+                            </div>
+                            <div class="flex flex-row m-2 w-full" *ngIf="loadingApparatus">
+                                <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+                    
+                            </div>
+                        </div> -->
+
                         <!-- BIBLIOGRAPHY -->
 
 
@@ -963,27 +1004,8 @@
                             </div>
                         </div> 
 
-                        <!-- ICONOGRAPHIC APPARATUS -->
 
-                        <div id="facsimile-div" class="flex flex-column flex-auto pt-3" *ngIf="{facsimile : getFacsimile | async } as images">
-                            <div id="facsimile-div-title" class="flex flex-row">
-                                <h2 class="font-medium">Facsimile</h2>
-                                
-                            </div>
-                            <div id="facsimile-div-panel" *ngIf="!loadingFacsimile" class="flex ml-3 pt-3"> 
-                            
-                                <div class="flex flex-row align-items-baseline book-element pl-2" *ngFor="let img of images.facsimile">
-                                    <p-image [src]="img.url" alt="Image" width="250" [preview]="true"></p-image>
-
-
-                                </div>
-                                 
-                            </div>
-                            <div class="flex flex-row m-2 w-full" *ngIf="loadingFacsimile">
-                                <p-progressSpinner class="flex flex-1"></p-progressSpinner>
-                    
-                            </div>
-                        </div> 
+                        
                     </div>
                     
 

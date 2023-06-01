@@ -267,6 +267,8 @@ export class TextsComponent implements OnInit {
   getAnnotationReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
   getBibliographyReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
   getFacsimileReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getCommentaryReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getApparatusReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
 
 
   loadingInterpretative : boolean = false;
@@ -274,6 +276,9 @@ export class TextsComponent implements OnInit {
   loadingTranslation : boolean = false;
   loadingBibliography : boolean = false;
   loadingFacsimile : boolean = false;
+  loadingCommentary: boolean = false;
+  loadingApparatus : boolean = false;
+
 
   displayModal : boolean = false;
   
@@ -282,6 +287,7 @@ export class TextsComponent implements OnInit {
 
   @ViewChild('interpretativeText') interpretativeText!: ElementRef;
   @ViewChild('diplomaticText') diplomaticText!: ElementRef;
+  @ViewChild('apparatusText') apparatusText!: ElementRef;
   @ViewChild('dynamicOverlay', { read: ViewContainerRef }) container : ViewContainerRef | undefined;
   arrayDynamicComponents : Array<FormElement> = [];
 
@@ -305,6 +311,13 @@ export class TextsComponent implements OnInit {
     switchMap(index => !isNaN(index) ? this.textService.getFileByIndex(index) : of()),
     tap(file => {
       if(file){
+        this.isVenetic = false;
+        this.loadingCommentary = true;
+        this.loadingInterpretative = true;
+        this.loadingTranslation = true;
+        this.loadingBibliography = true;
+        this.loadingFacsimile = true;
+        this.loadingApparatus = true;
         this.getTextContentReq$.next(file['element-id']);
         this.isBodyTextPartArray = Array.isArray(file.bodytextpart)
       }
@@ -313,25 +326,26 @@ export class TextsComponent implements OnInit {
 
   code : string = '';
 
-
+  isVenetic : boolean = false;
   getXMLContent : Observable<XmlAndId> = this.getTextContentReq$.pipe(
-    tap(x => {
-      this.loadingInterpretative = true;
-      this.loadingTranslation = true;
-      this.loadingBibliography = true;
-      this.loadingFacsimile = true;
-    }),
     tap(elementId => !isNaN(elementId) ? this.currentElementId = elementId : of()),
     switchMap(elementId => !isNaN(elementId) ? this.textService.getContent(elementId) : of()),
     tap((res) => {
       if(res.xml != '') {
         //console.log(res.xml);
         this.code = res.xml;
+
+        //controllo se è venetico
+        let languageNodes = new DOMParser().parseFromString(this.code, "text/xml").querySelectorAll('language');
+        languageNodes.forEach(el=>{
+          if(el.getAttribute('ident') == 'xve') this.isVenetic = true
+        })
         this.getInterpretativeReq$.next(res);
         this.getDiplomaticReq$.next(res);
         this.getTranslationReq$.next(res);
         this.getBibliographyReq$.next(res.xml);
         this.getFacsimileReq$.next(res.xml);
+        //this.getCommentaryReq$.next(res.xml);
         this.arrayDynamicComponents = [];
       }
     }),
@@ -365,8 +379,17 @@ export class TextsComponent implements OnInit {
   getDiplomaticContent : Observable<string> = this.getDiplomaticReq$.pipe(
     filter(req => Object.keys(req).length > 0),
     map(rawXml => this.textService.mapXmlRequest(rawXml)),
-    switchMap(req => req.xml != '' ? this.textService.getHTMLContent(req) : of()),
-    map(html => leidenDiplomaticBuilder(html)),
+    switchMap(req => req.xml != '' ? this.textService.getHTMLContent(req).pipe(
+      catchError(error => {
+        console.error('An error occurred:', error);
+        return(of())
+      }),
+    ) : of()),
+    tap(html => {
+      this.getCommentaryReq$.next(html);
+      this.getApparatusReq$.next(html);
+    }),
+    map(html => leidenDiplomaticBuilder(html, this.isVenetic)),
     tap(x => {
       // console.log(x);
       this.loadingDiplomatic = false
@@ -391,6 +414,18 @@ export class TextsComponent implements OnInit {
     filter(xml => xml != ''),
     map(xml => getFacsimile(xml)),
     tap(facsimile => this.loadingFacsimile = false)
+  );
+
+  getCommentary : Observable<Array<string>> = this.getCommentaryReq$.pipe(
+    filter(html => html != ''),
+    map(html => getCommentary(html)),
+    tap(html => this.loadingCommentary = false)
+  );
+
+  getApparatus : Observable<Array<string>> = this.getApparatusReq$.pipe(
+    filter(html => html != ''),
+    map(html => getApparatus(html)),
+    tap(html => this.loadingApparatus = false)
   );
 
   searchForm: FormGroup = new FormGroup({
@@ -914,6 +949,52 @@ function getBibliography(rawXml : string) : Array<any> {
   return biblio_array;
 }
 
+function getCommentary(rawHTML : string) : Array<string> {
+
+  let notesArray : Array<string> = [];
+
+  if(Array.from(new DOMParser().parseFromString(rawHTML, "text/html").querySelectorAll('div#commentary')).length != 0){
+    let nodes = Array.from(new DOMParser().parseFromString(rawHTML, "text/html").querySelectorAll('div#commentary')[0].children);
+    nodes.forEach(n => {
+      if(n.tagName == "P"){
+        notesArray.push(n.outerHTML);
+      }
+    })
+    return notesArray;
+  }else{
+    return []
+  }
+  
+}
+
+function getApparatus(rawHTML : string) : Array<string> {
+
+  let apparatusArray : Array<string> = [];
+
+  if(Array.from(new DOMParser().parseFromString(rawHTML, "text/html").querySelectorAll('div#apparatus')).length != 0){
+    let nodes = Array.from(new DOMParser().parseFromString(rawHTML, "text/html").querySelectorAll('div#apparatus'));
+    nodes.forEach(n => {
+      
+      let children = Array.from(n.children);
+
+      children.forEach(child => {
+        if(child.tagName == 'P'){
+
+          let subChildren = Array.from(child.children)
+
+          subChildren.forEach(sub=> {
+            apparatusArray.push(sub.outerHTML)
+          })
+        }
+      })
+    })
+    return apparatusArray;
+  }else{
+    return []
+  }
+  
+}
+
 function getFacsimile(rawXml : string) : Array<Graphic> {
 
   let graphic_array : Array<Graphic> = [];
@@ -946,9 +1027,15 @@ function getFacsimile(rawXml : string) : Array<Graphic> {
   return graphic_array;
 }
 
-function leidenDiplomaticBuilder(html : string){
-  let nodes = new DOMParser().parseFromString(html, "text/html").querySelectorAll('#edition .textpart');
-  return nodes[1].innerHTML;
+function leidenDiplomaticBuilder(html : string, isVenetic? : boolean){
+  let resHTML = '';
+  let nodes = new DOMParser().parseFromString(html, "text/html").querySelectorAll('#diplomatic .textpart');
+  if(!isVenetic){
+    nodes.forEach(el=>resHTML+=el.innerHTML+'\n')
+  }else{
+    resHTML = nodes[1].innerHTML
+  }
+  return resHTML;
 }
 
 function groupByCenturies(texts: TextMetadata[]) : CenturiesCounter[]{
@@ -1151,9 +1238,6 @@ function buildCustomInterpretative(renderer : Renderer2, TEINodes : Array<Elemen
   return HTML;
 
 }
-
-//TODO: ottenere commentario, apparatus
-//      renderizzare elementi tei (da discutere)
 
 function getTranslation(rawHtml : string){
   //console.log(rawHtml);
