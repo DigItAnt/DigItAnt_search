@@ -1,6 +1,21 @@
-<div class="flex flex-1 flex-row">
+<div class="flex flex-1 flex-row" *ngIf="{activeTab : activeTab | async, 
+    totalRecords: totalRecords | async, 
+    groupCenturies : groupCenturies | async, 
+    activeDate : activeDate | async, 
+    activeLocation : activeLocation | async,
+    activeType : activeType | async,
+    activeFile : activeFile | async, 
+    groupLocations : groupLocations | async,
+    groupType : groupTypes | async,
+    groupLanguage : groupLanguages | async,
+    groupMaterial : groupMaterial | async,
+    groupObjectTypes : groupObjectTypes | async} as text">
 
     <div id="left-bar" class="flex flex-column normal-tabview">
+
+        <!-- TODO: Inserire bottone CQL  -->
+
+        
 
         <form id="search-form" class="flex flex-column flex-auto h-full" [formGroup]="advancedSearchForm">
 
@@ -8,10 +23,15 @@
             <p-panel header="Full Text" [toggleable]="false">
                 <div class="flex-column start">
                     <div id="text-radio-button" class="pt-2 p-inputgroup">
-                        <input id="float-input" type="text"
-                            
-                            name="word" pInputText /> 
-                        
+                        <input (focus)="markAsTouched()" id="float-input" type="text"
+                            [placeholder]="!advancedSearchForm.get('greekMode')?.value  ? 'Eg: legù' : 'Eg: λεγϋ'"
+                            name="word" formControlName="word" pInputText /> 
+                        <!-- <p-toggleButton styleClass="border-noround" formControlName="fullTextExactMatch" onIcon="exact" offIcon="contains"
+                            [pTooltip]="advancedSearchForm.get('fullTextExactMatch')?.value ? 'Exact match: true' : 'Exact match: false'"
+                            tooltipPosition="right"></p-toggleButton> -->
+                        <!-- <p-toggleButton onIcon="omega" offIcon="latin"
+                            [pTooltip]="advancedSearchForm.get('greekMode')?.value ? 'Greek keyboard' : 'Latin keyboard'"
+                            tooltipPosition="right"></p-toggleButton> -->
                     </div>
                 
                 </div>
@@ -21,30 +41,34 @@
                 <div class="flex-column start">
                     <div id="text-radio-button" class="pt-2 p-inputgroup">
                         <input id="float-input" type="text" 
-                           
+                            (focus)="markAsTouched()"
                             placeholder="Enter title..."
-                            pInputText /> 
-                        <p-toggleButton onIcon="exact" offIcon="contains"></p-toggleButton>
+                            formControlName="title" pInputText /> 
+                        <!-- <p-toggleButton formControlName="titleExactMatch" onIcon="exact" offIcon="contains"
+                            [pTooltip]="advancedSearchForm.get('titleExactMatch')?.value ? 'Exact match: true' : 'Exact match: false'"
+                            tooltipPosition="right"></p-toggleButton> -->
                     </div>
 
                     <div id="text-radio-button" class="pt-2 p-inputgroup">
-                        <input id="float-input" type="text"
+                        <input (focus)="markAsTouched()" id="float-input" type="text"
                             placeholder="Enter ID..."
-                             pInputText /> 
-                        <p-toggleButton  onIcon="exact" offIcon="contains"></p-toggleButton>
+                            formControlName="id" pInputText /> 
+                        <!-- <p-toggleButton formControlName="idExactMatch" onIcon="exact" offIcon="contains"
+                            [pTooltip]="advancedSearchForm.get('idExactMatch')?.value ? 'Exact match: true' : 'Exact match: false'"
+                            tooltipPosition="right"></p-toggleButton> -->
                     </div>
                    <!--  <div class="mt-4">
-                        <p-selectButton [options]="searchOptions" ></p-selectButton>
+                        <p-selectButton [options]="searchOptions" formControlName="searchMode"></p-selectButton>
                     </div> -->
                 </div>
             </p-panel>
 
             <p-panel class="cursor-pointer" header="Date" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                 <div class="flex pt-3">
-                    <p-checkbox [binary]="true" label="Interval" ></p-checkbox>
+                    <p-checkbox [(ngModel)]="isActiveInterval" [binary]="true" label="Interval" [ngModelOptions]="{standalone: true}"></p-checkbox>
                 </div>
                 <div class="flex pt-3">
-                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="[]" 
+                    <p-dropdown (onClear)="clearDates()" appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="dateOfOriginNotBefore"
                         optionValue="century" optionLabel="label" placeholder="Eg: 6th century BC">
                         <ng-template let-date pTemplate="item">
                             <div class="century-item">
@@ -54,8 +78,8 @@
                     </p-dropdown>
                 </div>
 
-                <div class="flex pt-3">
-                    <p-dropdown  appendTo="body"  [showClear]="true" class="flex-auto" [options]="[]" 
+                <div class="flex pt-3" *ngIf="isActiveInterval">
+                    <p-dropdown [disabled]="advancedSearchForm.get('dateOfOriginNotBefore')?.value == null" appendTo="body"  [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="dateOfOriginNotAfter"
                         optionValue="century" optionLabel="label" placeholder="Eg: 6th century BC">
                         <ng-template let-date pTemplate="item">
                             <div class="century-item">
@@ -67,13 +91,12 @@
             </p-panel>
 
             <p-panel class="cursor-pointer" header="Location" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
-                
-                <!-- (onClear)="clearLocation()"
-                (onSelect)="handleAutocompleteFilter($event)"
-                [suggestions]="(searchLocations | async) || []" 
-                (completeMethod)="autocomplete$.next($event)" -->
+
                 <p-autoComplete 
-                                
+                                (onClear)="clearLocation()"
+                                (onSelect)="handleAutocompleteFilter($event)"
+                                [suggestions]="(searchLocations | async) || []" 
+                                (completeMethod)="autocomplete$.next($event)"
                                 field="ancientPlaceLabel"
                                 placeholder="Eg: Samnium"
                                 [showClear]="true">
@@ -90,7 +113,7 @@
             <p-panel class="cursor-pointer" header="Language" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                 
                 <div class="flex pt-3">
-                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="[]" 
+                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupLanguage) || []" formControlName="language"
                         optionValue="language" optionLabel="language" placeholder="Select language...">
                         <ng-template let-item pTemplate="item">
                             <div class="language-item">
@@ -106,7 +129,7 @@
             <p-panel class="cursor-pointer" header="Inscription Types" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                 
                 <div class="flex pt-3">
-                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="[]" 
+                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupType) || []" formControlName="inscriptionType"
                         optionValue="inscriptionType" optionLabel="inscriptionType" placeholder="Select inscription type...">
                         <ng-template let-inscriptionType pTemplate="item">
                             <div class="language-item">
@@ -123,7 +146,7 @@
             <p-panel class="cursor-pointer" header="Object Types" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                 
                 <div class="flex pt-3">
-                    <p-dropdown [appendTo]="'body'" [showClear]="true" class="flex-auto" [options]="[]" 
+                    <p-dropdown [appendTo]="'body'" [showClear]="true" class="flex-auto" [options]="(text.groupObjectTypes) || []" formControlName="objectType"
                         optionValue="objectType" optionLabel="objectType" placeholder="Select object type...">
                         <ng-template let-objectType pTemplate="item">
                             <div class="language-item">
@@ -139,7 +162,7 @@
             <p-panel class="cursor-pointer" header="Materials" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                 
                 <div class="flex pt-3">
-                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="[]" 
+                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupMaterial) || []" formControlName="material"
                         optionValue="material" optionLabel="material" placeholder="Select material...">
                         <ng-template let-materials pTemplate="item">
                             <div class="language-item">
@@ -155,14 +178,20 @@
 
             <div class="flex pt-3 mb-0 mt-auto search-button-div sticky bottom-0">
                 <button pButton 
-                    
+                    (click)="resetFields()"
                     type="button"
                     label="Reset fields" 
                     class="p-button-danger border-noround flex-1"
                     icon="fa-solid fa-times" 
                     iconPos="left">
                 </button>
-                
+                <!-- <button pButton 
+                        type="submit"
+                        label="Search" 
+                        class="p-button-secondary border-noround flex-1"
+                        icon="fa-solid fa-search" 
+                        iconPos="right">
+                </button> -->
             </div>
 
 
@@ -173,10 +202,71 @@
     <div id="search-container" class="flex flex-column flex-1">
 
         <!-- FILTER -->
+        <div id="filter-texts-container" class="flex flex-column text-container-top">
+            <div class="flex flex-row align-items-center horizontal-list m-3 text-center">
+                <h2 class="flex-1 loading" *ngIf="!text.totalRecords && !somethingWrong && text.totalRecords != 0">Loading <span>.</span><span>.</span><span>.</span>
+                </h2>
+                <h2 class="flex-1" *ngIf="somethingWrong">Ops!</h2>
+                <h2 class="flex-1" *ngIf="text.totalRecords || text.totalRecords == 0 && !somethingWrong"><span class="red">{{text.totalRecords}} </span>texts found
+                </h2>
+            </div>
+    
+    
+        </div>
 
+
+
+        <div class="flex flex-row flex-wrap ml-5 flex-auto text-item-container" *ngIf="(text.totalRecords != 0 && !somethingWrong) && !text.activeFile">
+            <div class="flex flex-row m-2 w-full" *ngIf="!text.totalRecords">
+                <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+    
+            </div>
+    
+            <a class="flex no-underline text-item m-2" *ngFor="let item of paginationItems | async"
+                [href]="'/text?file='+item.fileID" routerLink="./" [queryParams]="{file: item.fileID}">
+
+                <div class="flex flex-row  ">
+                    <div class="flex text-item-id p-2">
+                        {{item.itAnt_ID}}
+                    </div>
+    
+                    <div class="flex flex-column text-item-preview p-2">
+    
+                        <div class="text-item-preview-top">
+                            {{item.inscriptionTitle != '' ? item.inscriptionTitle : item.itAnt_ID}}
+                        </div>
+    
+                        <div class="text-item-preview-bottom flex flex-column mt-3">
+                            <div class="flex flex-row align-items-baseline">
+                                <i class="far fa-calendar-alt"></i>
+                                <span class="ml-2">{{item.dateOfOrigin}}</span>
+                            </div>
+                            <div class="flex flex-row align-items-baseline mt-2">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span class="ml-2">{{item.originalPlace.ancientName}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+    
+        </div>
        
 
 
+        <p-paginator *ngIf="(text.totalRecords != 0 && !somethingWrong) && !text.activeFile" [dropdownAppendTo]="'body'" [first]="first" [rows]="rows"
+                [totalRecords]="(totalRecords | async) || 0"
+                (onPageChange)="pagination($event)"
+                [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[6,12,24]"></p-paginator>
+            
+                
+        <div class="m-5 flex flex-row flex-wrap flex-auto text-item-container" *ngIf="text.totalRecords == 0 && !somethingWrong">
+            no entries
+        </div>
+
+        <div class="m-5 flex flex-row flex-wrap flex-auto text-item-container" *ngIf="somethingWrong">
+            Something went wrong
+        </div>
 
     </div>
 

@@ -20,7 +20,7 @@
 
         <p-tabView class="normal-tabview">
 
-            <p-tabPanel header="Categories">
+            <p-tabPanel header="Categories" [selected]="lexicon.activeTab != 'search'">
 
                 <ul class="home-menu">
 
@@ -35,7 +35,7 @@
                 </ul>
             </p-tabPanel>
             
-            <p-tabPanel header="Simple search" id="lexicon-tree-search" [selected]="lexicon.activeWord != ''">
+            <p-tabPanel header="Simple search" id="lexicon-tree-search" [selected]="lexicon.activeTab == 'search'">
 
 
                 <form *ngIf="lexicon.types && lexicon.pos && lexicon.authors && lexicon.languages && lexicon.status"
