@@ -34,12 +34,16 @@ export interface GeoNamesDataModel {
 }
 
 export interface GlobalGeoDataModel {
-  bbox: BBoxModel,
-  id: string,
+  ancientName : string,
+  modernName : string,
+  ancientBbox : BBoxModel,
+  modernBbox: BBoxModel,
+  modernId: string,
+  ancientId : string
   description: string,
   reprPoint: Markers,
-  title: string,
-  uri: string,
+  ancientUri: string,
+  modernUri : string,
 }
 
 @Injectable({
@@ -54,7 +58,7 @@ export class MapsService {
     private http: HttpClient,
   ) { }
 
-  mapPleiadesData(place: PleiadesDataModel): GlobalGeoDataModel {
+  mapPleiadesData(place: PleiadesDataModel) {
 
     return {
       bbox: place.bbox ? { north: place.bbox[2], south: place.bbox[0], west: place.bbox[1], east: place.bbox[3] } : { north: NaN, south: NaN, west: NaN, east: NaN },
@@ -66,7 +70,7 @@ export class MapsService {
     }
   }
 
-  mapGeoNamesData(place: GeoNamesDataModel, id: string, uri: string): GlobalGeoDataModel {
+  mapGeoNamesData(place: GeoNamesDataModel, id: string, uri: string) {
     return {
       bbox: { north: place.bbox.north, south: place.bbox.south, west: place.bbox.west, east: place.bbox.east },
       description: '',
@@ -78,29 +82,73 @@ export class MapsService {
   }
 
   getGeoPlaceData(locations: LocationsCounter[]) {
-
     return forkJoin(
-      locations.map(
-        (req) => {
-          if ((req.ancientPlaceId != 'unknown' && req.ancientPlaceId.length != 0)) {
-            return this.http.get(this.pleiadesBaseUrl + req.ancientPlaceId + '/json').pipe(
-              catchError(err => of(err)),
-              map(res => this.mapPleiadesData(res))
-            )
-          }
-          return this.http.get(
-            this.geoNamesBaseUrl +
-            'getJSON?formatted=true&geonameId=' +
-            req.modernPlaceId +
-            '&username=mmallia92&style=full').pipe(
-              catchError(err => of(err)),
-              map(res => this.mapGeoNamesData(res, req.modernPlaceId, req.modernPlaceUrl))
-            );
-        }
-      )
+      locations.map((req) => {
+        // Effettua entrambe le chiamate HTTP in parallelo
+        const pleiadesRequest = this.http.get(this.pleiadesBaseUrl + req.ancientPlaceId + '/json').pipe(
+          catchError(err => of(null)), // In caso di errore, restituisce null
+          map((res : any) => res ? this.mapPleiadesData(res) : null) // Mappa i risultati solo se non sono nulli
+        );
+  
+        const geoNamesRequest = this.http.get(
+          this.geoNamesBaseUrl +
+          'getJSON?formatted=true&geonameId=' +
+          req.modernPlaceId +
+          '&username=mmallia92&style=full').pipe(
+          catchError(err => of(null)), // In caso di errore, restituisce null
+          map((res : any) => res ? this.mapGeoNamesData(res, req.modernPlaceId, req.modernPlaceUrl) : null) // Mappa i risultati solo se non sono nulli
+        );
+  
+        // Restituisce entrambi i risultati in un unico oggetto
+        return forkJoin([pleiadesRequest, geoNamesRequest]).pipe(
+          map(([pleiadesData, geoNamesData]) => {
+            if (!pleiadesData && !geoNamesData) {
+              return null; // Return null if both requests fail
+            }
+        
+            // Inizializza un oggetto GlobalGeoDataModel vuoto
+            let result: GlobalGeoDataModel = {
+              ancientName: '',
+              modernName: '',
+              ancientBbox: { north: NaN, south: NaN, west: NaN, east: NaN },
+              modernBbox: { north: NaN, south: NaN, west: NaN, east: NaN },
+              ancientId: '',
+              modernId: '',
+              description: '',
+              reprPoint: { latitude: NaN, longitude: NaN },
+              ancientUri: '',
+              modernUri: '',
+            };
+        
+            // Se i dati di Pleiades sono disponibili, li aggiunge al risultato
+            if (pleiadesData) {
+              result.ancientName = pleiadesData.title;
+              result.ancientBbox = pleiadesData.bbox;
+              result.ancientId = pleiadesData.id;
+              result.description = pleiadesData.description;
+              result.reprPoint = pleiadesData.reprPoint;
+              result.ancientUri = pleiadesData.uri;
+            }
+        
+            // Se i dati di GeoNames sono disponibili, li aggiunge al risultato
+            if (geoNamesData) {
+              result.modernName = geoNamesData.title;
+              result.modernBbox = geoNamesData.bbox;
+              result.modernId = geoNamesData.id;
+              result.description = geoNamesData.description || result.description;
+              result.reprPoint = geoNamesData.reprPoint || result.reprPoint;
+              result.modernUri = geoNamesData.uri;
+            }
+        
+            return result;
+          }),
+          catchError(err => of(null)), // In caso di errore, restituisce null
+        );
+      })
     ).pipe(
-      catchError(err => of(err)),
-      map((results: GlobalGeoDataModel[]) => results.filter(element => !isNaN(element.bbox.north) && !isNaN(element.reprPoint.latitude))),
-    )
+      map((results: (GlobalGeoDataModel | null)[]) => results.filter(element => element !== null) as GlobalGeoDataModel[]),
+      map((results: GlobalGeoDataModel[]) => results.filter(element => !isNaN(element.modernBbox.north) && !isNaN(element.reprPoint.latitude))),
+    );
+    
   }
 }

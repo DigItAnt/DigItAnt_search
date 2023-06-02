@@ -272,17 +272,40 @@ export class TextsService {
     )
   }
 
-  searchAttestations(formId: string): Observable<Attestation[]> {
-    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?query="+encodeURIComponent('[attestation="'+formId+'"]'), null).pipe(
+  searchAttestations(formId: string, limit? : number, offset? : number): Observable<Attestation[]> {
+    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?limit=100&offset=0&query="+encodeURIComponent('[attestation="'+formId+'"]'), null).pipe(
       map(res => res.rows)
     )
   }
 
 
-  filterAttestations(query : string): Observable<TextMetadata[]> {
-    
+  filterAttestations(query : string, limit? : number, offset? : number): Observable<TextMetadata[]> {
 
-    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?query="+encodeURIComponent(query), null).pipe(
+    if(limit){
+      return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?limit="+limit+"&offset="+offset+"&query="+encodeURIComponent(query), null).pipe(
+      
+        map(res => res.rows),
+        map(postData => Array.from(postData.reduce((map, obj) => map.set(obj.nodeId, obj), new Map()).values())), // Aggiunto per rimuovere duplicati
+        withLatestFrom(this.texts$),
+        map(([postData, texts]) => {
+          let tmp : TextMetadata[] = [];
+          postData.forEach(
+            el=>{
+              texts.forEach(
+                t=>{
+                  if(el.nodeId == t['element-id'])tmp.push(t)
+                }
+              )
+            }
+          )
+          this.attestationsSubject.next(tmp);
+          return tmp
+        }),
+        shareReplay()
+      )
+    }
+
+    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?limit=100&offset=0&query="+encodeURIComponent(query), null).pipe(
       
       map(res => res.rows),
       map(postData => Array.from(postData.reduce((map, obj) => map.set(obj.nodeId, obj), new Map()).values())), // Aggiunto per rimuovere duplicati
@@ -519,7 +542,7 @@ export class TextsService {
   getAnnotationsByForms(forms: FormElementTree[]) {
     return forkJoin(
       forms.map(form => {
-        return this.searchAttestations(form.form).pipe(
+        return this.searchAttestations(form.form, 100, 0).pipe(
           switchMap(res => {
             if (res.length > 0) {
               let idSet = new Set();

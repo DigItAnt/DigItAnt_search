@@ -45,3 +45,14 @@
 .print-version {
     display: none;
 }
+
+.resizer {
+    user-select: none !important;
+    height: 8rem;
+    min-height: 8rem !important;
+    max-height: 20rem!important;
+    border: 1px solid black;
+    overflow: hidden;
+    resize: vertical;
+    cursor: ns-resize;
+}

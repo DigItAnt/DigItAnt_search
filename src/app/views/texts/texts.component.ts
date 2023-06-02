@@ -4,7 +4,7 @@ import { Router, ActivatedRoute, Params } from '@angular/router';
 import * as L from 'leaflet';
 import { circle, tileLayer } from 'leaflet';
 import { Paginator } from 'primeng/paginator';
-import { map, tap, Subject, takeUntil, BehaviorSubject, Observable, switchMap, take, filter, debounceTime, timeout, catchError, iif, throwError, of, EMPTY, shareReplay, mergeMap, flatMap, delay } from 'rxjs';
+import { map, tap, Subject, takeUntil, BehaviorSubject, Observable, switchMap, take, filter, debounceTime, timeout, catchError, iif, throwError, of, EMPTY, shareReplay, mergeMap, flatMap, delay, forkJoin } from 'rxjs';
 import { CenturyPipe } from 'src/app/pipes/century-pipe/century-pipe.pipe';
 import { FormElement, LexiconService } from 'src/app/services/lexicon/lexicon.service';
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
@@ -245,6 +245,18 @@ export class TextsComponent implements OnInit {
     )),
     take(1),
     switchMap(locations => this.mapsService.getGeoPlaceData(locations)),
+    switchMap(geoData => {
+      const searchAttestationsObservables = geoData.map(place => {
+        const cqlQuery = `[_doc__originalPlace__modernNameUrl="${place.modernUri}" | _doc__originalPlace__ancientNameUrl="${place.ancientUri}"]`;
+        
+        
+        return this.textService.filterAttestations(cqlQuery).pipe(
+          map(attestations => ({ ...place, attestations }))
+        );
+      });
+  
+      return forkJoin(searchAttestationsObservables);
+    }),
     tap(data => this.drawMap(data))
   )
 
@@ -502,7 +514,7 @@ export class TextsComponent implements OnInit {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
         ),
       ],
-      zoom: 5,
+      zoom: 7,
       center: [42.296818, 12.254809]
     };
 
@@ -627,6 +639,44 @@ export class TextsComponent implements OnInit {
     this.totalRecords = this.textService.texts$.pipe(map(texts=>texts.length || 0))
   }
 
+  isDragging = false;
+  startY = 0;
+  startHeight = 0;
+
+  onMouseDown(event: MouseEvent) {
+    const div = document.querySelector('.resizer') as HTMLElement;
+    if (!div) return;
+
+    // Clicked on bottom border
+    if (event.offsetY > 45) {
+      this.isDragging = true;
+      this.startY = event.clientY;
+      this.startHeight = div.clientHeight;
+
+      // Add mousemove and mouseup listeners directly to the document
+      document.addEventListener('mousemove', this.onMouseMove.bind(this));
+      document.addEventListener('mouseup', this.onMouseUp.bind(this));
+    }
+  }
+
+  onMouseMove(event: MouseEvent) {
+    const div = document.querySelector('.resizer') as HTMLElement;
+    if (!div || !this.isDragging) return;
+
+    const diff = event.clientY - this.startY;
+    div.style.height = `${this.startHeight + diff}px`;
+  }
+
+  onMouseUp() {
+    if (this.isDragging) {
+      this.isDragging = false;
+
+      // Remove mousemove and mouseup listeners from the document
+      document.removeEventListener('mousemove', this.onMouseMove.bind(this));
+      document.removeEventListener('mouseup', this.onMouseUp.bind(this));
+    }
+  }
+
   stopRequest() {
     this.loadingInterpretative = false;
     return EMPTY;
@@ -743,7 +793,7 @@ export class TextsComponent implements OnInit {
               { queryParams: 
                 {
                   filter: 'location', 
-                  place: geoPlaceData.id
+                  place: geoPlaceData.ancientId
                 }
               }
             );
@@ -1055,6 +1105,7 @@ function groupLocations(texts : TextMetadata[], truncatePlaces?:boolean) : Locat
   let count : number = 0;
 
   texts.forEach(text => {
+  
     count = texts.reduce((acc, cur) => cur.originalPlace.ancientNameUrl == text.originalPlace.ancientNameUrl ? ++acc : acc, 0);
     if(count > 0) {
       let ancientPlaceStripId = text.originalPlace.ancientNameUrl.split('/')[text.originalPlace.ancientNameUrl.split('/').length -1];
@@ -1062,7 +1113,7 @@ function groupLocations(texts : TextMetadata[], truncatePlaces?:boolean) : Locat
       tmp.push({
         ancientPlaceUrl : text.originalPlace.ancientNameUrl, 
         ancientPlaceId : ancientPlaceStripId, 
-        ancientPlaceLabel: (truncatePlaces? text.originalPlace.ancientName : text.originalPlace.ancientName.split(',')[0]), 
+        ancientPlaceLabel: (text.originalPlace.ancientName), 
         modernPlaceUrl: text.originalPlace.modernNameUrl, 
         modernPlaceId: modernPlaceStripId, 
         modernPlaceLabel: text.originalPlace.modernName, 
@@ -1072,7 +1123,7 @@ function groupLocations(texts : TextMetadata[], truncatePlaces?:boolean) : Locat
   });
 
   tmp = Object.values(
-    tmp.reduce((acc, object) => ({...acc, [object.ancientPlaceId] : object}), {})
+    tmp.reduce((acc, object) => ({...acc, [object.ancientPlaceLabel] : object}), {})
   )
 
   return tmp;

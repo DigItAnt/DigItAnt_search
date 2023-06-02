@@ -316,7 +316,7 @@ export class LexiconComponent implements OnInit {
   getAttestations : Observable<any> | undefined = this.getAttestationsReq$.pipe(
     
     filter(instanceName => instanceName != ''),
-    switchMap(instanceName => this.textService.searchAttestations(instanceName)),
+    switchMap(instanceName => this.textService.searchAttestations(instanceName, 200, 0)),
     map(res => {
       let idSet = new Set();
       let arrayFromSet : any[] = [];

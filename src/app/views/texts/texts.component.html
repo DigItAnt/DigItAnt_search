@@ -286,9 +286,13 @@
             
 
             <!-- TEXT FILTER LOCATION -->
-            <div id="filter-location-container" class="flex flex-column" *ngIf="text.activeTab == 'location'">
+            <div id="filter-location-container" class="flex flex-column" *ngIf="text.activeTab == 'location'" 
+                (mousedown)="onMouseDown($event)" 
+                (mousemove)="onMouseMove($event)" 
+                (mouseup)="onMouseUp()"
+                [ngClass]="{'dragging': isDragging}">
         
-                <div class="flex flex-row horizontal-list m-3 text-container-top justify-content-between">
+                <div class="flex flex-row horizontal-list resizer m-3 text-container-top justify-content-between">
         
                     <h2 class="loading text-center flex-1 flex align-items-center justify-content-center"
                         *ngIf="!text.groupLocations">Loading <span>.</span><span>.</span><span>.</span>
@@ -309,9 +313,9 @@
         
                         <p-overlayPanel #overlayGeneralMap [appendTo]="'body'">
                             <ng-template pTemplate>
-                                <div class="relative mb-3" style="width: 400px;"
+                                <div class="relative mb-3" style="width: 800px;"
                                     *ngIf="{geoData : getGeoData.next((text.groupLocations) || [])} as map">
-                                    <div style="height: 400px;" leaflet [leafletOptions]="leafletMapOptions" [leafletLayers]="layers"
+                                    <div style="height: 600px;" leaflet [leafletOptions]="leafletMapOptions" [leafletLayers]="layers"
                                         [leafletMaxBounds]="bounds">
                                     </div>
                                 </div>
