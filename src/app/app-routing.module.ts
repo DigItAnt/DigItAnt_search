@@ -30,7 +30,7 @@ const routes: Routes = [
   { path: 'bibliography', component: BibliographyComponent, },
   { path: 'concordances', component: ConcordancesComponent, },
   { path: 'advancedsearch', component: AdvancedSearchComponent },
-  { path: '**', component: HomeComponent },
+  { path: '**', redirectTo: '/home' },
   
 ];
 
