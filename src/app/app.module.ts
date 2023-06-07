@@ -33,6 +33,8 @@ import {TreeModule} from 'primeng/tree';
 import {AccordionModule} from 'primeng/accordion';
 import {ImageModule} from 'primeng/image';
 import {DialogModule} from 'primeng/dialog';
+import {SliderModule} from 'primeng/slider';
+
 
 
 //LEAFLET
@@ -118,7 +120,8 @@ import { HighlightModule, HIGHLIGHT_OPTIONS } from 'ngx-highlightjs';
     AccordionModule,
     ImageModule,
     HighlightModule,
-    DialogModule
+    DialogModule,
+    SliderModule
   ],
   providers: [
     {
