@@ -1,23 +1,21 @@
 <div class="flex flex-1 flex-row" *ngIf="{activeTab : activeTab | async, 
     totalRecords: totalRecords | async, 
     groupCenturies : groupCenturies | async, 
-    activeDate : activeDate | async, 
     activeLocation : activeLocation | async,
-    activeType : activeType | async,
     activeFile : activeFile | async, 
     groupLocations : groupLocations | async,
     groupType : groupTypes | async,
     groupLanguage : groupLanguages | async,
     groupMaterial : groupMaterial | async,
-    groupObjectTypes : groupObjectTypes | async} as text">
-
+    groupObjectTypes : groupObjectTypes | async,
+    groupDuctus : groupDuctus | async} as advancedSearch">
     <div id="left-bar" class="flex flex-column normal-tabview">
 
         <!-- TODO: Inserire bottone CQL  -->
 
         
 
-        <form id="search-form" class="flex flex-column flex-auto h-full" [formGroup]="advancedSearchForm">
+        <form id="search-form" class="flex flex-column flex-auto" [formGroup]="advancedSearchForm">
 
 
             <p-panel header="Full Text" [toggleable]="false">
@@ -67,19 +65,22 @@
                 <div class="flex pt-3">
                     <p-checkbox [(ngModel)]="isActiveInterval" [binary]="true" label="Interval" [ngModelOptions]="{standalone: true}"></p-checkbox>
                 </div>
-                <div class="flex pt-3">
-                    <p-dropdown (onClear)="clearDates()" appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="dateOfOriginNotBefore"
-                        optionValue="century" optionLabel="label" placeholder="Eg: 6th century BC">
-                        <ng-template let-date pTemplate="item">
-                            <div class="century-item">
-                                <span class="counter">{{date.label}}</span>
-                            </div>
-                        </ng-template>
-                    </p-dropdown>
+
+                <div class="flex align-items-center pt-3" *ngIf="!isActiveInterval">
+
+                    {{mapSingle}}
+                    <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="start" [range]="false" class="w-full mx-5" (onChange)="onChangeSlider($event)"></p-slider>
                 </div>
 
-                <div class="flex pt-3" *ngIf="isActiveInterval">
-                    <p-dropdown [disabled]="advancedSearchForm.get('dateOfOriginNotBefore')?.value == null" appendTo="body"  [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="dateOfOriginNotAfter"
+                <div class="flex align-items-center pt-3" *ngIf="isActiveInterval">
+
+                    {{mappingRange[0]}}
+                    <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="allowedCenturies"  [range]="true" class="w-full mx-5" (onChange)="onChangeSlider($event)"></p-slider>
+                    {{mappingRange[1]}}
+                </div>
+
+                <!-- <div class="flex pt-3" *ngIf="isActiveInterval">
+                    <p-dropdown [disabled]="advancedSearchForm.get('dateOfOriginNotBefore')?.value == null" appendTo="body"  [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupCenturies) || []" formControlName="dateOfOriginNotAfter"
                         optionValue="century" optionLabel="label" placeholder="Eg: 6th century BC">
                         <ng-template let-date pTemplate="item">
                             <div class="century-item">
@@ -87,7 +88,7 @@
                             </div>
                         </ng-template>
                     </p-dropdown>
-                </div>
+                </div> -->
             </p-panel>
 
             <p-panel class="cursor-pointer" header="Location" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
@@ -113,7 +114,7 @@
             <p-panel class="cursor-pointer" header="Language" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                 
                 <div class="flex pt-3">
-                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupLanguage) || []" formControlName="language"
+                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupLanguage) || []" formControlName="language"
                         optionValue="language" optionLabel="language" placeholder="Select language...">
                         <ng-template let-item pTemplate="item">
                             <div class="language-item">
@@ -129,7 +130,7 @@
             <p-panel class="cursor-pointer" header="Inscription Types" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                 
                 <div class="flex pt-3">
-                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupType) || []" formControlName="inscriptionType"
+                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupType) || []" formControlName="inscriptionType"
                         optionValue="inscriptionType" optionLabel="inscriptionType" placeholder="Select inscription type...">
                         <ng-template let-inscriptionType pTemplate="item">
                             <div class="language-item">
@@ -146,7 +147,7 @@
             <p-panel class="cursor-pointer" header="Object Types" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                 
                 <div class="flex pt-3">
-                    <p-dropdown [appendTo]="'body'" [showClear]="true" class="flex-auto" [options]="(text.groupObjectTypes) || []" formControlName="objectType"
+                    <p-dropdown [appendTo]="'body'" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupObjectTypes) || []" formControlName="objectType"
                         optionValue="objectType" optionLabel="objectType" placeholder="Select object type...">
                         <ng-template let-objectType pTemplate="item">
                             <div class="language-item">
@@ -162,11 +163,27 @@
             <p-panel class="cursor-pointer" header="Materials" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
                 
                 <div class="flex pt-3">
-                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupMaterial) || []" formControlName="material"
+                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupMaterial) || []" formControlName="material"
                         optionValue="material" optionLabel="material" placeholder="Select material...">
                         <ng-template let-materials pTemplate="item">
                             <div class="language-item">
                                 <span class="counter">{{materials.material}}</span>
+                            </div>
+                        </ng-template>
+                    </p-dropdown>
+                </div>
+
+
+            </p-panel>
+
+            <p-panel class="cursor-pointer" header="Ductus" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                
+                <div class="flex pt-3">
+                    <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupDuctus) || []" formControlName="ductus"
+                        optionValue="ductus" optionLabel="ductus" placeholder="Select ductus...">
+                        <ng-template let-ductus pTemplate="item">
+                            <div class="ductus-item">
+                                <span class="counter">{{ductus.ductus}}</span>
                             </div>
                         </ng-template>
                     </p-dropdown>
@@ -204,10 +221,10 @@
         <!-- FILTER -->
         <div id="filter-texts-container" class="flex flex-column text-container-top">
             <div class="flex flex-row align-items-center horizontal-list m-3 text-center">
-                <h2 class="flex-1 loading" *ngIf="!text.totalRecords && !somethingWrong && text.totalRecords != 0">Loading <span>.</span><span>.</span><span>.</span>
+                <h2 class="flex-1 loading" *ngIf="!advancedSearch.totalRecords && !somethingWrong && advancedSearch.totalRecords != 0">Loading <span>.</span><span>.</span><span>.</span>
                 </h2>
                 <h2 class="flex-1" *ngIf="somethingWrong">Ops!</h2>
-                <h2 class="flex-1" *ngIf="text.totalRecords || text.totalRecords == 0 && !somethingWrong"><span class="red">{{text.totalRecords}} </span>texts found
+                <h2 class="flex-1" *ngIf="advancedSearch.totalRecords || advancedSearch.totalRecords == 0 && !somethingWrong"><span class="red">{{advancedSearch.totalRecords}} </span>texts found
                 </h2>
             </div>
     
@@ -216,14 +233,14 @@
 
 
 
-        <div class="flex flex-row flex-wrap ml-5 flex-auto text-item-container" *ngIf="(text.totalRecords != 0 && !somethingWrong) && !text.activeFile">
-            <div class="flex flex-row m-2 w-full" *ngIf="!text.totalRecords">
+        <div class="flex flex-row flex-wrap ml-5 flex-auto text-item-container" *ngIf="(advancedSearch.totalRecords != 0 && !somethingWrong) && !advancedSearch.activeFile">
+            <div class="flex flex-row m-2 w-full" *ngIf="!advancedSearch.totalRecords">
                 <p-progressSpinner class="flex flex-1"></p-progressSpinner>
     
             </div>
     
             <a class="flex no-underline text-item m-2" *ngFor="let item of paginationItems | async"
-                [href]="'/text?file='+item.fileID" routerLink="./" [queryParams]="{file: item.fileID}">
+                [href]="'/texts?file='+item.fileID" routerLink="/texts" [queryParams]="{file: item.fileID}">
 
                 <div class="flex flex-row  ">
                     <div class="flex text-item-id p-2">
@@ -254,13 +271,13 @@
        
 
 
-        <p-paginator *ngIf="(text.totalRecords != 0 && !somethingWrong) && !text.activeFile" [dropdownAppendTo]="'body'" [first]="first" [rows]="rows"
+        <p-paginator *ngIf="(advancedSearch.totalRecords != 0 && !somethingWrong) && !advancedSearch.activeFile" [dropdownAppendTo]="'body'" [first]="first" [rows]="rows"
                 [totalRecords]="(totalRecords | async) || 0"
-                (onPageChange)="pagination($event)"
+                (onPageChange)="pagination($event, (advancedSearch.activeTab || null))"
                 [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[6,12,24]"></p-paginator>
             
                 
-        <div class="m-5 flex flex-row flex-wrap flex-auto text-item-container" *ngIf="text.totalRecords == 0 && !somethingWrong">
+        <div class="m-5 flex flex-row flex-wrap flex-auto text-item-container" *ngIf="advancedSearch.totalRecords == 0 && !somethingWrong">
             no entries
         </div>
 

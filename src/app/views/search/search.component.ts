@@ -6,7 +6,7 @@ import { BehaviorSubject, catchError, debounceTime, delay, EMPTY, filter, iif, m
 import { CenturyPipe } from 'src/app/pipes/century-pipe/century-pipe.pipe';
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
 import { TextMetadata, TextsService } from 'src/app/services/text/text.service';
-import { AutoCompleteEvent, CenturiesCounter, LanguagesCounter, LocationsCounter, MaterialCounter, ObjectTypeCounter, TextFilter, TypesCounter } from '../texts/texts.component';
+import { AutoCompleteEvent, CenturiesCounter, DuctusCounter, LanguagesCounter, LocationsCounter, MaterialCounter, ObjectTypeCounter, TextFilter, TypesCounter, WordDivisionTypeCounter } from '../texts/texts.component';
 
 @Component({
   selector: 'app-search',
@@ -17,6 +17,25 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
 
 
   isActiveInterval : boolean = false;
+  allowedCenturies : number[] = [0, 100];
+  start : number = 0;
+
+  get mappingRange(): number[] {
+    let min = -200;
+    let max = 300;
+    let minSlider = 0;
+    let maxSlider = 100;
+    return this.allowedCenturies.map(value => (value - minSlider) * (max - min) / (maxSlider - minSlider) + min);
+  }
+
+  get mapSingle(): number {
+    let min = -200;
+    let max = 300;
+    let minSlider = 0;
+    let maxSlider = 100;
+    return (this.start - minSlider) * (max - min) / (maxSlider - minSlider) + min;
+  }
+
 
   advancedSearchForm: FormGroup = new FormGroup({
     word: new FormControl(null),
@@ -30,7 +49,8 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     ancientName: new FormControl(null),
     inscriptionType: new FormControl(null),
     objectType: new FormControl(null),
-    material: new FormControl(null)
+    material: new FormControl(null),
+    ductus : new FormControl(null)
   });
 
   first: number = 0;
@@ -175,6 +195,30 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(texts=> groupMaterial(texts)),
   )
 
+  groupDuctus : Observable<DuctusCounter[]> = this.textService.texts$.pipe(
+    timeout(15000),
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), 
+        of([]) 
+    )),
+    takeUntil(this.destroy$),
+    map(texts=> groupDuctus(texts)),
+  )
+
+  groupWordDivisionType : Observable<WordDivisionTypeCounter[]> = this.textService.texts$.pipe(
+    timeout(15000),
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), 
+        of([]) 
+    )),
+    takeUntil(this.destroy$),
+    map(texts=> groupWordDivisionType(texts)),
+  )
+
   
   geoData : Observable<GlobalGeoDataModel[]> = this.groupLocations.pipe(
     timeout(15000),
@@ -253,6 +297,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   }
 
   buildTextQuery(formData : any){
+    console.log(formData)
     this.somethingWrong = false;
     this.route.navigate(
       [],
@@ -269,39 +314,43 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     }
 
     if (formData.title) {
-      queryParts.push(`_doc__title="${formData.title}"`);
+      queryParts.push(` _doc__title="${formData.title}"`);
     }
 
     if (formData.id) {
-      queryParts.push(`_doc__id="${formData.id}"`);
+      queryParts.push(` _doc__id="${formData.id}"`);
     }
 
     if (formData.dateOfOriginNotBefore) {
-      queryParts.push(`_doc__dateOfOriginNotBefore="${formData.dateOfOriginNotBefore}"`);
+      queryParts.push(` _doc__dateOfOriginNotBefore="${formData.dateOfOriginNotBefore}"`);
     }
 
     if (formData.dateOfOriginNotAfter) {
-      queryParts.push(`_doc__dateOfOriginNotAfter="${formData.dateOfOriginNotAfter}"`);
+      queryParts.push(` _doc__dateOfOriginNotAfter="${formData.dateOfOriginNotAfter}"`);
     }
 
     if (formData.ancientName) {
-      queryParts.push(`_doc__originalPlace__ancientName="${formData.ancientName}"`);
+      queryParts.push(` _doc__originalPlace__ancientName="${formData.ancientName}"`);
     }
 
     if (formData.language) {
-      queryParts.push(`_doc__language__ident="${formData.language}"`);
+      queryParts.push(` _doc__language__ident="${formData.language}"`);
     }
 
     if (formData.inscriptionType) {
-      queryParts.push(`_doc__inscriptionType="${formData.inscriptionType}"`);
+      queryParts.push(` _doc__inscriptionType="${formData.inscriptionType}"`);
     }
 
     if (formData.objectType) {
-      queryParts.push(`_doc__support__objectType="${formData.objectType}"`);
+      queryParts.push(` _doc__support__objectType="${formData.objectType}"`);
     }
 
     if (formData.material) {
-      queryParts.push(`_doc__support__material="${formData.material}"`);
+      queryParts.push(` _doc__support__material="${formData.material}"`);
+    }
+
+    if (formData.ductus) {
+      queryParts.push(` _doc__bodytextpart__ductus="${formData.ductus}"`);
     }
 
     const query = queryParts.length > 0 ? `[${queryParts.join(' &')}]` : '';
@@ -342,8 +391,28 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     
   }
 
-  pagination(event?: any) {
+  pagination(event: Paginator, ...args : any[]){
+    if(Object.keys(event).length != 0){this.first = event.first; this.rows = event.rows;}
+    if(Object.keys(event).length == 0){this.first = 0; this.rows = 6;}
+
+    let rows = (this.first != this.rows) && (this.first < this.rows) ? this.rows : this.first + this.rows;
+    if(args.length>0){args =args.filter(query=>query != null)}
+
+    if(args.length == 0){
+      this.getAllData(this.first, rows);
+    }else{
+      this.paginationItems = this.textService.sliceFilteredAttestations(this.first, rows);
+    }
+  }
+
+  getAllData(f? : number, r? : number): void {
+    let rows = 0;
+    if(f && r){this.first = f; rows = r; }
+    if(!f && !r){this.first = 0; this.rows = 6;}
     
+   
+    this.paginationItems = this.textService.texts$.pipe(map(texts => texts.slice(this.first, rows == 0 ? this.rows : rows)));
+    this.totalRecords = this.textService.texts$.pipe(map(texts=>texts.length || 0))
   }
 
   filterText(){
@@ -371,8 +440,8 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     this.advancedSearchForm.reset();
     this.first = 0;
     this.rows = 6;
-    /* this.paginationItems = this.textService.texts$.pipe(map(texts => texts.slice(0, 6)));
-    this.totalRecords = this.textService.texts$.pipe(map(texts=>texts.length || 0)) */
+    this.paginationItems = this.textService.texts$.pipe(map(texts => texts.slice(0, 6)));
+    this.totalRecords = this.textService.texts$.pipe(map(texts=>texts.length || 0))
   }
 
   handleAutocompleteFilter(evt: any){
@@ -385,16 +454,34 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
 
     this.advancedSearchForm.updateValueAndValidity({ onlySelf: false, emitEvent: true })
   }
+
+  onChangeSlider(event : any){
+    this.markAsTouched();
+    if(event.value){
+      this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.mapSingle)
+      this.advancedSearchForm.get('dateOfOriginNotAfter')?.setValue(null)
+
+    }
+
+    if(event.values){
+      this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.mappingRange[0])
+      this.advancedSearchForm.get('dateOfOriginNotAfter')?.setValue(this.mappingRange[1])
+
+    }
+  }
+
+  
 }
 
-const allowedCenturies : number[] = [-600, -500, -400, -300, -200, -100, 100];
+const allowedCenturies : number[] = [-600, 200];
 
 function groupByCenturies(texts: TextMetadata[]) : CenturiesCounter[]{
   let tmp : CenturiesCounter[] = [];
   let count : number = 0;
+
   allowedCenturies.forEach(value=>{
-    if(value < 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOrigin) >= value && parseInt(cur.dateOfOrigin) < (value + 100)) ? ++acc : acc, 0); 
-    if(value > 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOrigin) > (value-100) && parseInt(cur.dateOfOrigin) <= value) ? ++acc : acc, 0);
+    if(value < 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOriginNotBefore) >= value && parseInt(cur.dateOfOriginNotBefore) < (value + 100)) ? ++acc : acc, 0); 
+    if(value > 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOriginNotBefore) > (value-100) && parseInt(cur.dateOfOriginNotBefore) <= value) ? ++acc : acc, 0);
     if(count > 0) tmp.push({century: value, count: count, label: CenturyPipe.prototype.transform(value) })
   })
 
@@ -499,5 +586,51 @@ function groupMaterial(texts : TextMetadata[]) : MaterialCounter[]{
   )
 
   
+  return tmp;
+}
+
+
+function groupDuctus(texts : TextMetadata[]) : DuctusCounter[]{
+  let tmp : DuctusCounter[] = [];
+  
+  texts.forEach(text=> {
+    // Se ductus è null, undefined o una stringa vuota, continua alla prossima iterazione
+    if(!text.bodytextpart.ductus){
+      return;
+    }
+
+    let count = texts.reduce((acc, cur) => cur.bodytextpart.ductus == text.bodytextpart.ductus ? ++acc : acc , 0);
+    if(count > 0) {
+      tmp.push({ductus: text.bodytextpart.ductus, count: count})
+    }
+  });
+
+  tmp = Object.values(
+    tmp.reduce((acc, object) => ({...acc, [object.ductus] : object}), {})
+  );
+
+  return tmp;
+}
+
+
+function groupWordDivisionType(texts : TextMetadata[]) : WordDivisionTypeCounter[]{
+  let tmp : WordDivisionTypeCounter[] = [];
+  
+  texts.forEach(text=> {
+    // Se ductus è null, undefined o una stringa vuota, continua alla prossima iterazione
+    if(!text.bodytextpart.ductus){
+      return;
+    }
+
+    let count = texts.reduce((acc, cur) => cur.wordDivisionType == text.wordDivisionType ? ++acc : acc , 0);
+    if(count > 0) {
+      tmp.push({type: text.wordDivisionType, count: count})
+    }
+  });
+
+  tmp = Object.values(
+    tmp.reduce((acc, object) => ({...acc, [object.type] : object}), {})
+  );
+
   return tmp;
 }
