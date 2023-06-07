@@ -391,7 +391,9 @@ app-root {
         #interpretative-text,
         #diplomatic-text {
             span.linenumber {
-                display: none;
+                padding-right: 1rem;
+                display: inline-block;
+                width: 2rem;
             }
         }
     }
@@ -659,6 +661,19 @@ p-tabview.normal-tabview {
         font-family: "M PLUS Rounded 1c", sans-serif;
         font-size: 0.85rem;
     }
+
+    #search-form {
+        
+        font-family: "M PLUS Rounded 1c", sans-serif !important;
+        padding: 0 !important;
+        background: transparent !important;
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        overflow: auto;
+        height: 100px;
+        
+    }
 }
 
 .p-tabview .p-tabview-nav .p-tabview-ink-bar{
@@ -735,13 +750,13 @@ app-search,
 app-bibliography,
 app-concordances,
 app-file {
-    #interpretative-text {
+   /*  #interpretative-text {
         span.ab {
             span.linenumber {
                 display: none;
             }
         }
-    }
+    } */
     display: flex !important;
     flex: 1 1 auto !important;
     //position: relative !important;
@@ -921,8 +936,8 @@ app-footer {
         display: none !important;
     }
 
-    .linenumber,
+    /* .linenumber,
     .notation {
         display: none !important;
-    }
+    } */
 }
