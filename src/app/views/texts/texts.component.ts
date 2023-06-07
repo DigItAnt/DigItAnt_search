@@ -19,6 +19,8 @@ export interface CenturiesCounter {
   label: string,
 }
 
+
+
 export interface LocationsCounter {
   ancientPlaceUrl : string,
   ancientPlaceId : string,
@@ -44,8 +46,18 @@ export interface ObjectTypeCounter {
   count : number,
 }
 
+export interface WordDivisionTypeCounter {
+  count : number,
+  type: string,
+}
+
 export interface MaterialCounter {
   material : string,
+  count : number,
+}
+
+export interface DuctusCounter {
+  ductus : string,
   count : number,
 }
 
@@ -116,7 +128,8 @@ export class TextsComponent implements OnInit {
     takeUntil(this.destroy$),
     filter(params => Object.keys(params).length != 0),
     map((queryParams : Params) => queryParams as TextFilter),
-    map((filter : TextFilter) => filter.filter)
+    map((filter : TextFilter) => filter.filter),
+    tap(index => index == 'search' ? this.activeIndex = 1 : this.activeIndex = 0)
   );
 
   activeDate : Observable<number> = this.activatedRoute.queryParams.pipe(
@@ -368,7 +381,7 @@ export class TextsComponent implements OnInit {
     filter(req => Object.keys(req).length > 0),
     map(req => this.textService.mapXmlRequest(req)),
     map(req =>  getTeiChildren(req)),
-    switchMap(arrayNodes => this.textService.getCustomInterpretativeData(arrayNodes)),
+    switchMap(arrayNodes => this.textService.getCustomInterpretativeData(arrayNodes).pipe(catchError(err => this.thereWasAnError()))),
     tap(data => this.currentTokensList = data.tokens),
     map(data => buildCustomInterpretative(this.renderer, data.teiNodes, data.leidenNodes, data.tokens)),
     tap(x => this.getAnnotationReq$.next(this.currentElementId))
@@ -422,7 +435,7 @@ export class TextsComponent implements OnInit {
     tap(biblio => this.loadingBibliography = false)
   );
 
-  getFacsimile : Observable<Graphic[]> | undefined = this.getBibliographyReq$.pipe(
+  getFacsimile : Observable<Graphic[]> | undefined = this.getFacsimileReq$.pipe(
     filter(xml => xml != ''),
     map(xml => getFacsimile(xml)),
     tap(facsimile => this.loadingFacsimile = false)
@@ -439,6 +452,8 @@ export class TextsComponent implements OnInit {
     map(html => getApparatus(html)),
     tap(html => this.loadingApparatus = false)
   );
+
+  activeIndex : number = 0;
 
   searchForm: FormGroup = new FormGroup({
     word: new FormControl(null),
@@ -529,6 +544,10 @@ export class TextsComponent implements OnInit {
         }
       }
     )
+  }
+
+  onChangeTabView(event: any){
+    this.activeIndex = event.index;
   }
 
   buildTextQuery(formData : any){
@@ -757,7 +776,7 @@ export class TextsComponent implements OnInit {
         this.paginationItems = this.textService.sliceFilteredAttestations(this.first, rows);
       }
       
-      return;
+      this.getAllData(this.first, rows);
     }
     if(args.length>1){
       let filter = args[0];
@@ -793,7 +812,7 @@ export class TextsComponent implements OnInit {
               { queryParams: 
                 {
                   filter: 'location', 
-                  place: geoPlaceData.ancientId
+                  place: geoPlaceData.modernId
                 }
               }
             );
@@ -1091,9 +1110,10 @@ function leidenDiplomaticBuilder(html : string, isVenetic? : boolean){
 function groupByCenturies(texts: TextMetadata[]) : CenturiesCounter[]{
   let tmp : CenturiesCounter[] = [];
   let count : number = 0;
+
   allowedCenturies.forEach(value=>{
-    if(value < 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOrigin) >= value && parseInt(cur.dateOfOrigin) < (value + 100)) ? ++acc : acc, 0); 
-    if(value > 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOrigin) > (value-100) && parseInt(cur.dateOfOrigin) <= value) ? ++acc : acc, 0);
+    if(value < 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOriginNotBefore) >= value && parseInt(cur.dateOfOriginNotBefore) < (value + 100)) ? ++acc : acc, 0); 
+    if(value > 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOriginNotBefore) >= (value-100) && parseInt(cur.dateOfOriginNotBefore) <= value) ? ++acc : acc, 0);
     if(count > 0) tmp.push({century: value, count: count, label: CenturyPipe.prototype.transform(value) })
   })
 
@@ -1205,6 +1225,7 @@ function groupMaterial(texts : TextMetadata[]) : MaterialCounter[]{
 function buildCustomInterpretative(renderer : Renderer2, TEINodes : Array<Element>, LeidenNodes : Array<string>, token : TextToken[]) : string{
   
   let HTML = '';
+  let lineCounter = 0;
   TEINodes.forEach(
     element=> {
       let begin : number = NaN, end : number = NaN, tokenId : number = NaN, nodeId : number = NaN, xmlId : string | null = null, nodeValue: string | null;
@@ -1265,13 +1286,29 @@ function buildCustomInterpretative(renderer : Renderer2, TEINodes : Array<Elemen
         
         let body = new DOMParser().parseFromString(LeidenNodes[TEINodes.indexOf(element)], "text/html").querySelector('body');
         if(body != null){
+          
           Array.from(body.childNodes).forEach((sub:any) => {
 
             if(sub instanceof HTMLElement){//nodo span o altro 
-              if(sub.tagName == 'BR' && sub.id == 'al1'){
-                null;
+              if(nodeValue && sub.tagName == 'BR'){
+                let span = renderer.createElement('span') as Element;
+                renderer.addClass(span, 'linenumber');
+                span.setAttribute('xmlid', nodeValue);
+                let text = renderer.createText((lineCounter+1).toString());
+                renderer.appendChild(span, text);
+                if(sub.tagName == 'BR' && sub.id == 'al1'){
+                  HTML += span.outerHTML;
+                }else{
+                  HTML += sub.outerHTML;
+                  HTML += span.outerHTML;
+                }    
+                lineCounter = lineCounter+1;
               }else{
-                HTML += sub.outerHTML;
+                if(sub.tagName == 'SPAN' && sub.classList.contains('linenumber')){
+                  null;
+                }else{
+                  HTML += sub.outerHTML;
+                }
               }
               
             } 

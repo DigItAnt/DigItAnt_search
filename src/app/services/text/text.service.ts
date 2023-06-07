@@ -252,6 +252,7 @@ export class TextsService {
   texts$ : Observable<TextMetadata[]> = this.getTextCollection().pipe(
     map(texts => texts.filter(text => text.type == 'file' && Object.keys(text.metadata).length > 0)),
     map(texts => this.mapData(texts)),
+    tap(x=>console.log(x)),
     shareReplay()
   )
 
@@ -422,8 +423,8 @@ export class TextsService {
   filterByDate(century : number): Observable<TextMetadata[]>{
     return this.texts$.pipe(
       map(texts => texts.filter((text)=> {
-        if(century < 0) return parseInt(text.dateOfOrigin) >= century && parseInt(text.dateOfOrigin) < (century + 100);
-        return parseInt(text.dateOfOrigin) > (century-100) && parseInt(text.dateOfOrigin) <= century
+        if(century < 0) return parseInt(text.dateOfOriginNotBefore) >= century && parseInt(text.dateOfOriginNotBefore) < (century + 100);
+        return parseInt(text.dateOfOriginNotBefore) > (century-100) && parseInt(text.dateOfOriginNotBefore) <= century
       })),
     )
   }
@@ -535,7 +536,7 @@ export class TextsService {
           tokens : tokens
         }
       }),
-      shareReplay()
+      shareReplay(),
     )
   }
 
@@ -633,6 +634,7 @@ export class TextsService {
         }
       )
     ).pipe(
+      catchError(err => of(null)),
       tap(res => res)
     )
   }

@@ -12,7 +12,7 @@
         groupObjectTypes : groupObjectTypes | async} as text">
 
         <div id="left-bar" class="flex flex-column">
-            <p-tabView *ngIf="!text.activeFile" class="normal-tabview">
+            <p-tabView *ngIf="!text.activeFile" class="normal-tabview"(onChange)="onChangeTabView($event)" >
         
                 <p-tabPanel header="Categories" [selected]="text.activeTab != 'search'">
         
@@ -30,7 +30,6 @@
                 </p-tabPanel>
         
                 <p-tabPanel class="flex flex-column flex-1" header="Simple search" [selected]="text.activeTab == 'search'">
-
                     <form id="search-form" class="flex flex-column flex-auto h-full" [formGroup]="searchForm">
 
 
@@ -136,7 +135,7 @@
                         </p-panel>
 
                         <p-panel class="cursor-pointer" header="Inscription Types" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
-                            
+                            *ngIf="text.activeTab == 'search'"
                             <div class="flex pt-3">
                                 <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupType) || []" formControlName="inscriptionType"
                                     optionValue="inscriptionType" optionLabel="inscriptionType" placeholder="Select inscription type...">
@@ -185,28 +184,29 @@
                         </p-panel>
 
 
-                        <div class="flex pt-3 mb-0 mt-auto search-button-div sticky bottom-0">
-                            <button pButton 
-                                (click)="resetFields()"
-                                type="button"
-                                label="Reset fields" 
-                                class="p-button-danger border-noround flex-1"
-                                icon="fa-solid fa-times" 
-                                iconPos="left">
-                            </button>
-                            <!-- <button pButton 
-                                    type="submit"
-                                    label="Search" 
-                                    class="p-button-secondary border-noround flex-1"
-                                    icon="fa-solid fa-search" 
-                                    iconPos="right">
-                            </button> -->
-                        </div>
+                        
 
     
                     </form>
+                   
                 </p-tabPanel>
-        
+                <div class="flex pt-3 mb-0 mt-auto search-button-div sticky bottom-0" *ngIf="activeIndex == 1">
+                    <button pButton 
+                        (click)="resetFields()"
+                        type="button"
+                        label="Reset fields" 
+                        class="p-button-danger border-noround flex-1"
+                        icon="fa-solid fa-times" 
+                        iconPos="left">
+                    </button>
+                    <!-- <button pButton 
+                            type="submit"
+                            label="Search" 
+                            class="p-button-secondary border-noround flex-1"
+                            icon="fa-solid fa-search" 
+                            iconPos="right">
+                    </button> -->
+                </div>
             </p-tabView>
 
             <ul class="home-menu" *ngIf="text.activeFile">
@@ -454,17 +454,24 @@
                                                                                              diplomatic : getDiplomaticContent | async,
                                                                                              annotations: getAnnotations | async,
                                                                                              apparatus : getApparatus | async} as leiden"> 
-                                <p-tabView styleClass="text-panel" [hidden]="loadingInterpretative || loadingDiplomatic">
+                                <p-tabView class="w-full" styleClass="text-panel" [hidden]="loadingInterpretative || loadingDiplomatic">
                                     <p-tabPanel header="Intepretative">
-                                        <div class="flex flex-row m-2 w-full" *ngIf="loadingInterpretative && loadingDiplomatic">
-                                            <p-progressSpinner class="flex flex-1"></p-progressSpinner>
-                                
+                                        <div class="flex">
+                                            <div class="flex flex-row m-2 w-full" *ngIf="loadingInterpretative && loadingDiplomatic">
+                                                <p-progressSpinner class="flex flex-1"></p-progressSpinner>
+                                    
+                                            </div>
+                                            <div #interpretativeText id="interpretative-text" [hidden]="loadingInterpretative" [innerHTML]="leiden.interpretative | noSanitize " >
+    
+                                                
+                                            </div>
+    
+                                            <div >
+                                                TODO: inserire dati da commentary o apparatus
+                                            </div>
+                                            <div #dynamicOverlay></div>
                                         </div>
-                                        <div #interpretativeText id="interpretative-text" [hidden]="loadingInterpretative" [innerHTML]="leiden.interpretative | noSanitize " >
-
-                                            
-                                        </div>
-                                        <div #dynamicOverlay></div>
+                                        
                                     </p-tabPanel>
                                     <p-tabPanel header="Diplomatic">
                                         <div #diplomaticText id="diplomatic-text" [hidden]="loadingDiplomatic" [innerHTML]="leiden.diplomatic">
@@ -472,10 +479,13 @@
                                         </div>
                                     </p-tabPanel>
 
-                                    <p-tabPanel header="Apparatus">
-                                        <div #apparatusText id="apparatus-text" class="flex flex-column" [hidden]="loadingApparatus">
+                                    <p-tabPanel header="Apparatus" *ngIf="leiden.apparatus && leiden.apparatus.length != 0">
+                                        <div #apparatusText id="apparatus-text" class="flex flex-column" [hidden]="loadingApparatus" >
                                             <p *ngFor="let app of leiden.apparatus" [innerHTML]="app"></p>
                                         </div>
+
+                                        <!-- {{leiden.apparatus | json}} -->
+                                        
                                     </p-tabPanel>
     
                                 </p-tabView>                              
