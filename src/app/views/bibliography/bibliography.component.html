@@ -326,8 +326,9 @@
 
         <!-- BIBLIO LIST -->
         <div class="flex flex-row flex-wrap flex-auto bibliography-item-container ml-2 p-3"
-            *ngIf="bibliography.bookOrLetter == '' || bibliography.bookOrLetter != 'book'">
-            <div class="flex flex-row m-2 w-full" *ngIf="!bibliography.totalRecords">
+            *ngIf="(bibliography.bookOrLetter == '' || bibliography.bookOrLetter != 'book') && bibliography.totalRecords != 0">
+            
+            <div class="flex flex-row m-2 w-full" *ngIf="!bibliography.totalRecords && bibliography.totalRecords != 0">
                 <p-progressSpinner class="flex flex-1"></p-progressSpinner>
 
             </div>
@@ -387,7 +388,6 @@
                     </p-paginator>
 
                     <div id="text-view-id" class="select-none absolute h-full flex justify-content-center align-items-center">
-                        
                         <div *ngIf="!bookView.book">
                             <i class="fas fa-spinner fa-pulse"></i>
                         </div>
