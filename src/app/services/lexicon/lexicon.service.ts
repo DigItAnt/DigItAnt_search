@@ -279,6 +279,13 @@ export class LexiconService {
     )
   }
 
+  getBibliographyByEntity(instanceName : string) : Observable<any[]>{
+    return this.http.get<any[]>(`${this.baseUrl}lexicon/data/bibliography?id=${encodeURIComponent(instanceName)}`).pipe(
+      map((res) => res),
+      shareReplay(),
+    )
+  }
+
   getTypes(): Observable<StatisticsCounter[]> {
     return this.http.get<StatisticsCounter[]>(`${this.baseUrl}lexicon/statistics/types`).pipe(
       map((res) => res),

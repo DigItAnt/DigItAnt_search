@@ -56,3 +56,34 @@
     resize: vertical;
     cursor: ns-resize;
 }
+
+.comment {
+    background: lightcoral;
+}
+
+.spanReference{
+    cursor: pointer;
+    background: lightgreen;
+}
+
+.highlight {
+    background: lightgreen;
+}
+
+.referencedCommentary {
+    max-height: 20rem;
+    overflow-y: auto;
+}
+
+.overlaySpinner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}

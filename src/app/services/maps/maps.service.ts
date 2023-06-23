@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { catchError, concatMap, delay, filter, forkJoin, from, map, mergeMap, Observable, of, switchMap, takeLast, tap, throwError } from 'rxjs';
 import { LocationsCounter } from 'src/app/views/texts/texts.component';
 import { environment } from 'src/environments/environment';
+import { PlaceModel, TextMetadata } from '../text/text.service';
 
 export interface PleiadesDataModel {
   bbox: Array<number>,
@@ -79,6 +80,73 @@ export class MapsService {
       title: place.name,
       uri: uri,
     }
+  }
+
+  getSingleLocation(location : PlaceModel) : Observable<any> {
+    const modernId = location.modernNameUrl.split('/').pop();
+    const ancientId = location.ancientNameUrl.split('/').pop();
+
+    const pleiadesRequest = this.http.get(this.pleiadesBaseUrl + ancientId + '/json').pipe(
+      catchError(err => of(null)), // In caso di errore, restituisce null
+      map((res : any) => res ? this.mapPleiadesData(res) : null) // Mappa i risultati solo se non sono nulli
+    );
+
+    const geoNamesRequest = this.http.get(
+      this.geoNamesBaseUrl +
+      'getJSON?formatted=true&geonameId=' +
+      modernId +
+      '&username=mmallia92&style=full').pipe(
+      catchError(err => of(null)), // In caso di errore, restituisce null
+      map((res : any) => res ? this.mapGeoNamesData(res, (modernId || ''), location.modernNameUrl) : null) // Mappa i risultati solo se non sono nulli
+    );
+
+    // Restituisce entrambi i risultati in un unico oggetto
+    return forkJoin([pleiadesRequest, geoNamesRequest]).pipe(
+      map(([pleiadesData, geoNamesData]) => {
+        if (!pleiadesData && !geoNamesData) {
+          return null; // Return null if both requests fail
+        }
+    
+        // Inizializza un oggetto GlobalGeoDataModel vuoto
+        let result: GlobalGeoDataModel = {
+          ancientName: '',
+          modernName: '',
+          ancientBbox: { north: NaN, south: NaN, west: NaN, east: NaN },
+          modernBbox: { north: NaN, south: NaN, west: NaN, east: NaN },
+          ancientId: '',
+          modernId: '',
+          description: '',
+          reprPoint: { latitude: NaN, longitude: NaN },
+          ancientUri: '',
+          modernUri: '',
+        };
+    
+        // Se i dati di Pleiades sono disponibili, li aggiunge al risultato
+        if (pleiadesData) {
+          result.ancientName = pleiadesData.title;
+          result.ancientBbox = pleiadesData.bbox;
+          result.ancientId = pleiadesData.id;
+          result.description = pleiadesData.description;
+          result.reprPoint = pleiadesData.reprPoint;
+          result.ancientUri = pleiadesData.uri;
+        }
+    
+        // Se i dati di GeoNames sono disponibili, li aggiunge al risultato
+        if (geoNamesData) {
+          result.modernName = geoNamesData.title;
+          result.modernBbox = geoNamesData.bbox;
+          result.modernId = geoNamesData.id;
+          result.description = geoNamesData.description || result.description;
+          result.reprPoint = geoNamesData.reprPoint || result.reprPoint;
+          result.modernUri = geoNamesData.uri;
+        }
+    
+        return result;
+      }),
+      catchError(err => of(null)), // In caso di errore, restituisce null
+    ).pipe(
+      tap(res=>res)
+    )
   }
 
   getGeoPlaceData(locations: LocationsCounter[]) {

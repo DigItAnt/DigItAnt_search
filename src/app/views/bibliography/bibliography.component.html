@@ -323,7 +323,13 @@
 
         </div>
 
+        <!-- TODO: prendere i dati da zotero -->
 
+        <!-- TODO: in futuro bisogna fare in modo da prendere i dati sia da andrea e cash-->
+
+        <!-- TODO: fare paginazione con le lettere-->
+
+        <!-- TODO: usare convenzioni bibliografie -->
         <!-- BIBLIO LIST -->
         <div class="flex flex-row flex-wrap flex-auto bibliography-item-container ml-2 p-3"
             *ngIf="(bibliography.bookOrLetter == '' || bibliography.bookOrLetter != 'book') && bibliography.totalRecords != 0">
@@ -336,8 +342,8 @@
             <a class="flex no-underline lexicon-item m-2" *ngFor="let item of paginationItems | async" routerLink="./"
                 [href]="'/lexicon?book='+item.key" [queryParams]="{book : item.key}">
                 <div class="flex flex-row">
-                    <div class="flex text-item-id p-2">
-                        {{item.key}}
+                    <div class="flex text-item-id p-2" style="word-break: break-word;">
+                        {{item.author}}  {{item.date}}
                     </div>
 
                     <div class="flex flex-column text-item-preview p-2">

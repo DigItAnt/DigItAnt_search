@@ -239,6 +239,7 @@ export class LexiconComponent implements OnInit {
   getCognatesReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
   getFormsListReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
   getAttestationsReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getBibliographyReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
 
   formRequestComplete : boolean = false;
 
@@ -254,6 +255,7 @@ export class LexiconComponent implements OnInit {
         this.getEtymologiesListReq$.next(instanceName);
         this.getCognatesReq$.next(instanceName);
         this.getFormsListReq$.next(instanceName);
+        this.getBibliographyReq$.next(instanceName)
       }
     }),
     switchMap(instanceName => (instanceName != '' && instanceName == this.currentLexicalEntry) ? this.lexiconService.getLexicalEntryData(instanceName).pipe(catchError(err => this.thereWasAnError())) : of()),
@@ -271,13 +273,13 @@ export class LexiconComponent implements OnInit {
   )
 
   getSenses : Observable<SenseElement[]> = this.getSensesReq$.pipe(
+    takeUntil(this.destroy$),
     switchMap(instanceName => instanceName != '' ? this.lexiconService.getSenses(instanceName).pipe(catchError(err => this.thereWasAnError())) : of([])),
-    //tap(senses => console.log(senses))
   )
 
 
   getFormsList : Observable<FormElementTree[]> = this.getFormsListReq$.pipe(
-    distinctUntilChanged(),
+    takeUntil(this.destroy$),
     switchMap(instanceName => (instanceName != '' && instanceName == this.currentLexicalEntry) ? this.lexiconService.getForms(instanceName) : of([])),
     switchMap(forms => forms.length> 0 ? this.textService.getAnnotationsByForms(forms) : of([])),
     tap(forms => console.log(forms))
@@ -316,6 +318,7 @@ export class LexiconComponent implements OnInit {
   getAttestations : Observable<any> | undefined = this.getAttestationsReq$.pipe(
     
     filter(instanceName => instanceName != ''),
+    takeUntil(this.destroy$),
     switchMap(instanceName => this.textService.searchAttestations(instanceName, 200, 0)),
     map(res => {
       let idSet = new Set();
@@ -333,6 +336,12 @@ export class LexiconComponent implements OnInit {
     map(res => res.map(el=>el.split('.xml')[0])),
     tap(res => console.log(res))
    
+  )
+
+  getBibliography : Observable<any> | undefined = this.getBibliographyReq$.pipe(
+    filter(instanceName => instanceName != ''),
+    switchMap(instanceName => this.lexiconService.getBibliographyByEntity(instanceName)),
+    tap(results => console.log(results))
   )
 
   constructor(private route: Router,

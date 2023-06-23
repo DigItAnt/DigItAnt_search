@@ -45,7 +45,7 @@ export interface TextMetadata {
   license : License,
   opistography : string,
   originalPlace : PlaceModel,
-  paleographicNotes : string,
+  palaeographicNotes : string,
   publicationDate : string,
   publicationPID : string,
   reuse : string,
@@ -234,7 +234,8 @@ export interface BookEditor extends BookAuthor{
 
 export interface Graphic {
   description : string,
-  url : string
+  url : string,
+  isPdf : boolean,
 }
 
 
@@ -405,7 +406,7 @@ export class TextsService {
       license : text.metadata.license,
       opistography : text.metadata.opistography,
       originalPlace : text.metadata.originalPlace,
-      paleographicNotes : text.metadata.paleographicNotes,
+      palaeographicNotes : text.metadata.palaeographicNotes,
       publicationDate : text.metadata.publicationDate,
       publicationPID : text.metadata.publicationPID,
       reuse : text.metadata.reuse,

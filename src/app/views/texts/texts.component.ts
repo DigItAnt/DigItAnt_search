@@ -1,4 +1,4 @@
-import {  Component, ComponentRef, ElementRef, NgZone, OnInit, Renderer2, ViewChild, ViewContainerRef } from '@angular/core';
+import {  AfterViewInit, Component, ComponentRef, ElementRef, NgZone, OnInit, Renderer2, ViewChild, ViewContainerRef } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import * as L from 'leaflet';
@@ -88,7 +88,7 @@ const allowedCenturies : number[] = [-600, -500, -400, -300, -200, -100, 100];
   templateUrl: './texts.component.html',
   styleUrls: ['./texts.component.scss']
 })
-export class TextsComponent implements OnInit {
+export class TextsComponent implements OnInit, AfterViewInit {
 
   //RXJS
   destroy$: Subject<boolean> = new Subject<boolean>();
@@ -110,7 +110,11 @@ export class TextsComponent implements OnInit {
   leafletMapOptions: any;
   layers: Array<L.Circle> = [];
 
+  
+  singleMap : L.Map | undefined;
+  singleCircle : L.Circle | undefined;
   bounds = new L.LatLngBounds(new L.LatLng(33.802052, 4.239242), new L.LatLng(50.230863, 19.812745));
+
 
   totalRecords: Observable<number> = this.textService.texts$.pipe(
     timeout(15000),
@@ -277,7 +281,7 @@ export class TextsComponent implements OnInit {
     debounceTime(1000),
     filter(autoCompleteEvent => autoCompleteEvent.query != ''),
     switchMap(autoCompleteEvent=> this.textService.searchLocation(autoCompleteEvent.query)),
-    map(texts=> groupLocations(texts, true)),
+    map(texts=> groupLocations(texts)),
     tap(results => this.autocompleteLocations = results)
   )
 
@@ -294,6 +298,7 @@ export class TextsComponent implements OnInit {
   getFacsimileReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
   getCommentaryReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
   getApparatusReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getGetoDataFromFile$ : BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
 
   loadingInterpretative : boolean = false;
@@ -331,11 +336,16 @@ export class TextsComponent implements OnInit {
   )
 
   isBodyTextPartArray : boolean = false;
+  onlyTextCommentary : string[] = [];
+  referencedCommentary : any[] = [];
 
   getFileByIndex : Observable<TextMetadata> = this.getFileByIndexReq$.pipe(
     switchMap(index => !isNaN(index) ? this.textService.getFileByIndex(index) : of()),
     tap(file => {
       if(file){
+        this.onlyTextCommentary = [];
+        this.referencedCommentary = [];
+        this.tempXml = null;
         this.isVenetic = false;
         this.loadingCommentary = true;
         this.loadingInterpretative = true;
@@ -343,6 +353,8 @@ export class TextsComponent implements OnInit {
         this.loadingBibliography = true;
         this.loadingFacsimile = true;
         this.loadingApparatus = true;
+        this.getGetoDataFromFile$.next(null)
+        this.getGetoDataFromFile$.next(file);
         this.getTextContentReq$.next(file['element-id']);
         this.isBodyTextPartArray = Array.isArray(file.bodytextpart)
       }
@@ -377,14 +389,20 @@ export class TextsComponent implements OnInit {
     
   )
   
+  tempXml : any;
   getInterpretativeContent : Observable<string> = this.getInterpretativeReq$.pipe(
     filter(req => Object.keys(req).length > 0),
+    tap(req => this.tempXml = req.xml ),
     map(req => this.textService.mapXmlRequest(req)),
     map(req =>  getTeiChildren(req)),
     switchMap(arrayNodes => this.textService.getCustomInterpretativeData(arrayNodes).pipe(catchError(err => this.thereWasAnError()))),
     tap(data => this.currentTokensList = data.tokens),
     map(data => buildCustomInterpretative(this.renderer, data.teiNodes, data.leidenNodes, data.tokens)),
-    tap(x => this.getAnnotationReq$.next(this.currentElementId))
+    tap(x => {
+      this.getAnnotationReq$.next(this.currentElementId)
+      this.getCommentaryReq$.next(this.tempXml)
+      this.tempXml = null
+    })
   );
 
   getAnnotations : Observable<any> = this.getAnnotationReq$.pipe(
@@ -411,7 +429,7 @@ export class TextsComponent implements OnInit {
       }),
     ) : of()),
     tap(html => {
-      this.getCommentaryReq$.next(html);
+      //this.getCommentaryReq$.next(html);
       this.getApparatusReq$.next(html);
     }),
     map(html => leidenDiplomaticBuilder(html, this.isVenetic)),
@@ -424,7 +442,7 @@ export class TextsComponent implements OnInit {
   getTranslation : Observable<any> | undefined = this.getTranslationReq$.pipe(
     filter(req => Object.keys(req).length > 0),
     map(req => this.textService.mapXmlRequest(req)),
-    switchMap(req => req.xml != '' ? this.textService.getHTMLTeiNodeContent({xmlString : req.xml}) : of()),
+    switchMap(req => req.xml != '' ? this.textService.getHTMLTeiNodeContent({xmlString : req.xml}).pipe(catchError(err => this.thereWasAnError())) : of()),
     map(res => getTranslation(res)),
     tap(res => this.loadingTranslation = false)
   );
@@ -435,22 +453,86 @@ export class TextsComponent implements OnInit {
     tap(biblio => this.loadingBibliography = false)
   );
 
+  externalReferences : Array<any> = [];
   getFacsimile : Observable<Graphic[]> | undefined = this.getFacsimileReq$.pipe(
+    tap(x=> this.externalReferences = []),
     filter(xml => xml != ''),
     map(xml => getFacsimile(xml)),
-    tap(facsimile => this.loadingFacsimile = false)
+    tap(facsimile => {
+      if(facsimile){
+        facsimile.forEach(fac=>{
+          if(fac.isPdf){
+            this.externalReferences.push(fac)
+          }
+        })
+      }
+      this.loadingFacsimile = false
+    })
   );
 
   getCommentary : Observable<Array<string>> = this.getCommentaryReq$.pipe(
-    filter(html => html != ''),
-    map(html => getCommentary(html)),
-    tap(html => this.loadingCommentary = false)
+    filter(xml => xml != ''),
+    map(xml => getCommentaryXml(xml, this.renderer)),
+    delay(500),
+    tap((output:any) => {
+
+      if(output.onlyText && output.onlyText.length > 0){
+        let tmp = [];
+
+        if(output.onlyText){
+          output.onlyText.forEach((element : any) => {
+            tmp.push(element)
+          });
+        }
+
+
+        if(output.referenced){
+          for (const key in output.referenced) {
+            // Usa l'operatore spread per aggiungere gli elementi dell'array corrente a arrayDestinazione
+
+            let innerHTMLs = output.referenced[key].map((elemento : Element) => elemento.outerHTML);
+            // Usa l'operatore spread per aggiungere i valori estratti a arrayDestinazione
+            tmp.push(...innerHTMLs);
+          }
+        }
+
+        this.onlyTextCommentary = tmp
+      }
+      if(output.referenced && Object.keys(output.referenced).length > 0){
+        this.mapCommentaryNodes(output.referenced)
+      }
+
+      
+      this.loadingCommentary = false;
+    })
   );
 
   getApparatus : Observable<Array<string>> = this.getApparatusReq$.pipe(
     filter(html => html != ''),
     map(html => getApparatus(html)),
     tap(html => this.loadingApparatus = false)
+  );
+
+  mapsLoading:boolean=false;
+  getGetoDataFromFileId: Observable<any> = this.getGetoDataFromFile$.pipe(
+    tap(x=>this.mapsLoading = true),
+    delay(1000),
+    tap(x=> this.initializeMap()),
+    switchMap(file => {
+      if (file != null) {
+        return this.mapsService.getSingleLocation(file.originalPlace).pipe(
+          takeUntil(this.destroy$),
+          catchError(err => {
+            this.thereWasAnError();
+            return of(null); // restituisci un array vuoto in caso di errore
+          })
+        );
+      } else {
+        return of(null);
+      }
+    }),
+    delay(3000),
+    tap(res => this.drawSingleMap(res))
   );
 
   activeIndex : number = 0;
@@ -513,6 +595,9 @@ export class TextsComponent implements OnInit {
             
             let fileId = values[0];
             this.getTextPaginationIndexReq$.next(fileId);
+          }else{
+            this.singleMap?.remove();
+            this.isMapInitialized = false;
           }
           
         }
@@ -533,21 +618,77 @@ export class TextsComponent implements OnInit {
       center: [42.296818, 12.254809]
     };
 
+    /* this.singleMapOptions = {
+        layers: [
+          tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 7, 
+            minZoom: 7, 
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
+          ),
+        ],
+        dragging: false,
+        zoomControl : false,
+        tap : false,
+        zoom: 7,
+        center: [42.296818, 12.254809]
+      }; */
+
     
     this.searchForm.valueChanges.pipe(
       takeUntil(this.destroy$),
       delay(100),
-      debounceTime(1000),).subscribe(
+      debounceTime(1000)).subscribe(
       data=>{
-        if(this.searchForm.touched){
+        const queryParams = new URLSearchParams(window.location.search);
+        if(this.searchForm.touched && queryParams.get('file') == null){
           this.buildTextQuery(data)
         }
       }
     )
   }
 
+  ngAfterViewInit(): void {
+    
+  }
+
   onChangeTabView(event: any){
     this.activeIndex = event.index;
+  }
+
+  
+  isMapInitialized = false;
+
+  initializeMap() {
+    if (!this.isMapInitialized) {
+      // Initialize the map here
+      this.singleMap = L.map('singleMap').setView([42.296818, 12.254809], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.singleMap);
+      this.isMapInitialized = true;
+    }
+
+  
+    
+  }
+
+  drawSingleMap(geoData: GlobalGeoDataModel) {
+    // First, ensure the map is initialized
+    
+  
+    // Then, proceed to add the circle
+    if (geoData) {
+      if (this.singleCircle && this.singleMap && this.singleMap.hasLayer(this.singleCircle)) {
+        this.singleMap.removeLayer(this.singleCircle);
+      }
+  
+      this.singleCircle = L.circle([geoData.reprPoint.latitude, geoData.reprPoint.longitude], { radius: 500 });
+  
+      if (this.singleMap && this.singleCircle) {
+        this.singleMap.addLayer(this.singleCircle);
+        this.singleMap.panTo([geoData.reprPoint.latitude, geoData.reprPoint.longitude]);
+
+        this.mapsLoading = false;
+      }
+    }
   }
 
   buildTextQuery(formData : any){
@@ -703,6 +844,7 @@ export class TextsComponent implements OnInit {
 
  
   ngOnDestroy(): void {
+
     this.destroy$.next(true);
     this.destroy$.complete();
   }
@@ -860,7 +1002,7 @@ export class TextsComponent implements OnInit {
 
 
   thereWasAnError(){
-    this.somethingWrong = true;
+    //this.somethingWrong = true;
     return EMPTY;
   }
 
@@ -896,8 +1038,73 @@ export class TextsComponent implements OnInit {
     this.displayModal = false;
   }
 
+
+  highlightNode(evt : any){
+    //console.log(evt)
+
+    if(evt){
+      let xmlid = evt.data;
+
+      let nodes = document.querySelectorAll(`span[xmlid="${evt.data}"]:not(.spanReference)`);
+
+      nodes.forEach(span=>{
+        span.classList.add('highlight')
+      })
+    }
+  }
+
+  deactivateNode(evt : any){
+    //console.log(evt)
+
+    if(evt){
+      let xmlid = evt.data;
+
+      let nodes = document.querySelectorAll(`span[xmlid="${evt.data}"]:not(.spanReference)`);
+
+      nodes.forEach(span=>{
+        span.classList.remove('highlight')
+      })
+    }
+  }
+
+  loadCommentaryData(evt : any){
+    let data = evt.data;
+
+    this.referencedCommentary = [];
+    console.log(evt)
+    if(data){
+      data.forEach((element : Element) => {
+        this.referencedCommentary.push(element.outerHTML);
+      });
+    }
+
+    setTimeout(() => {
+      console.log(data)
+      data.forEach((element : Element) => {
+        let spans = element.querySelectorAll(`[xmlid]`)
+        if(spans.length>0){
+          spans.forEach((subSpan : Element) => {
+            let xmlid = subSpan.getAttribute('xmlid')
+
+            let nodes = document.querySelectorAll(`.spanReference[xmlid="${xmlid}"]`)
+
+            nodes.forEach(domElement =>  {
+              domElement.addEventListener('mouseenter', (event) => {
+                this.highlightNode({evt: this, data: xmlid, clickEvent: event});
+              });
+
+              domElement.addEventListener('mouseleave', (event) => {
+                this.deactivateNode({evt: this, data: xmlid, clickEvent: event});
+              });
+            })
+            
+          })
+        }
+      });
+    }, 100);
+  }
+
   mapNodes(data : any[] | unknown){
-    console.log(data);
     if(Array.isArray(data)){
       
       let nodes = document.querySelectorAll('[tokenid]');
@@ -929,6 +1136,43 @@ export class TextsComponent implements OnInit {
    
     }
   
+  }
+
+
+  mapCommentaryNodes(data : any){
+    
+    if(data && Object.keys(data).length > 0){
+      
+      Object.keys(data).forEach(
+        element => {
+          console.log(data[element])
+          let xmlid = element;
+          let nodes = document.querySelectorAll(`[xmlid="${element}"]`)
+          if(nodes.length>0){
+
+            let span = nodes[0]
+            span.classList.add('comment');
+            span.addEventListener('mouseenter', (event) => {
+              this.loadCommentaryData({evt: this, data: data[element], clickEvent: event});
+            });
+
+            data[element].forEach((sub : Element) => {
+              let subReferences = sub.querySelectorAll(`[xmlid]`)
+              if(subReferences.length>0){
+                subReferences.forEach((subSpan : Element)=>{
+                  subSpan.classList.add('spanReference');
+                  /* subSpan.addEventListener('click', (event) => {
+                    this.highLightNodes({evt: this, data: data[element], clickEvent: event});
+                  }); */
+                })
+              }
+            });
+            //mouse hover and appiccicare le info dei nodi
+            //click, fisso dati
+          }
+        }
+      )
+    }
   }
 
   printDocument(){
@@ -1018,23 +1262,130 @@ function getBibliography(rawXml : string) : Array<any> {
   return biblio_array;
 }
 
-function getCommentary(rawHTML : string) : Array<string> {
 
-  let notesArray : Array<string> = [];
 
-  if(Array.from(new DOMParser().parseFromString(rawHTML, "text/html").querySelectorAll('div#commentary')).length != 0){
-    let nodes = Array.from(new DOMParser().parseFromString(rawHTML, "text/html").querySelectorAll('div#commentary')[0].children);
-    nodes.forEach(n => {
-      if(n.tagName == "P"){
-        notesArray.push(n.outerHTML);
+function getCommentaryXml(rawHTML : string, renderer : Renderer2) : any {
+
+  let onlyTextComments : Array<string> = [];
+  let referencedComments : any = {};
+
+  if(Array.from(new DOMParser().parseFromString(rawHTML, "text/xml").querySelectorAll('div[type="commentary"')).length != 0){
+
+    let commentaryNotes = Array.from(new DOMParser().parseFromString(rawHTML, "text/xml").querySelectorAll('div[type="commentary"')[0].children);
+    
+    commentaryNotes.forEach(teiNote => {
+
+      let teiNoteChildren = Array.from(teiNote.children);
+      let target : string | null | undefined= '';
+
+      //Elementi che si rifanno al testo
+      if(teiNote instanceof Element && teiNote.localName == 'note' && teiNote.hasAttribute('target')){
+        target = teiNote.getAttribute('target') != null ? teiNote.getAttribute('target')?.replace('#', '') : '';
       }
+
+      teiNoteChildren.forEach(child => {
+        
+        
+        let childNodes = Array.from(child.childNodes);
+       
+        let paragraph = renderer.createElement('p') as Element;
+        childNodes.forEach((element : any)=>{
+
+          if(element instanceof Text){
+            let paragraphText = renderer.createText(element.nodeValue ? element.nodeValue : '');
+            renderer.appendChild(paragraph, paragraphText)
+          }
+
+          if(element instanceof Element){
+
+            if((element.nodeName == 'tei:ref') && element.hasAttribute('target')){
+              let biblioTargetUrl = element.getAttribute('target') ? element.getAttribute('target') : '';
+              let link = renderer.createElement('a') as Element;
+
+              const regex = /.*\.xml$/;
+              let isAFile = false;
+              if(biblioTargetUrl && biblioTargetUrl != ''){
+                isAFile = regex.test(biblioTargetUrl)
+                
+              }
+              
+              if(isAFile){
+                link.setAttribute('href', biblioTargetUrl ? "/texts?file="+biblioTargetUrl.replace('.xml', '') : '')
+                link.setAttribute('target', '_blank')
+              }else{
+                link.setAttribute('href', biblioTargetUrl ? biblioTargetUrl : '')
+                link.setAttribute('target', '_blank')
+              }
+
+              
+
+              let biblioChildNodes = Array.from(element.childNodes)
+              biblioChildNodes.forEach((bibChild)=>{
+                let biblioText = renderer.createText(bibChild.textContent ? bibChild.textContent : '');
+                renderer.appendChild(link, biblioText)
+              })
+
+              renderer.appendChild(paragraph, link)
+            }
+
+            if(element.nodeName == 'tei:rs'){
+
+              let correspData = element.getAttribute('corresp') ? element.getAttribute('corresp') : '';
+
+              const regex = /https?:\/\/(?:www\.|(?!www))[^\s.]+\.[^\s]{2,}/;
+              let isALink = false;
+
+              if(correspData && correspData != ''){
+                
+                isALink = regex.test(correspData)
+              }
+              
+              if(isALink){
+                let link = renderer.createElement('a') as Element;
+                link.setAttribute('href', correspData ? correspData : '')
+                link.setAttribute('target', '_blank')
+  
+                let biblioChildNodes = Array.from(element.childNodes)
+                biblioChildNodes.forEach(bibChild=>{
+                  let biblioText = renderer.createText(element.nodeValue ? element.nodeValue : '');
+                  renderer.appendChild(link, biblioText)
+                })
+  
+                renderer.appendChild(paragraph, link)
+              }else{
+                let span = renderer.createElement('span') as Element;
+
+                if(correspData != ''){
+                  span.setAttribute('xmlid', correspData?.toString() ? correspData.toString() : '')
+                }
+
+                let spanText = renderer.createText(element.textContent ? element.textContent : '')
+
+                renderer.appendChild(span, spanText)
+
+                renderer.appendChild(paragraph, span)
+              } 
+
+            }
+          }
+        })
+
+        if(target && target != ''){
+          if(!referencedComments[target]) referencedComments[target] = []
+          referencedComments[target].push(paragraph)
+        }else{
+          onlyTextComments.push(paragraph.outerHTML)
+        }
+
+      });
+      
     })
-    return notesArray;
+    return {referenced: referencedComments, onlyText: onlyTextComments};
   }else{
     return []
   }
   
-}
+} 
 
 function getApparatus(rawHTML : string) : Array<string> {
 
@@ -1087,6 +1438,14 @@ function getFacsimile(rawXml : string) : Array<Graphic> {
     }
 
     if(url){
+      if(url.includes('.jpg')){
+        graphic_obj.isPdf = false;
+      }else if(url.includes('.pdf')){
+        graphic_obj.isPdf = true;
+      }else {
+        graphic_obj.isPdf = false;
+      }
+
       graphic_obj.url = url;
     }
     
@@ -1120,7 +1479,7 @@ function groupByCenturies(texts: TextMetadata[]) : CenturiesCounter[]{
   return tmp;
 }
 
-function groupLocations(texts : TextMetadata[], truncatePlaces?:boolean) : LocationsCounter[] {
+function groupLocations(texts : TextMetadata[]) : LocationsCounter[] {
   let tmp : LocationsCounter[] = [];
   let count : number = 0;
 

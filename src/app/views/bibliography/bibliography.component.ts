@@ -475,9 +475,20 @@ export class BibliographyComponent implements OnInit {
       if(args[0] == 'all'){
         this.getAllData(this.first, rows);
       }else if(args[0]=='search'){
-        this.paginationItems = this.filteredResults.pipe(
-          map((res:any)=> res.slice(this.first, rows))
-        );
+        if(this.filteredResults != undefined){
+          this.paginationItems = this.filteredResults.pipe(
+            map((res:any)=> {
+              if(res.length >0){
+                res.slice(this.first, rows)
+              }else{
+                this.getAllData(this.first, rows);
+              }
+            })
+          );
+        }else{
+          this.getAllData(this.first, rows)
+        }
+        
       }
       
       return;
