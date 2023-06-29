@@ -34,6 +34,7 @@ import {AccordionModule} from 'primeng/accordion';
 import {ImageModule} from 'primeng/image';
 import {DialogModule} from 'primeng/dialog';
 import {SliderModule} from 'primeng/slider';
+import {SplitButtonModule} from 'primeng/splitbutton';
 
 
 
@@ -121,7 +122,8 @@ import { HighlightModule, HIGHLIGHT_OPTIONS } from 'ngx-highlightjs';
     ImageModule,
     HighlightModule,
     DialogModule,
-    SliderModule
+    SliderModule,
+    SplitButtonModule
   ],
   providers: [
     {

@@ -65,6 +65,7 @@ export interface ObjectDimension {
   type: string,
   unit: string,
   width: string,
+  precision : string,
 }
 
 export interface Trismegistos {
@@ -179,7 +180,7 @@ export interface XmlAndId {
 }
 
 export interface ListAndId {
-  list : Array<Element>,
+  list : Array<Element[]>,
   id : number,
 }
 
@@ -218,9 +219,14 @@ export interface Annotation {
 
 export interface Book {
   author : BookAuthor,
+  date : string,
   editor : BookEditor,
+  entry : string,
+  issue : string,
+  page : string,
   title : string,
   url : string,
+  volume : string
 }
 
 export interface BookAuthor {
@@ -236,6 +242,7 @@ export interface Graphic {
   description : string,
   url : string,
   isPdf : boolean,
+  isExternalRef : boolean
 }
 
 
@@ -518,28 +525,30 @@ export class TextsService {
     return object;
   }
 
-  getCustomInterpretativeData(req : ListAndId){
-    let teiNodeContent : Array<string> = [];
+  getCustomInterpretativeData(req: ListAndId ) {
     return forkJoin(
-      req.list.map(
-        (node: any) => {
-          return this.getHTMLTeiNodeContent({xmlString : node.outerHTML}).pipe(map(x => x))
-        }
-      ),
-      
+        req.list.map(innerArray => {
+            return forkJoin(
+                innerArray.map((node: any) => {
+                    return this.getHTMLTeiNodeContent({xmlString: node.outerHTML}).pipe(map(x => x));
+                })
+            );
+        })
     ).pipe(
-      tap(x => teiNodeContent = x),
-      switchMap(x => this.getTokens(req.id)),
-      map(tokens => {
-        return {
-          teiNodes: req.list, 
-          leidenNodes : teiNodeContent, 
-          tokens : tokens
-        }
-      }),
-      shareReplay(),
-    )
-  }
+        switchMap(teiNodeContents => {
+            return this.getTokens(req.id).pipe(
+                map(tokens => {
+                    return {
+                        teiNodes: req.list,
+                        leidenNodes: teiNodeContents,
+                        tokens: tokens
+                    };
+                })
+            );
+        }),
+        shareReplay(),
+    );
+}
 
   getAnnotationsByForms(forms: FormElementTree[]) {
     return forkJoin(

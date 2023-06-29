@@ -3,6 +3,7 @@ import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import * as L from 'leaflet';
 import { circle, tileLayer } from 'leaflet';
+import { MenuItem } from 'primeng/api';
 import { Paginator } from 'primeng/paginator';
 import { map, tap, Subject, takeUntil, BehaviorSubject, Observable, switchMap, take, filter, debounceTime, timeout, catchError, iif, throwError, of, EMPTY, shareReplay, mergeMap, flatMap, delay, forkJoin } from 'rxjs';
 import { CenturyPipe } from 'src/app/pipes/century-pipe/century-pipe.pipe';
@@ -314,6 +315,9 @@ export class TextsComponent implements OnInit, AfterViewInit {
   
   currentElementId : number = NaN;
   currentTokensList : TextToken[] | undefined;
+  autopsyAuthors : Array<any> = [];
+  seenAuthors: Array<any> = [];
+  fileNotAvailable : boolean = false;
 
   @ViewChild('interpretativeText') interpretativeText!: ElementRef;
   @ViewChild('diplomaticText') diplomaticText!: ElementRef;
@@ -323,7 +327,14 @@ export class TextsComponent implements OnInit, AfterViewInit {
 
   getTextPaginationIndex : Observable<number> = this.getTextPaginationIndexReq$.pipe(
     switchMap(fileId => fileId != '' ? this.textService.getIndexOfText(fileId) : of()),
-    tap(index => this.getFileByIndexReq$.next(index))
+    tap(index => {
+      if(index != -1){
+        this.getFileByIndexReq$.next(index)
+        this.fileNotAvailable = false;
+      }else{
+        this.fileNotAvailable = true;
+      }
+  })
   )
 
   getFileIdByIndex : Observable<string> = this.getFileIdByIndexReq$.pipe(
@@ -377,26 +388,30 @@ export class TextsComponent implements OnInit, AfterViewInit {
         languageNodes.forEach(el=>{
           if(el.getAttribute('ident') == 'xve') this.isVenetic = true
         })
+        this.arrayDynamicComponents = [];
+        this.externalReferences = []
         this.getInterpretativeReq$.next(res);
         this.getDiplomaticReq$.next(res);
         this.getTranslationReq$.next(res);
         this.getBibliographyReq$.next(res.xml);
         this.getFacsimileReq$.next(res.xml);
+        this.getApparatusReq$.next(res.xml)
+        this.getAutopsyAuthors(res.xml);
         //this.getCommentaryReq$.next(res.xml);
-        this.arrayDynamicComponents = [];
+        
       }
     }),
     
   )
   
   tempXml : any;
-  getInterpretativeContent : Observable<string> = this.getInterpretativeReq$.pipe(
+  getInterpretativeContent : Observable<string[]> = this.getInterpretativeReq$.pipe(
     filter(req => Object.keys(req).length > 0),
     tap(req => this.tempXml = req.xml ),
     map(req => this.textService.mapXmlRequest(req)),
     map(req =>  getTeiChildren(req)),
     switchMap(arrayNodes => this.textService.getCustomInterpretativeData(arrayNodes).pipe(catchError(err => this.thereWasAnError()))),
-    tap(data => this.currentTokensList = data.tokens),
+    /* tap(data => this.currentTokensList = data.tokens), */
     map(data => buildCustomInterpretative(this.renderer, data.teiNodes, data.leidenNodes, data.tokens)),
     tap(x => {
       this.getAnnotationReq$.next(this.currentElementId)
@@ -419,7 +434,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
   )
 
 
-  getDiplomaticContent : Observable<string> = this.getDiplomaticReq$.pipe(
+  getDiplomaticContent : Observable<string[]> = this.getDiplomaticReq$.pipe(
     filter(req => Object.keys(req).length > 0),
     map(rawXml => this.textService.mapXmlRequest(rawXml)),
     switchMap(req => req.xml != '' ? this.textService.getHTMLContent(req).pipe(
@@ -428,22 +443,18 @@ export class TextsComponent implements OnInit, AfterViewInit {
         return(of())
       }),
     ) : of()),
-    tap(html => {
-      //this.getCommentaryReq$.next(html);
-      this.getApparatusReq$.next(html);
-    }),
     map(html => leidenDiplomaticBuilder(html, this.isVenetic)),
     tap(x => {
-      // console.log(x);
+      //console.log(x);
       this.loadingDiplomatic = false
     })
   );
 
   getTranslation : Observable<any> | undefined = this.getTranslationReq$.pipe(
     filter(req => Object.keys(req).length > 0),
-    map(req => this.textService.mapXmlRequest(req)),
-    switchMap(req => req.xml != '' ? this.textService.getHTMLTeiNodeContent({xmlString : req.xml}).pipe(catchError(err => this.thereWasAnError())) : of()),
-    map(res => getTranslation(res)),
+    //map(req => this.textService.mapXmlRequest(req)),
+    //switchMap(req => req.xml != '' ? this.textService.getHTMLTeiNodeContent({xmlString : req.xml}).pipe(catchError(err => this.thereWasAnError())) : of()),
+    map(res => getTranslationByXml(res.xml)),
     tap(res => this.loadingTranslation = false)
   );
 
@@ -453,19 +464,24 @@ export class TextsComponent implements OnInit, AfterViewInit {
     tap(biblio => this.loadingBibliography = false)
   );
 
-  externalReferences : Array<any> = [];
+  externalReferences : MenuItem[] = [];
+  externalReferencesCounter : string = '';
   getFacsimile : Observable<Graphic[]> | undefined = this.getFacsimileReq$.pipe(
-    tap(x=> this.externalReferences = []),
     filter(xml => xml != ''),
     map(xml => getFacsimile(xml)),
     tap(facsimile => {
       if(facsimile){
         facsimile.forEach(fac=>{
-          if(fac.isPdf){
-            this.externalReferences.push(fac)
+          if(fac.isPdf || fac.isExternalRef){
+            let item = {
+              label : fac.description.length > 50 ? fac.description.substring(0, 50) + "..." : fac.description,
+              url : fac.url
+            }
+            this.externalReferences.push(item)
           }
         })
       }
+      this.externalReferencesCounter = this.externalReferences.length.toString();
       this.loadingFacsimile = false
     })
   );
@@ -508,9 +524,9 @@ export class TextsComponent implements OnInit, AfterViewInit {
   );
 
   getApparatus : Observable<Array<string>> = this.getApparatusReq$.pipe(
-    filter(html => html != ''),
-    map(html => getApparatus(html)),
-    tap(html => this.loadingApparatus = false)
+    filter(xml => xml != ''),
+    map(xml => getApparatus(xml, this.renderer)),
+    tap(xml => this.loadingApparatus = false)
   );
 
   mapsLoading:boolean=false;
@@ -522,6 +538,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
       if (file != null) {
         return this.mapsService.getSingleLocation(file.originalPlace).pipe(
           takeUntil(this.destroy$),
+          debounceTime(3000),
           catchError(err => {
             this.thereWasAnError();
             return of(null); // restituisci un array vuoto in caso di errore
@@ -571,6 +588,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
     this.activatedRoute.queryParams.pipe(takeUntil(this.destroy$)).subscribe(
       (event)=>{
         if(event){
+          this.fileNotAvailable = false;
           const keys  = Object.keys(event);
           const values = Object.values(event);
           if(keys.length == 0) {
@@ -595,6 +613,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
             
             let fileId = values[0];
             this.getTextPaginationIndexReq$.next(fileId);
+            
           }else{
             this.singleMap?.remove();
             this.isMapInitialized = false;
@@ -618,20 +637,6 @@ export class TextsComponent implements OnInit, AfterViewInit {
       center: [42.296818, 12.254809]
     };
 
-    /* this.singleMapOptions = {
-        layers: [
-          tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 7, 
-            minZoom: 7, 
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
-          ),
-        ],
-        dragging: false,
-        zoomControl : false,
-        tap : false,
-        zoom: 7,
-        center: [42.296818, 12.254809]
-      }; */
 
     
     this.searchForm.valueChanges.pipe(
@@ -1138,6 +1143,40 @@ export class TextsComponent implements OnInit, AfterViewInit {
   
   }
 
+  getAutopsyAuthors(rawXml : string){
+    this.autopsyAuthors = [];
+    this.seenAuthors = [];
+
+    let nodes = new DOMParser().parseFromString(rawXml, "text/xml");
+    let autopsyAuthorsNodes = Array.from(nodes.querySelectorAll("provenance[type='observed']"));
+    
+    if(autopsyAuthorsNodes.length> 0){
+      autopsyAuthorsNodes.forEach(element=>{
+        //console.log(element);
+
+        if(element.getAttribute('subtype') == 'seen'){
+          let seenAuthors = {
+            name: element.textContent ? element.textContent : '',
+            subtype : element.getAttribute('subtype') || '',
+            when : element.getAttribute('when') ? element.getAttribute('when') : NaN,
+            notAfter : element.getAttribute('notAfter') ? element.getAttribute('notAfter') : NaN,
+          };
+          this.seenAuthors.push(seenAuthors);
+        }else if(element.getAttribute('subtype') == 'autopsied'){
+          let autopsyAuthor = {
+            name: element.textContent ? element.textContent : '',
+            subtype : element.getAttribute('subtype') || '',
+            when : element.getAttribute('when') ? element.getAttribute('when') : NaN,
+            notAfter : element.getAttribute('notAfter') ? element.getAttribute('notAfter') : NaN,
+          };
+          this.autopsyAuthors.push(autopsyAuthor)
+
+        }
+        
+      })
+    }
+  
+  }
 
   mapCommentaryNodes(data : any){
     
@@ -1181,18 +1220,22 @@ export class TextsComponent implements OnInit, AfterViewInit {
 
 }
 
+
 function getTeiChildren(req : XmlAndId) : ListAndId{
 
-  let array : Array<Element> = [];
+  let array : Array<Element[]> = [];
   let divFaces = Array.from(new DOMParser().parseFromString(req.xml, "text/xml").querySelectorAll('div[subtype="interpretative"] div'));
   divFaces.forEach(
     divFacesElement=>{
+      let face: Element[] = [];
       let abChildren = Array.from(divFacesElement.querySelectorAll('ab')[0].children);
       abChildren.forEach(
         abChildrenElement => {
-          array.push(abChildrenElement)
+          face.push(abChildrenElement)
         }
       )
+
+      array.push(face)
     }
   )
   return {list : array, id : req.nodeId};
@@ -1210,11 +1253,48 @@ function getBibliography(rawXml : string) : Array<any> {
     let author = Array.from(element.querySelectorAll('author'));
     let editor = Array.from(element.querySelectorAll('editor'));
     let url = element.attributes.getNamedItem('corresp');
+    let date = Array.from(element.querySelectorAll('date'));
+    let page = Array.from(element.querySelectorAll('biblScope[unit="page"]'));
+    
+    let volume = Array.from(element.querySelectorAll('biblScope[unit="volume"]'));
+    let entry = Array.from(element.querySelectorAll('biblScope[unit="entry"]'));
+    let issue = Array.from(element.querySelectorAll('biblScope[unit="issue"]'));
+
 
     if(title.length > 0){
       title.forEach(t => {
         book_obj.title = t.innerHTML;
         return true;
+      })
+    }
+
+    if(date.length > 0){
+      date.forEach(d => {
+        book_obj.date = d.innerHTML;
+      })
+    }
+
+    if(page.length > 0){
+      page.forEach(p => {
+        book_obj.page = p.innerHTML;
+      })
+    }
+
+    if(volume.length > 0){
+      volume.forEach(p => {
+        book_obj.volume = p.innerHTML;
+      })
+    }
+
+    if(entry.length > 0){
+      entry.forEach(p => {
+        book_obj.entry = p.innerHTML;
+      })
+    }
+
+    if(issue.length > 0){
+      issue.forEach(p => {
+        book_obj.issue = p.innerHTML;
       })
     }
 
@@ -1387,26 +1467,61 @@ function getCommentaryXml(rawHTML : string, renderer : Renderer2) : any {
   
 } 
 
-function getApparatus(rawHTML : string) : Array<string> {
+function getApparatus(rawXml : string, renderer : Renderer2) : Array<string> {
 
   let apparatusArray : Array<string> = [];
 
-  if(Array.from(new DOMParser().parseFromString(rawHTML, "text/html").querySelectorAll('div#apparatus')).length != 0){
-    let nodes = Array.from(new DOMParser().parseFromString(rawHTML, "text/html").querySelectorAll('div#apparatus'));
-    nodes.forEach(n => {
-      
-      let children = Array.from(n.children);
+  if(Array.from(new DOMParser().parseFromString(rawXml, "text/xml").querySelectorAll('app')).length != 0){
+    let apparatusNodes = Array.from(new DOMParser().parseFromString(rawXml, "text/xml").querySelectorAll('app'));
+    apparatusNodes.forEach(app => {
+      const lemNode = app.querySelector("lem");
+      const rdgNode = app.querySelector("rdg");
+      const refNodes = rdgNode?.querySelectorAll("ref");
+      const lineNumber = app.getAttribute("from")?.split('_').pop();
 
-      children.forEach(child => {
-        if(child.tagName == 'P'){
+      // Create the span elements
+      const containerSpan = renderer.createElement('span');
+      const lineNumberSpan = renderer.createElement('span');
+      const contentSpan = renderer.createElement('span');
 
-          let subChildren = Array.from(child.children)
+      // Set classes for the lineNumberSpan
+      renderer.addClass(lineNumberSpan, 'linenumber');
 
-          subChildren.forEach(sub=> {
-            apparatusArray.push(sub.outerHTML)
-          })
+      // Set the content for the lineNumberSpan
+      if (lineNumber) {
+        const text = renderer.createText(lineNumber);
+        renderer.appendChild(lineNumberSpan, text);
+      }
+
+      // Set the content for the contentSpan
+      if (lemNode) {
+        const lemText = lemNode.textContent ? lemNode.textContent + ' - ' : '';
+        renderer.appendChild(contentSpan, renderer.createText(lemText));
+      }
+      if (rdgNode && rdgNode.firstChild && rdgNode.firstChild.nodeValue) {
+        const rdgText = rdgNode.firstChild.nodeValue.trim();
+        renderer.appendChild(contentSpan, renderer.createText(rdgText));
+    }
+      refNodes?.forEach((refNode, index) => {
+        const link = renderer.createElement('a');
+        const href = refNode.getAttribute('target');
+        const bibl = refNode.querySelector("bibl")?.textContent;
+        renderer.setAttribute(link, 'href', href || '#');
+        renderer.setAttribute(link, 'target', '_blank');
+        renderer.appendChild(link, renderer.createText(bibl || ''));
+        renderer.appendChild(contentSpan, link);
+        if (index < (refNodes.length - 1)) {
+          renderer.appendChild(contentSpan, renderer.createText(' and '));
         }
-      })
+      });
+      if (rdgNode) renderer.appendChild(contentSpan, renderer.createText(')'));
+      
+      // Append the lineNumberSpan and contentSpan to the containerSpan
+      renderer.appendChild(containerSpan, lineNumberSpan);
+      renderer.appendChild(containerSpan, contentSpan);
+
+      // Append the containerSpan to the array
+      apparatusArray.push(containerSpan.outerHTML);
     })
     return apparatusArray;
   }else{
@@ -1428,8 +1543,8 @@ function getFacsimile(rawXml : string) : Array<Graphic> {
     
     if(desc.length > 0){
       desc.forEach(d => {
-        if(d.innerHTML != undefined || d.innerHTML != ''){
-          graphic_obj.description = d.innerHTML
+        if(d.textContent != undefined || d.textContent != null){
+          graphic_obj.description = d.textContent
         }else{
           graphic_obj.description = 'No description'
         }
@@ -1443,7 +1558,7 @@ function getFacsimile(rawXml : string) : Array<Graphic> {
       }else if(url.includes('.pdf')){
         graphic_obj.isPdf = true;
       }else {
-        graphic_obj.isPdf = false;
+        graphic_obj.isExternalRef = true;
       }
 
       graphic_obj.url = url;
@@ -1455,15 +1570,15 @@ function getFacsimile(rawXml : string) : Array<Graphic> {
   return graphic_array;
 }
 
-function leidenDiplomaticBuilder(html : string, isVenetic? : boolean){
-  let resHTML = '';
+function leidenDiplomaticBuilder(html: string, isVenetic?: boolean) {
+  let resHTMLArray = [];
   let nodes = new DOMParser().parseFromString(html, "text/html").querySelectorAll('#diplomatic .textpart');
-  if(!isVenetic){
-    nodes.forEach(el=>resHTML+=el.innerHTML+'\n')
-  }else{
-    resHTML = nodes[1].innerHTML
+  if (!isVenetic) {
+    nodes.forEach(el => resHTMLArray.push(el.innerHTML));
+  } else {
+    resHTMLArray.push(nodes[1].innerHTML);
   }
-  return resHTML;
+  return resHTMLArray;
 }
 
 function groupByCenturies(texts: TextMetadata[]) : CenturiesCounter[]{
@@ -1581,112 +1696,125 @@ function groupMaterial(texts : TextMetadata[]) : MaterialCounter[]{
   return tmp;
 }
 
-function buildCustomInterpretative(renderer : Renderer2, TEINodes : Array<Element>, LeidenNodes : Array<string>, token : TextToken[]) : string{
+function buildCustomInterpretative(renderer: Renderer2, TEINodes: Array<Array<Element>>, LeidenNodes: Array<Array<string>>, token: TextToken[]): Array<string> {
+  let HTMLArray: Array<string> = [];
   
-  let HTML = '';
-  let lineCounter = 0;
-  TEINodes.forEach(
-    element=> {
-      let begin : number = NaN, end : number = NaN, tokenId : number = NaN, nodeId : number = NaN, xmlId : string | null = null, nodeValue: string | null;
-      if(element.getAttribute('xml:id')!= null){
-        nodeValue = element.getAttribute('xml:id');
-        
-        token.forEach(t=> {
-          if(t.xmlid == nodeValue){
-            begin = t.begin;
-            end = t.end;
-            tokenId = t.id;
-            nodeId = t.node;
-            xmlId = t.xmlid;
+
+  TEINodes.forEach((innerArray, innerIndex) => {
+      let HTML = '';
+      let lineCounter = 0;
+      innerArray.forEach((element, elementIndex) => {
+          let begin: number = NaN, end: number = NaN, tokenId: number = NaN, nodeId: number = NaN, xmlId: string | null = null, nodeValue: string | null;
+          if (element.getAttribute('xml:id') != null) {
+              nodeValue = element.getAttribute('xml:id');
+
+              token.forEach(t => {
+                  if (t.xmlid == nodeValue) {
+                      begin = t.begin;
+                      end = t.end;
+                      tokenId = t.id;
+                      nodeId = t.node;
+                      xmlId = t.xmlid;
+                  }
+              });
           }
-        })
-        
-      }
-      if(!isNaN(tokenId) && xmlId != null){
-        
-        //LeidenNodes[TEINodes.indexOf(element)];
-        let body = new DOMParser().parseFromString(LeidenNodes[TEINodes.indexOf(element)], "text/html").querySelector('body');
-        if(body != null){
-          Array.from(body.childNodes).forEach((sub:any) => {
-            if(sub instanceof HTMLElement){
-              if(/[\a-z*]/.test(sub.outerText)){
-                HTML += sub.outerHTML;
-              }else{
-                HTML += sub.outerHTML;
+
+          if (!isNaN(tokenId) && xmlId != null) {
+              let leidenNode = LeidenNodes[innerIndex][elementIndex];
+              let body = new DOMParser().parseFromString(leidenNode, "text/html").querySelector('body');
+              if (body != null) {
+                Array.from(body.childNodes).forEach((sub:any) => {
+                  if(sub instanceof HTMLElement){
+                    HTML += sub.outerHTML;
+                  } 
+                  if(sub instanceof Text && sub.textContent != null && /[\a-z*]/.test(sub.textContent)){ 
+                      token.forEach(
+                        tok => {
+                          if(tok.xmlid == nodeValue){
+                            let span = renderer.createElement('span') as Element;
+                            let text = renderer.createText(sub.textContent != null ? sub.textContent : 'null');
+                            renderer.setAttribute(span, 'tokenId', tokenId?.toString());
+                            renderer.setAttribute(span, 'nodeId', nodeId?.toString());
+                            renderer.setAttribute(span, 'start', begin?.toString());
+                            renderer.setAttribute(span, 'end', end?.toString());
+                            renderer.setAttribute(span, 'xmlId', xmlId != undefined ? xmlId.toString() : 'null');
+                            renderer.appendChild(span, text)
+                            HTML += span.outerHTML;
+                          }
+                        }
+                      )
+                  }
+                  
+                });
               }
-            } 
-            if(sub instanceof Text){ 
-              if(sub.textContent != null && /[\a-z*]/.test(sub.textContent)){
-                token.forEach(
-                  tok => {
-                    if(tok.xmlid == nodeValue){
-                      let span = renderer.createElement('span') as Element;
-                      let text = renderer.createText(sub.textContent != null ? sub.textContent : 'null');
-                      renderer.setAttribute(span, 'tokenId', tokenId?.toString());
-                      renderer.setAttribute(span, 'nodeId', nodeId?.toString());
-                      renderer.setAttribute(span, 'start', begin?.toString());
-                      renderer.setAttribute(span, 'end', end?.toString());
-                      renderer.setAttribute(span, 'xmlId', xmlId != undefined ? xmlId.toString() : 'null');
-                      renderer.appendChild(span, text)
+          } else {
+            let leidenNode = LeidenNodes[innerIndex][elementIndex];
+            let body = new DOMParser().parseFromString(leidenNode, "text/html").querySelector('body');
+            if(body != null){
+              
+              Array.from(body.childNodes).forEach((sub:any) => {
+    
+                if(sub instanceof HTMLElement){
+                  if(nodeValue && sub.tagName == 'BR'){
+                    let span = renderer.createElement('span') as Element;
+                    renderer.addClass(span, 'linenumber');
+                    span.setAttribute('xmlid', nodeValue);
+                    let text = renderer.createText((lineCounter+1).toString());
+                    renderer.appendChild(span, text);
+                    if(sub.tagName == 'BR' && (sub.id == 'al1' || sub.id == 'al1b')){
                       HTML += span.outerHTML;
-                      //console.log(span.outerHTML)
+                    }else{
+                      HTML += sub.outerHTML;
+                      HTML += span.outerHTML;
+                    }    
+                    lineCounter = lineCounter+1;
+                  }else{
+                    if(!(sub.tagName == 'SPAN' && sub.classList.contains('linenumber'))){
+                      HTML += sub.outerHTML;
                     }
                   }
-                )
-                
-              }
-            }
-            
-          });
-        }
-
-
-      }else{
-        
-        let body = new DOMParser().parseFromString(LeidenNodes[TEINodes.indexOf(element)], "text/html").querySelector('body');
-        if(body != null){
-          
-          Array.from(body.childNodes).forEach((sub:any) => {
-
-            if(sub instanceof HTMLElement){//nodo span o altro 
-              if(nodeValue && sub.tagName == 'BR'){
-                let span = renderer.createElement('span') as Element;
-                renderer.addClass(span, 'linenumber');
-                span.setAttribute('xmlid', nodeValue);
-                let text = renderer.createText((lineCounter+1).toString());
-                renderer.appendChild(span, text);
-                if(sub.tagName == 'BR' && sub.id == 'al1'){
-                  HTML += span.outerHTML;
-                }else{
-                  HTML += sub.outerHTML;
-                  HTML += span.outerHTML;
-                }    
-                lineCounter = lineCounter+1;
-              }else{
-                if(sub.tagName == 'SPAN' && sub.classList.contains('linenumber')){
-                  null;
-                }else{
-                  HTML += sub.outerHTML;
+                } 
+                if(sub instanceof Text){
+                  HTML += sub.textContent;
                 }
-              }
-              
-            } 
-            if(sub instanceof Text){ //-- textContent
-              HTML += sub.textContent;
+              });
             }
-          });
-        }
-        
-      }
-    }
-  )
+          }
+      });
+      HTMLArray.push(HTML);
+  });
 
-  
-  return HTML;
-
+  return HTMLArray;
 }
 
-function getTranslation(rawHtml : string){
+function getTranslationByXml(rawXml : string){
+  let translations : Array<string> = [];
+
+  let nodes = new DOMParser().parseFromString(rawXml, "text/xml");
+  let translationNodes = Array.from(nodes.querySelectorAll("div[type='translation'"));
+  
+  if(translationNodes.length> 0){
+    translationNodes.forEach(element=>{
+      //console.log(element);
+      let children = Array.from(element.children);
+      if(children.length>0){
+        children.forEach(child=>{
+          console.log(child);
+          if(child.nodeName == 'tei:p'){
+            translations.push(child.innerHTML)
+          }
+        })
+      }
+    })
+  }
+
+  console.log(translations)
+  return translations;
+}
+
+
+
+/* function getTranslation(rawHtml : string){
   //console.log(rawHtml);
 
   let translations : Array<string> = [];
@@ -1712,3 +1840,4 @@ function getTranslation(rawHtml : string){
   console.log(translations)
   return translations;
 }
+ */

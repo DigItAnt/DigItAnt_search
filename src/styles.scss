@@ -389,11 +389,27 @@ app-root {
         height: 100px;
 
         #interpretative-text,
-        #diplomatic-text {
+        #diplomatic-text,
+        #apparatus-text {
             span.linenumber {
                 padding-right: 1rem;
                 display: inline-block;
                 width: 2rem;
+            }
+        }
+
+        p-splitbutton {
+            .p-splitbutton-defaultbutton.p-button{
+                pointer-events: none !important;
+                background: #740E1F !important;
+                border: #740E1F !important;
+            }
+
+            .p-splitbutton-menubutton.p-button{
+                background: #740E1F !important;
+                border: #740E1F !important;
+                /* border-top-left-radius: 2rem !important;
+                border-bottom-left-radius: 2rem !important; */
             }
         }
     }
@@ -567,6 +583,11 @@ app-root {
         }
     }
 }
+
+.p-tieredmenu.p-tieredmenu-overlay{
+    width: 25rem !important;
+}
+
 
 p-tabview.noZIndex{
     .p-tabview-nav-container{

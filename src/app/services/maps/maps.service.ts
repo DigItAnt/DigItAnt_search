@@ -72,8 +72,22 @@ export class MapsService {
   }
 
   mapGeoNamesData(place: GeoNamesDataModel, id: string, uri: string) {
+    
+    let bbox = {} as BBoxModel;
+    if(place.bbox){
+      bbox.north = place.bbox?.north;
+      bbox.south = place.bbox?.south;
+      bbox.east = place.bbox?.east;
+      bbox.west = place.bbox?.west;
+    }else{
+      bbox.north = NaN;
+      bbox.south = NaN;
+      bbox.east = NaN;
+      bbox.west = NaN;
+    }
+
     return {
-      bbox: { north: place.bbox.north, south: place.bbox.south, west: place.bbox.west, east: place.bbox.east },
+      bbox: bbox,
       description: '',
       id: id,
       reprPoint: { latitude: parseFloat(place.lat), longitude: parseFloat(place.lng) },
