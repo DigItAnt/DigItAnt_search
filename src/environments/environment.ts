@@ -10,12 +10,10 @@ export const environment = {
   lexoUrl : '/LexO-backend-itant_demo/service/',
   lexoKey: "PRINitant19",
 
+  zoteroUrl : "https://api.zotero.org/groups/2552746/items",
+
   endpointPleiades : 'https://pleiades.stoa.org/places/',
   endpointGeoNames : 'http://api.geonames.org/',
-
-  
-
-  
 };
 
 /*

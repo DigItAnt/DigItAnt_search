@@ -11,6 +11,7 @@ import { TextMetadata, TextsService } from 'src/app/services/text/text.service';
 import * as data from '../../../assets/mock/words.json'
 import { AlphaCounter, AuthorCounter, DateCounter, LexiconFilter, TreeEvent } from '../lexicon/lexicon.component';
 import { AutoCompleteEvent, LocationsCounter, PaginatorEvent } from '../texts/texts.component';
+import { groupByAuthors, groupByDates, groupLocations } from '../texts/utils';
 
 @Component({
   selector: 'app-bibliography',
@@ -23,12 +24,15 @@ export class BibliographyComponent implements OnInit {
   autocomplete$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
   first: number = 0;
   rows: number = 6;
+
+  startIndex : number = 0;
+
   somethingWrong: boolean = false;
   treeLoading : boolean = true;
   currentBook: string = '';
 
   allowedOperators: string[] = ['filter', 'author', 'name', 'letter', 'year', 'book'];
-  allowedFilters: string[] = ['all', 'author', 'title', 'date']; /* 'argument' */
+  allowedFilters: string[] = ['all']; /* 'argument' */ /* , 'author', 'title', 'date' */
 
   lexiconTree : Observable<TreeNode[]> = this.lexiconService.lexicon$.pipe(
     map(lexicon => this.mapLexicalElement(lexicon)),
@@ -456,7 +460,7 @@ export class BibliographyComponent implements OnInit {
   }
 
   goToDefaultUrl() {
-    this.route.navigate(['/bibliography'], { queryParams: { filter: 'all'} });
+    this.route.navigate(['/bibliography'], { queryParams: { filter: 'all', letter : 'a'} });
   }
 
   goToDefaultUrlTitles() {
@@ -498,9 +502,9 @@ export class BibliographyComponent implements OnInit {
       let value = !isNaN(parseInt(args[1])) ? parseInt(args[1]) : args[1];
 
       switch (filter) {
-        case 'name': this.filterByAuthor(this.first, rows, value); break;
-        case 'letter' : this.filterByLetter(this.first, rows, value); break;
-        case 'year' : this.filterByYear(this.first, rows, value); break;
+        /* case 'name': this.filterByAuthor(this.first, rows, value); break; */
+        case 'letter' : this.filterByLetterZotero(this.startIndex, value); break;
+        /* case 'year' : this.filterByYear(this.first, rows, value); break; */
        
       }
       return;
@@ -527,14 +531,11 @@ export class BibliographyComponent implements OnInit {
     
   }
 
-  filterByLetter(f?: number, r?: number, letter?: string): void {
-    let rows = 0;
-    if (f && r) { this.first = f; rows = r; }
-    if (!f && !r) { this.first = 0; this.rows = 6; }
 
-    this.paginationItems = this.bibliographyService.filterByLetter((letter)||'').pipe(map(book=>book.slice(f, r)))
-    this.totalRecords = this.bibliographyService.filterByLetter((letter)||'').pipe(map(books=>books.length || 0))
-    
+  filterByLetterZotero(startIndex : number, letter : string) : void {
+    this.paginationItems = this.bibliographyService.filterByLetterZotero(startIndex, letter).pipe(
+      tap(x => console.log(x))
+    )
   }
 
   getAllData(f? : number, r? : number): void {
@@ -583,77 +584,5 @@ function groupTitles(books: Book[]): AlphaCounter[] {
     return 0;
   });
   
-  return tmp;
-}
-
-function groupByAuthors(books: Book[]) : AuthorCounter[]{
-  let tmp : AuthorCounter[] = [];
-  let count : number = 0;
-  books.forEach(book=> {
-    count = books.reduce((acc, cur) => cur.author == book.author ? ++acc : acc , 0);
-    if(count > 0) {tmp.push({name: book.author, count: count})}
-  })
-
-  tmp = Object.values(
-    tmp.reduce((acc, object) => ({...acc, [object.name] : object}), {})
-  )
-
-  
-  return tmp;
-}
-
-function groupByDates(books: Book[]): DateCounter[] {
-  let tmp: DateCounter[] = [];
-  let count: number = 0;
-  books.forEach(book => {
-    // Normalize date by extracting year and removing square brackets
-    const yearRegex = /\d{4}/;
-    const match = book.date.match(yearRegex);
-    const normalizedDate = match ? match[0] : '';
-
-    count = books.reduce((acc, cur) => {
-      const curMatch = cur.date.match(yearRegex);
-      const normalizedCurDate = curMatch ? curMatch[0] : '';
-      return normalizedCurDate == normalizedDate ? ++acc : acc;
-    }, 0);
-
-    if(count > 0 &&  normalizedDate != '') {
-     
-      tmp.push({ date: normalizedDate, count: count });
-    }
-  });
-
-  tmp = Object.values(
-    tmp.reduce((acc, object) => ({ ...acc, [object.date]: object }), {})
-  );
-
-  return tmp;
-}
-
-function groupLocations(texts : TextMetadata[], truncatePlaces?:boolean) : LocationsCounter[] {
-  let tmp : LocationsCounter[] = [];
-  let count : number = 0;
-
-  texts.forEach(text => {
-    count = texts.reduce((acc, cur) => cur.originalPlace.ancientNameUrl == text.originalPlace.ancientNameUrl ? ++acc : acc, 0);
-    if(count > 0) {
-      let ancientPlaceStripId = text.originalPlace.ancientNameUrl.split('/')[text.originalPlace.ancientNameUrl.split('/').length -1];
-      let modernPlaceStripId = text.originalPlace.modernNameUrl.split('/')[text.originalPlace.modernNameUrl.split('/').length -1];
-      tmp.push({
-        ancientPlaceUrl : text.originalPlace.ancientNameUrl, 
-        ancientPlaceId : ancientPlaceStripId, 
-        ancientPlaceLabel: (truncatePlaces? text.originalPlace.ancientName : text.originalPlace.ancientName.split(',')[0]), 
-        modernPlaceUrl: text.originalPlace.modernNameUrl, 
-        modernPlaceId: modernPlaceStripId, 
-        modernPlaceLabel: text.originalPlace.modernName, 
-        count : count
-      })
-    }
-  });
-
-  tmp = Object.values(
-    tmp.reduce((acc, object) => ({...acc, [object.ancientPlaceId] : object}), {})
-  )
-
   return tmp;
 }

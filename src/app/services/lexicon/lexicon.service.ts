@@ -230,6 +230,21 @@ export class LexiconService {
     )
   }
 
+  getFormsList(label: string): Observable<LexicalElement[]> {
+    let params = {
+      text: label,
+      searchMode: "contains",
+      representationType: "writtenRep",
+      author: "",
+      offset: 0,
+      limit: 500
+    }
+    return this.http.post<LexiconList>(this.baseUrl + "lexicon/data/filteredForms", params).pipe(
+      map((res) => res.list),
+      shareReplay(),
+    )
+  }
+
   getLexicalEntryData(instanceName: string): Observable<LexicalElement> {
     return this.http.get<LexicalElement>(`${this.baseUrl}lexicon/data/lexicalEntry?key=lexodemo&module=core&id=${encodeURIComponent(instanceName)}`).pipe(
       map((res) => res),

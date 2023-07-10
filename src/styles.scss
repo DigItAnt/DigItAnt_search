@@ -154,13 +154,24 @@ app-root {
 
     p-panel {
         .p-panel-header {
-            background: #00000082 !important;
+            background: #000000 !important;
             color: white !important;
             border-top-left-radius: 0 !important;
             border-top-right-radius: 0 !important;
             border: none !important;
             font-family: "M PLUS Rounded 1c", sans-serif !important;
             font-size: 0.85rem;
+        }
+
+        .dataSource {
+            .p-panel-title {
+                flex: 1 !important;
+                text-align: center !important;
+            }
+
+            .p-panel-content {
+                display: none !important;
+            }
         }
 
         .p-panel-header-icon {
@@ -177,13 +188,40 @@ app-root {
         }
 
         .p-panel-content {
-            background: transparent !important;
+            background: #000000cf !important;
             border-bottom-left-radius: 0 !important;
             border-bottom-right-radius: 0 !important;
             border: 0 !important;
             color: unset !important;
             padding-top: 0;
             font-family: "M PLUS Rounded 1c", sans-serif !important;
+        }
+    }
+
+    p-panel.inscription-panel-header{
+        .p-panel-content{
+            cursor: default !important;
+        }
+        .p-panel-header {
+            background-color: #5a1120ec !important;
+        }
+    }
+
+    p-panel.lexicon-panel-header{
+        .p-panel-content{
+            cursor: default !important;
+        }
+        .p-panel-header {
+            background-color: #11245aec !important;
+        }
+    }
+
+    p-panel.bibliography-panel-header{
+        .p-panel-content{
+            cursor: default !important;
+        }
+        .p-panel-header {
+            background-color: #115a11ec !important;
         }
     }
 

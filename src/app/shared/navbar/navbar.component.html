@@ -6,19 +6,32 @@
             <a href="/home" (click)="$event.preventDefault()">                
                 <button routerLink="/home" routerLinkActive="active" pButton pRipple type="button" label="Home" class="p-button-secondary p-button-text"></button>
             </a>
-            <button [iconPos]="'right'" icon="fa-solid fa-sort-down" [ngClass]="{'active': isActive}"  pButton pRipple type="button" label="Browse" class="p-button-secondary p-button-text align-items-stretch" (click)="menu.toggle($event)"></button>
-            <p-menu [appendTo]="'body'"  #menu [popup]="true" [model]="items"></p-menu>
-            <a href="/advancedsearch" (click)="$event.preventDefault()">
-                <button routerLink="/advancedsearch" routerLinkActive="active"  pButton pRipple type="button" [label]="'Search+'" class="p-button-secondary p-button-text"></button>
 
+            <a href="/texts?filter=all" (click)="$event.preventDefault()">                
+                <button routerLink="/texts" routerLinkActive="active" pButton pRipple type="button" label="Inscriptions" class="p-button-secondary p-button-text"></button>
             </a>
+
+            <a href="/lexicon?filter=all" (click)="$event.preventDefault()">                
+                <button routerLink="/lexicon" routerLinkActive="active" pButton pRipple type="button" label="Lexicon" class="p-button-secondary p-button-text"></button>
+            </a>
+
+            <a href="/bibliography?filter=all" (click)="$event.preventDefault()">                
+                <button routerLink="/bibliography" routerLinkActive="active" pButton pRipple type="button" label="Bibliography" class="p-button-secondary p-button-text"></button>
+            </a>
+
+            <!-- <button [iconPos]="'right'" icon="fa-solid fa-sort-down" [ngClass]="{'active': isActive}"  pButton pRipple type="button" label="Browse" class="p-button-secondary p-button-text align-items-stretch" (click)="menu.toggle($event)"></button> -->
+            <!-- <p-menu [appendTo]="'body'"  #menu [popup]="true" [model]="items"></p-menu> -->
+            
         </div>
         <div id="navbar-logo">
             EpiLexO Search
         </div>
     
        
-        
+        <a href="/advancedsearch" (click)="$event.preventDefault()">
+            <button routerLink="/advancedsearch" routerLinkActive="active"  pButton pRipple type="button" [label]="'Advanced Search'" class="p-button-secondary p-button-text"></button>
+
+        </a>
         
     </p-toolbar>
 

@@ -4,9 +4,13 @@ import { ActivatedRoute, NavigationEnd, NavigationStart, Params, Router } from '
 import { Paginator } from 'primeng/paginator';
 import { BehaviorSubject, catchError, debounceTime, delay, EMPTY, filter, iif, map, Observable, of, Subject, Subscription, switchMap, take, takeUntil, tap, timeout } from 'rxjs';
 import { CenturyPipe } from 'src/app/pipes/century-pipe/century-pipe.pipe';
+import { BibliographyService } from 'src/app/services/bibliography/bibliography.service';
+import { LexicalElement, LexiconService } from 'src/app/services/lexicon/lexicon.service';
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
 import { TextMetadata, TextsService } from 'src/app/services/text/text.service';
+import { AuthorCounter, DateCounter, StatisticsCounter } from '../lexicon/lexicon.component';
 import { AutoCompleteEvent, CenturiesCounter, DuctusCounter, LanguagesCounter, LocationsCounter, MaterialCounter, ObjectTypeCounter, TextFilter, TypesCounter, WordDivisionTypeCounter } from '../texts/texts.component';
+import { groupByAuthors, groupByCenturies, groupByDates, groupByLexicalEntry, groupDuctus, groupLanguages, groupLocations, groupMaterial, groupObjectTypes, groupTypes, groupWordDivisionType } from '../texts/utils';
 
 @Component({
   selector: 'app-search',
@@ -50,13 +54,35 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     inscriptionType: new FormControl(null),
     objectType: new FormControl(null),
     material: new FormControl(null),
-    ductus : new FormControl(null)
+    ductus : new FormControl(null),
+    wordDivisionType : new FormControl(null),
+    lexicalElement : new FormControl(null),
+    lexicalElementType : new FormControl(null),
+    lexicalElementPos : new FormControl(null),
+    lexicalElementAuthor : new FormControl(null),
+    lexicalElementLanguage : new FormControl(null),
+    lexicalElementStatus : new FormControl(null),
+    bibliographyTitle : new FormControl(null),
+    bibliographyID : new FormControl(null),
+    bibliographyFromDate : new FormControl(null),
+    bibliographyToDate : new FormControl(null),
+    bibliographyAuthor : new FormControl(null),
   });
 
   first: number = 0;
   rows: number = 6;
+  
 
-  autocomplete$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
+  autocompleteLocationReq$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
+  autocompleteLexiconReq$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
+
+  typesList : Observable<StatisticsCounter[]> = this.lexiconService.types$;
+  posList : Observable<StatisticsCounter[]> = this.lexiconService.pos$;
+  authorsList : Observable<StatisticsCounter[]> = this.lexiconService.authors$;
+  languagesList : Observable<StatisticsCounter[]> = this.lexiconService.languages$;
+  statusList : Observable<StatisticsCounter[]> = this.lexiconService.status$;
+
+  
   autocompleteLocations: Array<LocationsCounter> = [];
   destroy$: Subject<boolean> = new Subject<boolean>();
 
@@ -232,22 +258,55 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     switchMap(locations => this.mapsService.getGeoPlaceData(locations)),
     
   )
+
+  groupDates : Observable<DateCounter[]> = this.bibliographyService.books$.pipe(
+    timeout(15000),
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), 
+        of([]) 
+    )),
+    takeUntil(this.destroy$),
+    map(books=> groupByDates(books)),
+  )
+
+  groupAuthors : Observable<AuthorCounter[]> = this.bibliographyService.books$.pipe(
+    timeout(15000),
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), 
+        of([]) 
+    )),
+    takeUntil(this.destroy$),
+    map(books=> groupByAuthors(books)),
+  )
   
-  searchLocations : Observable<LocationsCounter[]> = this.autocomplete$.pipe(
+  searchLocations : Observable<LocationsCounter[]> = this.autocompleteLocationReq$.pipe(
     debounceTime(1000),
     filter(autoCompleteEvent => autoCompleteEvent.query != ''),
     switchMap(autoCompleteEvent=> this.textService.searchLocation(autoCompleteEvent.query)),
     map(texts=> groupLocations(texts, true)),
     tap(results => this.autocompleteLocations = results)
   )
+
+  searchLexicon : Observable<LexicalElement[]> = this.autocompleteLexiconReq$.pipe(
+    debounceTime(1000),
+    filter(autoCompleteEvent => autoCompleteEvent.query != ''),
+    switchMap(autoCompleteEvent=> this.lexiconService.getFormsList(autoCompleteEvent.query)),
+    map(elements => groupByLexicalEntry(elements)),
+  )
+
   somethingWrong: boolean = false;
   showSpinner: boolean = true;
 
-  constructor(private formBuilder: FormBuilder,
-              private route: Router, 
+  constructor(private route: Router, 
               private activatedRoute : ActivatedRoute, 
               private textService : TextsService,
-              private mapsService : MapsService) { }
+              private mapsService : MapsService,
+              private lexiconService : LexiconService,
+              private bibliographyService : BibliographyService) { }
 
   ngOnInit(): void {
 
@@ -427,6 +486,10 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     this.advancedSearchForm.get('ancientName')?.setValue(null, {emitEvent: true})
   }
 
+  clearLexicalEntry(){
+    this.advancedSearchForm.get('lexicalElement')?.setValue(null, {emitEvent: true})
+  }
+
   thereWasAnError(){
     this.somethingWrong = true;
     return EMPTY;
@@ -455,6 +518,17 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     this.advancedSearchForm.updateValueAndValidity({ onlySelf: false, emitEvent: true })
   }
 
+  handleAutocompleteFilterLocation(evt: any){
+    
+    this.advancedSearchForm.markAllAsTouched();
+
+    if(evt.ancientPlaceLabel != ''){
+      this.advancedSearchForm.get('lexicalElement')?.setValue(evt.ancientPlaceLabel, {emitEvent: false})
+    }
+
+    this.advancedSearchForm.updateValueAndValidity({ onlySelf: false, emitEvent: true })
+  }
+
   onChangeSlider(event : any){
     this.markAsTouched();
     if(event.value){
@@ -471,166 +545,4 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   }
 
   
-}
-
-const allowedCenturies : number[] = [-600, 200];
-
-function groupByCenturies(texts: TextMetadata[]) : CenturiesCounter[]{
-  let tmp : CenturiesCounter[] = [];
-  let count : number = 0;
-
-  allowedCenturies.forEach(value=>{
-    if(value < 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOriginNotBefore) >= value && parseInt(cur.dateOfOriginNotBefore) < (value + 100)) ? ++acc : acc, 0); 
-    if(value > 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOriginNotBefore) > (value-100) && parseInt(cur.dateOfOriginNotBefore) <= value) ? ++acc : acc, 0);
-    if(count > 0) tmp.push({century: value, count: count, label: CenturyPipe.prototype.transform(value) })
-  })
-
-  return tmp;
-}
-
-function groupLocations(texts : TextMetadata[], truncatePlaces?:boolean) : LocationsCounter[] {
-  let tmp : LocationsCounter[] = [];
-  let count : number = 0;
-
-  texts.forEach(text => {
-    count = texts.reduce((acc, cur) => cur.originalPlace.ancientNameUrl == text.originalPlace.ancientNameUrl ? ++acc : acc, 0);
-    if(count > 0) {
-      let ancientPlaceStripId = text.originalPlace.ancientNameUrl.split('/')[text.originalPlace.ancientNameUrl.split('/').length -1];
-      let modernPlaceStripId = text.originalPlace.modernNameUrl.split('/')[text.originalPlace.modernNameUrl.split('/').length -1];
-      tmp.push({
-        ancientPlaceUrl : text.originalPlace.ancientNameUrl, 
-        ancientPlaceId : ancientPlaceStripId, 
-        ancientPlaceLabel: (truncatePlaces? text.originalPlace.ancientName : text.originalPlace.ancientName.split(',')[0]), 
-        modernPlaceUrl: text.originalPlace.modernNameUrl, 
-        modernPlaceId: modernPlaceStripId, 
-        modernPlaceLabel: text.originalPlace.modernName, 
-        count : count
-      })
-    }
-  });
-
-  tmp = Object.values(
-    tmp.reduce((acc, object) => ({...acc, [object.ancientPlaceId] : object}), {})
-  )
-
-  return tmp;
-}
-
-
-function groupTypes(texts : TextMetadata[]) : TypesCounter[]{
-  let tmp : TypesCounter[] = [];
-  let count : number = 0;
-  texts.forEach(text => {
-    count = texts.reduce((acc, cur) => cur.inscriptionType == text.inscriptionType ? ++acc : acc, 0);
-    if(count > 0) {tmp.push({ inscriptionType: text.inscriptionType, count : count} )
-    }
-  });
-
-  tmp = Object.values(
-    tmp.reduce((acc, object) => ({...acc, [object.inscriptionType] : object}), {})
-  )
-
-  return tmp;
-}
-
-
-function groupLanguages(texts : TextMetadata[]) : LanguagesCounter[]{
-  let tmp : LanguagesCounter[] = [];
-  let count : number = 0;
-
-  
-  texts.forEach(text=> {
-    count = texts.reduce((acc, cur) => cur.language[0].ident == text.language[0].ident ? ++acc : acc , 0);
-    if(count > 0) {tmp.push({language: text.language[0].ident, count: count})}
-  })
-
-  tmp = Object.values(
-    tmp.reduce((acc, object) => ({...acc, [object.language] : object}), {})
-  )
-
-  
-  return tmp;
-}
-
-function groupObjectTypes(texts : TextMetadata[]) : ObjectTypeCounter[]{
-  let tmp : ObjectTypeCounter[] = [];
-  let count : number = 0;
-
-  
-  texts.forEach(text=> {
-    count = texts.reduce((acc, cur) => cur.support.objectType == text.support.objectType ? ++acc : acc , 0);
-    if(count > 0) {tmp.push({objectType: text.support.objectType, count: count})}
-  })
-
-  tmp = Object.values(
-    tmp.reduce((acc, object) => ({...acc, [object.objectType] : object}), {})
-  )
-
-  
-  return tmp;
-}
-
-
-function groupMaterial(texts : TextMetadata[]) : MaterialCounter[]{
-  let tmp : MaterialCounter[] = [];
-  let count : number = 0;
-
-  
-  texts.forEach(text=> {
-    count = texts.reduce((acc, cur) => cur.support.material == text.support.material ? ++acc : acc , 0);
-    if(count > 0) {tmp.push({material: text.support.material, count: count})}
-  })
-
-  tmp = Object.values(
-    tmp.reduce((acc, object) => ({...acc, [object.material] : object}), {})
-  )
-
-  
-  return tmp;
-}
-
-
-function groupDuctus(texts : TextMetadata[]) : DuctusCounter[]{
-  let tmp : DuctusCounter[] = [];
-  
-  texts.forEach(text=> {
-    // Se ductus è null, undefined o una stringa vuota, continua alla prossima iterazione
-    if(!text.bodytextpart.ductus){
-      return;
-    }
-
-    let count = texts.reduce((acc, cur) => cur.bodytextpart.ductus == text.bodytextpart.ductus ? ++acc : acc , 0);
-    if(count > 0) {
-      tmp.push({ductus: text.bodytextpart.ductus, count: count})
-    }
-  });
-
-  tmp = Object.values(
-    tmp.reduce((acc, object) => ({...acc, [object.ductus] : object}), {})
-  );
-
-  return tmp;
-}
-
-
-function groupWordDivisionType(texts : TextMetadata[]) : WordDivisionTypeCounter[]{
-  let tmp : WordDivisionTypeCounter[] = [];
-  
-  texts.forEach(text=> {
-    // Se ductus è null, undefined o una stringa vuota, continua alla prossima iterazione
-    if(!text.bodytextpart.ductus){
-      return;
-    }
-
-    let count = texts.reduce((acc, cur) => cur.wordDivisionType == text.wordDivisionType ? ++acc : acc , 0);
-    if(count > 0) {
-      tmp.push({type: text.wordDivisionType, count: count})
-    }
-  });
-
-  tmp = Object.values(
-    tmp.reduce((acc, object) => ({...acc, [object.type] : object}), {})
-  );
-
-  return tmp;
 }

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, concat, concatAll, concatMap, EMPTY, expand, filter, flatMap, forkJoin, map, Observable, of, shareReplay, switchMap, tap, throwError, toArray } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -20,13 +20,13 @@ export class BibliographyService {
 
   private lexoUrl = environment.lexoUrl;
   private cashUrl = environment.cashUrl;
-  private limit : number = 100;
+  private zoteroUrl = environment.zoteroUrl;
 
   books$ : Observable<any> = this.getAllBooks().pipe(
     map((books:any[]) => books.map(book => ({
       author: book.author,
       date: book.date,
-      key: book.publisher,  // nota qui: stiamo assegnando il campo 'publisher' al campo 'id'
+      key: book.publisher,  
       references: book.references,
       title: book.title
     }))),
@@ -76,6 +76,42 @@ export class BibliographyService {
       }))
     );
   }
+
+  filterByLetterZotero(startIndex : number, letter : string) : Observable<any[]> {
+    const params = new HttpParams()
+      .set('start', startIndex.toString())
+      .set('limit', '50')
+      .set('q', letter)
+      .set('qmode', 'titleCreatorYear')
+      .set('direction', 'asc')
+      .set('v', '3');
+
+      return this.http.get<any[]>(this.zoteroUrl, { params }).pipe(
+        map(items => items.map(item => {
+          let author = '';
+          if (item.data.creators && item.data.creators.length > 0) {
+            const firstAuthor = item.data.creators[0]
+            if (firstAuthor) {
+              author = `${firstAuthor.lastName} ${firstAuthor.firstName}`;
+            }
+          }
+          return {
+            isbn: item.data.ISBN || '',
+            author: author,
+            title: item.data.title || '',
+            date: item.data.date || '',
+            key: item.data.key || '',
+            place: item.data.place || '',
+            publisher: item.data.publisher || '',
+            pages: item.data.pages || '',
+            series: item.data.series || '',
+            seriesNumber: item.data.seriesNumber || '',
+            volume: item.data.volume || ''
+          };
+        }))
+      );
+  }
+
 
   filterByYear(year: string): Observable<Book[]> {
     return this.books$.pipe(
