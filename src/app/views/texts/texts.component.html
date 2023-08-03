@@ -494,6 +494,23 @@
                                     
                                 </div>
                             </div> -->
+                            <div  class="flex grid data-list  pt-3 ">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">IDs:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column" *ngIf="textView.file.traditionalIDs.length > 0">
+                                        <div class="flex flex-column">
+                                            <a class="font-bold text-red-800 pl-2" *ngFor="let traditionalIDs of textView.file.traditionalIDs" [href]="traditionalIDs.traditionalID_URL" target="_blank">{{traditionalIDs.traditionalID}}</a>
+                                        </div>
+                                        
+                                        <div class="flex flex-row pl-2" *ngIf="textView.file.trismegistos">
+                                            <a [href]="'//'+textView.file.trismegistos.trismegistosID_url" target="_blank" class="font-bold text-red-800">{{textView.file.trismegistos.trismegistosID}}</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="flex grid data-list pt-3" *ngIf="textView.file.language != undefined && textView.file.language.length != 0">
                                 <div class="flex col-3 justify-content-end">
@@ -628,6 +645,39 @@
                                     <span class="font-italic mr-2" *ngIf="textView.file.datingCertainty == 'medium'">approx. </span>
                                     <span class="font-normal">{{textView.file.dateOfOrigin != undefined ? textView.file.dateOfOrigin : 'No info'}}</span>
                                     
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">Opistography:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <span class="font-normal" *ngIf="textView.file.opistography">{{textView.file.opistography}}</span>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">Reuse:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <span class="font-normal" *ngIf="textView.file.reuse">{{textView.file.reuse}}</span>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">Summary:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <span class="font-normal" *ngIf="textView.file.summary">{{textView.file.summary}}</span>
                                     
                                 </div>
                             </div>
@@ -1064,6 +1114,7 @@
                                         <span class="font-normal text-900 " *ngIf="book.volume != undefined && book.volume != ''">, vol. {{book.volume}}</span>
                                         <span class="font-normal text-900 " *ngIf="book.issue != undefined && book.issue != ''">, issue {{book.issue}}</span>
                                         <span class="font-normal text-900 " *ngIf="book.page != undefined && book.page != ''">, pag. {{book.page}}</span>
+                                        <span class="font-normal text-900 " *ngIf="book.entry != undefined && book.entry != ''">, pag. {{book.entry}}</span>
 
                                     </a>
 

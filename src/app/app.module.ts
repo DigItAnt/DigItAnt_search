@@ -65,6 +65,7 @@ import { CenturyPipe } from './pipes/century-pipe/century-pipe.pipe';
 import { UrlDecoderPipe } from './pipes/url-decoder/url-decoder.pipe';
 import { NoSanitizePipe } from './pipes/no-sanitize/no-sanitize.pipe';
 import { HighlightModule, HIGHLIGHT_OPTIONS } from 'ngx-highlightjs';
+import { IsArrayPipe } from './views/concordances/isArrayPipe/is-array.pipe';
 
 
 @NgModule({
@@ -87,7 +88,8 @@ import { HighlightModule, HIGHLIGHT_OPTIONS } from 'ngx-highlightjs';
     CenturyPipe,
     UrlDecoderPipe,
     NoSanitizePipe,
-    DynamicOverlayComponent
+    DynamicOverlayComponent,
+    IsArrayPipe
   ],
   imports: [
     BrowserModule,
