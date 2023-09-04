@@ -4,6 +4,7 @@ import { ActivatedRoute, NavigationEnd, NavigationStart, Params, Router } from '
 import { Paginator } from 'primeng/paginator';
 import { BehaviorSubject, catchError, debounceTime, delay, EMPTY, filter, iif, map, Observable, of, Subject, Subscription, switchMap, take, takeUntil, tap, timeout } from 'rxjs';
 import { CenturyPipe } from 'src/app/pipes/century-pipe/century-pipe.pipe';
+import { AdvancedsearchService } from 'src/app/services/advancedsearch/advancedsearch.service';
 import { BibliographyService } from 'src/app/services/bibliography/bibliography.service';
 import { LexicalElement, LexiconService } from 'src/app/services/lexicon/lexicon.service';
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
@@ -20,19 +21,34 @@ import { groupByAuthors, groupByCenturies, groupByDates, groupByLexicalEntry, gr
 export class AdvancedSearchComponent implements OnInit, OnDestroy {
 
 
-  isActiveInterval : boolean = false;
-  allowedCenturies : number[] = [0, 100];
-  start : number = 0;
+  isActiveInscriptionInterval : boolean = false;
+  isActiveBibliographyInterval : boolean = false;
 
-  get mappingRange(): number[] {
+  allowedInscriptionInterval : number[] = [0, 100];
+  allowedBibliographyInterval: number[] = [1500, 2023];
+
+  get mappingBibliograpgyRange(): number[] {
+    return this.allowedBibliographyInterval;  // Direttamente ritornare il valore attuale perché già mappato nel range [1500, 2023]
+  }
+
+  get mapBibliographySingle(): number {
+    return this.startBiblio;  // Direttamente ritornare il valore attuale perché già mappato nel range [1500, 2023]
+  }
+
+  start : number = 0;
+  startBiblio : number = 1500;
+
+  get mappingInscriptionRange(): number[] {
     let min = -200;
     let max = 300;
     let minSlider = 0;
     let maxSlider = 100;
-    return this.allowedCenturies.map(value => (value - minSlider) * (max - min) / (maxSlider - minSlider) + min);
+    return this.allowedInscriptionInterval.map(value => (value - minSlider) * (max - min) / (maxSlider - minSlider) + min);
   }
 
-  get mapSingle(): number {
+  
+
+  get mapInscriptionSingle(): number {
     let min = -200;
     let max = 300;
     let minSlider = 0;
@@ -40,31 +56,43 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     return (this.start - minSlider) * (max - min) / (maxSlider - minSlider) + min;
   }
 
+  lexiconOptions = [{name: 'Lemma'}, {name: 'Form'}, {name:'Autocomplete'}]
+  lexiconSearchMode = [{name: 'Start', value: 'startsWith'}, {name: 'Contains', value: 'contains'}, {name:'End', value: 'endsWith'}, {name:'Equals', value: 'equals'}]
+  formSearchMode = [{name: 'Start', value: 'startsWith'}, {name: 'Contains', value: 'contains'}, {name:'End', value: 'endsWith'}, {name:'Equals', value: 'equals'}]
+  inscriptionSearchMode = [{name: 'Start', value: 'startsWith'}, {name: 'Contains', value: 'contains'}, {name:'End', value: 'endsWith'}, {name:'Equals', value: 'equals'}]
+  selectedLexiconOption: string = 'Lemma';
+  selectedInscriptionSearchMode: string = 'contains';
+
 
   advancedSearchForm: FormGroup = new FormGroup({
     word: new FormControl(null),
+    wordSearchMode : new FormControl('contains'),
     title: new FormControl(null),
-    titleExactMatch: new FormControl(false),
     id: new FormControl(null),
-    idExactMatch: new FormControl(false),
     language: new FormControl(null),
-    dateOfOriginNotBefore: new FormControl(null),
+    dateOfOriginNotBefore: new FormControl(-200),
     dateOfOriginNotAfter: new FormControl(null),
-    ancientName: new FormControl(null),
+    modernName: new FormControl(null),
     inscriptionType: new FormControl(null),
     objectType: new FormControl(null),
     material: new FormControl(null),
     ductus : new FormControl(null),
     wordDivisionType : new FormControl(null),
-    lexicalElement : new FormControl(null),
-    lexicalElementType : new FormControl(null),
-    lexicalElementPos : new FormControl(null),
-    lexicalElementAuthor : new FormControl(null),
-    lexicalElementLanguage : new FormControl(null),
-    lexicalElementStatus : new FormControl(null),
+    lexicalEntryText : new FormControl(null),
+    lexicalEntrySearchMode : new FormControl('contains'),
+    lexicalEntryType : new FormControl(null),
+    lexicalEntryPos : new FormControl(null),
+    lexicalEntryAuthor : new FormControl(null),
+    lexicalEntryLanguage : new FormControl(null),
+    lexicalEntryStatus : new FormControl(null),
+    formText : new FormControl(null),
+    formSearchMode : new FormControl('contains'),
+    formAuthor : new FormControl(null),
+    lexicalElementLabel : new FormControl(null),
+    lexicalElementIRI : new FormControl(null),
     bibliographyTitle : new FormControl(null),
     bibliographyID : new FormControl(null),
-    bibliographyFromDate : new FormControl(null),
+    bibliographyFromDate : new FormControl(1500),
     bibliographyToDate : new FormControl(null),
     bibliographyAuthor : new FormControl(null),
   });
@@ -301,14 +329,48 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   somethingWrong: boolean = false;
   showSpinner: boolean = true;
 
-  constructor(private route: Router, 
-              private activatedRoute : ActivatedRoute, 
+  initialFormValues = {
+    word: null,
+    title: null,
+    titleExactMatch: false,
+    id: null,
+    idExactMatch: false,
+    language: null,
+    dateOfOriginNotBefore: -200,
+    dateOfOriginNotAfter: null,
+    modernName: null,
+    inscriptionType: null,
+    objectType: null,
+    material: null,
+    ductus: null,
+    wordDivisionType: null,
+    lexicalEntryText: null,
+    lexicalEntryType: null,
+    lexicalEntryPos: null,
+    lexicalEntryAuthor: null,
+    lexicalEntryLanguage: null,
+    lexicalEntryStatus: null,
+    formText: null,
+    formAuthor: null,
+    lexicalElementLabel: null,
+    lexicalElementIRI: null,
+    bibliographyTitle: null,
+    bibliographyID: null,
+    bibliographyFromDate: null,
+    bibliographyToDate: null,
+    bibliographyAuthor: null
+  };;
+
+  constructor(private activatedRoute : ActivatedRoute, 
               private textService : TextsService,
               private mapsService : MapsService,
               private lexiconService : LexiconService,
-              private bibliographyService : BibliographyService) { }
+              private bibliographyService : BibliographyService,
+              private advancedSearchService : AdvancedsearchService) { }
 
   ngOnInit(): void {
+
+
 
     this.activatedRoute.queryParams.pipe(takeUntil(this.destroy$)).subscribe(
       (event)=>{
@@ -343,97 +405,50 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
       }
     );
 
-    this.advancedSearchForm.valueChanges.pipe(
+    /* this.advancedSearchForm.valueChanges.pipe(
       takeUntil(this.destroy$),
       delay(100),
-      debounceTime(1000),).subscribe(
+      debounceTime(1000)).subscribe(
       data=>{
         if(this.advancedSearchForm.touched){
           this.buildTextQuery(data)
         }
       }
-    )
+    ) */
   }
 
-  buildTextQuery(formData : any){
-    console.log(formData)
-    this.somethingWrong = false;
-    this.route.navigate(
-      [],
-      {
-        relativeTo: this.activatedRoute,
-        queryParams: {filter : 'search'}, 
-        queryParamsHandling: 'merge',
-      }
-    )
-    let queryParts: string[] = [];
+  buildTextQuery(){
 
-    if (formData.word) {
-      queryParts.push(`word="${formData.word}"`);
-    }
+    const formValues = this.advancedSearchForm.getRawValue(); // Ottiene tutti i valori dal form group
+    const shouldStartQuery = Object.keys(formValues).some(key => {
+      const control = this.advancedSearchForm.get(key);
+      return control && control.touched && control.value !== null;
+    });
 
-    if (formData.title) {
-      queryParts.push(` _doc__title="${formData.title}"`);
-    }
-
-    if (formData.id) {
-      queryParts.push(` _doc__id="${formData.id}"`);
-    }
-
-    if (formData.dateOfOriginNotBefore) {
-      queryParts.push(` _doc__dateOfOriginNotBefore="${formData.dateOfOriginNotBefore}"`);
-    }
-
-    if (formData.dateOfOriginNotAfter) {
-      queryParts.push(` _doc__dateOfOriginNotAfter="${formData.dateOfOriginNotAfter}"`);
-    }
-
-    if (formData.ancientName) {
-      queryParts.push(` _doc__originalPlace__ancientName="${formData.ancientName}"`);
-    }
-
-    if (formData.language) {
-      queryParts.push(` _doc__language__ident="${formData.language}"`);
-    }
-
-    if (formData.inscriptionType) {
-      queryParts.push(` _doc__inscriptionType="${formData.inscriptionType}"`);
-    }
-
-    if (formData.objectType) {
-      queryParts.push(` _doc__support__objectType="${formData.objectType}"`);
-    }
-
-    if (formData.material) {
-      queryParts.push(` _doc__support__material="${formData.material}"`);
-    }
-
-    if (formData.ductus) {
-      queryParts.push(` _doc__bodytextpart__ductus="${formData.ductus}"`);
-    }
-
-    const query = queryParts.length > 0 ? `[${queryParts.join(' &')}]` : '';
-    console.log(query)
-    this.first = 0;
-    this.rows = 6;
-    if(query != ''){
-     
-      this.paginationItems = this.textService.filterAttestations(query).pipe(
-        catchError(error => {
-          console.error('An error occurred:', error);
-          if(error.status != 200) this.thereWasAnError() // Stampa l'errore sulla console
-          return of([])// Ritorna un Observable con una struttura di AnnotationsRows vuota
-        }),
-        map(texts => texts.slice(0, 6))
-      );
-      this.totalRecords = this.textService.filterAttestations(query).pipe(map(texts=>texts.length || 0))
-    }else{
-      this.textService.restoreFilterAttestations();
-      this.paginationItems = this.textService.texts$.pipe(map(texts => texts.slice(0, 6)));
-      this.totalRecords = this.textService.texts$.pipe(map(texts=>texts.length || 0))
+    if (!shouldStartQuery) {
+      console.log("Nessun controllo è stato toccato e modificato. Interrompendo la query.");
+      return;
     }
     
+    this.somethingWrong = false;
+    
+    this.paginationItems = of([]);
+    this.totalRecords = of(NaN)
 
+    this.paginationItems = this.advancedSearchService.crossQuery(this.advancedSearchForm.value, this.advancedSearchForm).pipe(
+      catchError(error => {
+        console.error('An error occurred:', error);
+        if(error.status != 200) this.thereWasAnError() // Stampa l'errore sulla console
+        return of([])// Ritorna un Observable con una struttura di AnnotationsRows vuota
+      }),
+      tap(res=> {
+        setTimeout(() => {
+          this.totalRecords = of(res.length)
+        }, 100);
+      }),
+      //map(res => res.slice(0, 6))
+    )
+    console.log(this.advancedSearchForm.value)
     
   }
 
@@ -474,10 +489,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     this.totalRecords = this.textService.texts$.pipe(map(texts=>texts.length || 0))
   }
 
-  filterText(){
-
-  }
-
   clearDates(){
     this.advancedSearchForm.get('dateOfOriginNotAfter')?.setValue(null, {emitEvent: true})
   }
@@ -490,32 +501,35 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     this.advancedSearchForm.get('lexicalElement')?.setValue(null, {emitEvent: true})
   }
 
+  onLexiconOptionChange() {
+    const fieldsToReset = [
+        'lexicalEntryText', 'lexicalEntryType', 'lexicalEntryPos', 'lexicalEntryAuthor', 
+        'lexicalEntryLanguage', 'lexicalEntryStatus', 'formText', 'formAuthor',
+        'lexicalElementLabel', 'lexicalElementIRI'
+    ];
+    
+    fieldsToReset.forEach(field => {
+        this.advancedSearchForm.get(field)?.reset();
+    });
+
+    this.advancedSearchForm.get('lexicalEntrySearchMode')?.setValue('contains')
+  }
+
   thereWasAnError(){
     this.somethingWrong = true;
     return EMPTY;
   }
 
-  markAsTouched(){
+  /* markAsTouched(){
     this.advancedSearchForm.markAllAsTouched();
   }
-
+ */
   resetFields(){
-    this.advancedSearchForm.reset();
+    this.advancedSearchForm.patchValue(this.initialFormValues);
     this.first = 0;
     this.rows = 6;
     this.paginationItems = this.textService.texts$.pipe(map(texts => texts.slice(0, 6)));
     this.totalRecords = this.textService.texts$.pipe(map(texts=>texts.length || 0))
-  }
-
-  handleAutocompleteFilter(evt: any){
-    
-    this.advancedSearchForm.markAllAsTouched();
-
-    if(evt.ancientPlaceLabel != ''){
-      this.advancedSearchForm.get('ancientName')?.setValue(evt.ancientPlaceLabel, {emitEvent: false})
-    }
-
-    this.advancedSearchForm.updateValueAndValidity({ onlySelf: false, emitEvent: true })
   }
 
   handleAutocompleteFilterLocation(evt: any){
@@ -523,24 +537,83 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     this.advancedSearchForm.markAllAsTouched();
 
     if(evt.ancientPlaceLabel != ''){
-      this.advancedSearchForm.get('lexicalElement')?.setValue(evt.ancientPlaceLabel, {emitEvent: false})
+      this.advancedSearchForm.get('modernName')?.setValue(evt.modernPlaceLabel, {emitEvent: false})
+    }
+
+    this.advancedSearchForm.updateValueAndValidity({ onlySelf: false, emitEvent: true })
+  }
+
+  handleAutocompleteFilter(evt: any){
+    
+    this.advancedSearchForm.markAllAsTouched();
+
+    if(evt.form != ''){
+      this.advancedSearchForm.get('lexicalElementIRI')?.setValue(evt.form, {emitEvent: false})
+      this.advancedSearchForm.get('lexicalElementLabel')?.setValue(evt.label, {emitEvent: false})
+    }
+
+    this.advancedSearchForm.updateValueAndValidity({ onlySelf: false, emitEvent: true })
+  }
+
+  onSelectLexicalEntry(evt : any){
+
+    this.advancedSearchForm.markAllAsTouched();
+
+    if(evt.value != ''){
+      this.advancedSearchForm.get('lexicalElementIRI')?.setValue(evt.value, {emitEvent: false})
+      this.advancedSearchForm.get('lexicalElementLabel')?.setValue(evt.label, {emitEvent: false})
     }
 
     this.advancedSearchForm.updateValueAndValidity({ onlySelf: false, emitEvent: true })
   }
 
   onChangeSlider(event : any){
-    this.markAsTouched();
+    
     if(event.value){
-      this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.mapSingle)
+      this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.mapInscriptionSingle)
       this.advancedSearchForm.get('dateOfOriginNotAfter')?.setValue(null)
 
     }
 
     if(event.values){
-      this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.mappingRange[0])
-      this.advancedSearchForm.get('dateOfOriginNotAfter')?.setValue(this.mappingRange[1])
+      this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.mappingInscriptionRange[0])
+      this.advancedSearchForm.get('dateOfOriginNotAfter')?.setValue(this.mappingInscriptionRange[1])
 
+    }
+  }
+
+  onChangeBibliographySlider(event : any){
+    
+    if(event.value){
+      this.advancedSearchForm.get('bibliographyFromDate')?.setValue(this.mapBibliographySingle)
+      this.advancedSearchForm.get('bibliographyToDate')?.setValue(null)
+
+    }
+
+    if(event.values){
+      this.advancedSearchForm.get('bibliographyFromDate')?.setValue(this.mappingBibliograpgyRange[0])
+      this.advancedSearchForm.get('bibliographyToDate')?.setValue(this.mappingBibliograpgyRange[1])
+
+    }
+  }
+
+  setInscriptionDateInterval(){
+    if(this.isActiveInscriptionInterval){
+      this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.mappingInscriptionRange[0])
+      this.advancedSearchForm.get('dateOfOriginNotAfter')?.setValue(this.mappingInscriptionRange[1])
+    }else{
+      this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.mapInscriptionSingle)
+      this.advancedSearchForm.get('dateOfOriginNotAfter')?.setValue(null)
+    }
+  }
+
+  setBibliographyDateInterval(){
+    if(this.isActiveBibliographyInterval){
+      this.advancedSearchForm.get('bibliographyFromDate')?.setValue(this.mappingBibliograpgyRange[0])
+      this.advancedSearchForm.get('bibliographyToDate')?.setValue(this.mappingBibliograpgyRange[1])
+    }else{
+      this.advancedSearchForm.get('bibliographyFromDate')?.setValue(this.mapBibliographySingle)
+      this.advancedSearchForm.get('bibliographyToDate')?.setValue(null)
     }
   }
 

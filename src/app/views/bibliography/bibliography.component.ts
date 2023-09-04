@@ -346,14 +346,14 @@ export class BibliographyComponent implements OnInit {
     this.paginationItems = of([]);
     this.totalRecords = of(NaN)
 
-    this.route.navigate(
+    /* this.route.navigate(
       [],
       {
         relativeTo: this.activatedRoute,
         queryParams: {filter : 'search'}, 
         
       }
-    )
+    ) */
     
     this.paginationItems = this.bibliographyService.combineResults(formValues).pipe(
       catchError(error => {

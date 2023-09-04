@@ -172,6 +172,8 @@ export interface LexiconQueryFilter {
 
 
 
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -239,6 +241,14 @@ export class LexiconService {
       offset: 0,
       limit: 500
     }
+    return this.http.post<LexiconList>(this.baseUrl + "lexicon/data/filteredForms", params).pipe(
+      map((res) => res.list),
+      shareReplay(),
+    )
+  }
+
+  getFormsListAdvanced(params: any): Observable<LexicalElement[]> {
+    
     return this.http.post<LexiconList>(this.baseUrl + "lexicon/data/filteredForms", params).pipe(
       map((res) => res.list),
       shareReplay(),

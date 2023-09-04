@@ -86,30 +86,30 @@ export class BibliographyService {
       .set('direction', 'asc')
       .set('v', '3');
 
-      return this.http.get<any[]>(this.zoteroUrl, { params }).pipe(
-        map(items => items.map(item => {
-          let author = '';
-          if (item.data.creators && item.data.creators.length > 0) {
-            const firstAuthor = item.data.creators[0]
-            if (firstAuthor) {
-              author = `${firstAuthor.lastName} ${firstAuthor.firstName}`;
-            }
+    return this.http.get<any[]>(this.zoteroUrl, { params }).pipe(
+      map(items => items.map(item => {
+        let author = '';
+        if (item.data.creators && item.data.creators.length > 0) {
+          const firstAuthor = item.data.creators[0]
+          if (firstAuthor) {
+            author = `${firstAuthor.lastName} ${firstAuthor.firstName}`;
           }
-          return {
-            isbn: item.data.ISBN || '',
-            author: author,
-            title: item.data.title || '',
-            date: item.data.date || '',
-            key: item.data.key || '',
-            place: item.data.place || '',
-            publisher: item.data.publisher || '',
-            pages: item.data.pages || '',
-            series: item.data.series || '',
-            seriesNumber: item.data.seriesNumber || '',
-            volume: item.data.volume || ''
-          };
-        }))
-      );
+        }
+        return {
+          isbn: item.data.ISBN || '',
+          author: author,
+          title: item.data.title || '',
+          date: item.data.date || '',
+          key: item.data.key || '',
+          place: item.data.place || '',
+          publisher: item.data.publisher || '',
+          pages: item.data.pages || '',
+          series: item.data.series || '',
+          seriesNumber: item.data.seriesNumber || '',
+          volume: item.data.volume || ''
+        };
+      }))
+    );
   }
 
 
@@ -190,29 +190,29 @@ export class BibliographyService {
   }
 
   // Funzione helper per mappare un attestazione a un libro
-mapAttestationToBook(attestation : any) : Book {
-  let author = "";
-  if (attestation.attributes.bibliography) {
+  mapAttestationToBook(attestation : any) : Book {
+    let author = "";
+    if (attestation.attributes.bibliography) {
 
-    let bibliography = attestation.attributes.bibliography;
-    bibliography.creators.forEach((creator: any) => {
-        if (creator.creatorType === "author") {
-            author = creator.lastName;
-            return; // Cambia 'creatorValue' con il vero nome del campo
-        }
-    });
+      let bibliography = attestation.attributes.bibliography;
+      bibliography.creators.forEach((creator: any) => {
+          if (creator.creatorType === "author") {
+              author = creator.lastName;
+              return; // Cambia 'creatorValue' con il vero nome del campo
+          }
+      });
+    }
+
+    let bookEquivalent : Book = {
+        author: author,
+        date: attestation.attributes.bibliography.date || "",
+        key: attestation.attributes.bibliography.key || "",
+        references: NaN,
+        title: attestation.attributes.bibliography.title || ""
+    };
+
+    return bookEquivalent;
   }
-
-  let bookEquivalent : Book = {
-      author: author,
-      date: attestation.attributes.bibliography.date || "",
-      key: attestation.attributes.bibliography.key || "",
-      references: NaN,
-      title: attestation.attributes.bibliography.title || ""
-  };
-
-  return bookEquivalent;
-}
 
   combineResults(formValues: any): Observable<(Book)[]> {
 

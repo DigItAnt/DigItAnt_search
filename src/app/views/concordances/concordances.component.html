@@ -25,7 +25,6 @@
 
         <div class="flex flex-column flex-auto overflow-auto px-3 pt-3" style="height: 100px;" *ngIf="concordances.texts">
             
-            <!-- TODO: lista concordanze print -->
             <p-table [paginator]="true" [rows]="6"  [value]="(texts | async) || []" responsiveLayout="scroll" [scrollable]="true" scrollHeight="flex">
                 <ng-template pTemplate="header">
                     <tr>

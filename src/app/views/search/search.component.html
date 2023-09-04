@@ -22,7 +22,7 @@
 
         
 
-        <form id="search-form" class="flex flex-column flex-auto" [formGroup]="advancedSearchForm">
+        <form id="search-form" class="flex flex-column flex-auto" [formGroup]="advancedSearchForm" (ngSubmit)="buildTextQuery()">
 
             <p-panel [toggleable]="false" styleClass="dataSource">
                 <ng-template pTemplate="header">
@@ -46,11 +46,16 @@
                     <span class="text-sm font-medium">Full Text</span>
                     <div id="text-radio-button" class="pt-2 p-inputgroup">
                         
-                        <input (focus)="markAsTouched()" id="float-input" type="text"
+                        <input id="float-input" type="text"
                             [placeholder]="!advancedSearchForm.get('greekMode')?.value  ? 'Eg: legù' : 'Eg: λεγϋ'"
                             name="word" formControlName="word" pInputText /> 
                         
                     </div>
+                </div>
+
+                <div class="mt-3" >
+                    <p-selectButton [options]="inscriptionSearchMode" optionValue="value" formControlName="wordSearchMode" optionLabel="name"></p-selectButton>
+
                 </div>
 
                 <div class="pt-3 flex flex-column">
@@ -58,7 +63,6 @@
                     <div id="text-radio-button" class="pt-2 p-inputgroup">
                         
                         <input id="float-input" type="text" 
-                            (focus)="markAsTouched()"
                             placeholder="Enter title..."
                             formControlName="title" pInputText /> 
                         
@@ -69,7 +73,7 @@
                     <span class="text-sm font-medium">ID</span>
                     <div id="text-radio-button" class="pt-2 p-inputgroup">
                         
-                        <input (focus)="markAsTouched()" id="float-input" type="text"
+                        <input id="float-input" type="text"
                             placeholder="Enter ID..."
                             formControlName="id" pInputText /> 
                         
@@ -79,20 +83,20 @@
                 <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">Date:</span>
                     <div class="flex pt-3">
-                        <p-checkbox [(ngModel)]="isActiveInterval" [binary]="true" label="Interval" [ngModelOptions]="{standalone: true}"></p-checkbox>
+                        <p-checkbox [(ngModel)]="isActiveInscriptionInterval" (onChange)="setInscriptionDateInterval()" [binary]="true" label="Interval" [ngModelOptions]="{standalone: true}"></p-checkbox>
                     </div>
     
-                    <div class="flex align-items-center pt-3" *ngIf="!isActiveInterval">
+                    <div class="flex align-items-center pt-3" *ngIf="!isActiveInscriptionInterval">
     
-                        {{mapSingle}}
+                        {{mapInscriptionSingle}}
                         <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="start" [range]="false" class="w-full mx-5" (onChange)="onChangeSlider($event)"></p-slider>
                     </div>
     
-                    <div class="flex align-items-center pt-3" *ngIf="isActiveInterval">
+                    <div class="flex align-items-center pt-3" *ngIf="isActiveInscriptionInterval">
     
-                        {{mappingRange[0]}}
-                        <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="allowedCenturies"  [range]="true" class="w-full mx-5" (onChange)="onChangeSlider($event)"></p-slider>
-                        {{mappingRange[1]}}
+                        {{mappingInscriptionRange[0]}}
+                        <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="allowedInscriptionInterval"  [range]="true" class="w-full mx-5" (onChange)="onChangeSlider($event)"></p-slider>
+                        {{mappingInscriptionRange[1]}}
                     </div>
                 </div>
 
@@ -101,10 +105,10 @@
                     <div class="flex pt-3">
                         <p-autoComplete 
                         (onClear)="clearLocation()"
-                        (onSelect)="handleAutocompleteFilter($event)"
+                        (onSelect)="handleAutocompleteFilterLocation($event)"
                         [suggestions]="(searchLocations | async) || []" 
                         (completeMethod)="autocompleteLocationReq$.next($event)"
-                        field="ancientPlaceLabel"
+                        field="modernPlaceLabel"
                         placeholder="Eg: Samnium"
                         class="w-full"
                         [showClear]="true">
@@ -226,114 +230,179 @@
                         <span class="font-bold pl-2">Lexicon dataset:</span>
                     </span>
                 </ng-template>
+                <div class="mt-3" >
+                    <p-selectButton (ngModelChange)="onLexiconOptionChange()" [options]="lexiconOptions" optionValue="name" [(ngModel)]="selectedLexiconOption" [ngModelOptions]="{standalone: true}" optionLabel="name"></p-selectButton>
 
-                <div class="pt-3 flex flex-column">
-                    <span class="text-sm font-medium">Form:</span>
-                    <div class="flex pt-3">
-                        <p-autoComplete
-                        [appendTo]="'body'"
-                        (onClear)="clearLocation()"
-                        (onSelect)="handleAutocompleteFilterLocation($event)"
-                        [suggestions]="(searchLexicon | async) || []" 
-                        (completeMethod)="autocompleteLexiconReq$.next($event)"
-                        field="lexicalEntry"
-                        placeholder="Eg: legù"
-                        class="w-full"
-                        [group]="true"
-                        [showClear]="true"
-                        [showEmptyMessage]="true"
-                        emptyMessage="No results">
+                </div>
 
-                        <!-- Templating per la label del gruppo -->
-                        <ng-template let-group pTemplate="group">
-                            <div>
-                                <span style="font-size:14px;">{{group.label}}</span>
-                                <span class="text-blue-800" style="font-size:14px;">@{{group.language}}</span>
-                                <span class="text-red-800 pl-2 font-light" style="font-size: 14px">{{group.pos}}</span>
-                            </div>
-                        </ng-template>
-                        
-                        <!-- Templating per gli elementi all'interno del gruppo -->
-                        <ng-template let-item pTemplate="item">
-                            <div>
-                                <span style="padding-left: 2rem; padding-right: 1rem; font-size:14px;">{{item.label}}</span>
-                                <span *ngFor="let morpho of item.morphology">
-                                    <span *ngIf="morpho.trait != 'partOfSpeech'">
-                                        <span style="font-size: 12px" class="text-blue-800">{{morpho.value.split('#')[1]}} </span>
-                                    </span>
-                                </span>
-                            </div>
-                        </ng-template>
-
-                    </p-autoComplete>
+                <!-- LEMMA -->
+                <div *ngIf="selectedLexiconOption == 'Lemma'">
+                    <div class="pt-3 flex flex-column" >
+                        <span class="text-sm font-medium pt-3">Text:</span>
+                        <div class="flex pt-3">
+                            <input type="text" class="w-full" formControlName="lexicalEntryText" placeholder="Enter some text..." pInputText />
+    
+                        </div>
                     </div>
+
+                    <div class="mt-3" >
+                        <p-selectButton [options]="lexiconSearchMode" optionValue="value" formControlName="lexicalEntrySearchMode" optionLabel="name"></p-selectButton>
+    
+                    </div>
+
+                    <div class="pt-3 flex flex-column">
+                        <span class="text-sm font-medium">Type:</span>
+                        <p-dropdown [showClear]="true" appendTo="body" class="flex-auto pt-3"
+                            [options]="(advancedSearch.types) || []" formControlName="lexicalEntryType" optionValue="label"
+                            optionLabel="label" placeholder="Type">
+                            <ng-template let-type pTemplate="item">
+                                <div class="type-item">
+                                    <span class="counter">{{type.label}}</span>
+                                </div>
+                            </ng-template>
+                        </p-dropdown>
+                    </div>
+
+                    <div class="pt-3 flex flex-column">
+                        <span class="text-sm font-medium">Pos:</span>
+                        <p-dropdown [showClear]="true" appendTo="body" placeholder="Pos"
+                            class="flex-auto pt-3" [options]="(advancedSearch.pos) || []" formControlName="lexicalEntryPos"
+                            optionValue="label" optionLabel="label">
+                            <ng-template let-pos pTemplate="item">
+                                <div class="pos-item">
+                                    <span class="counter">{{pos.label}}</span>
+                                </div>
+                            </ng-template>
+                        </p-dropdown>
+                    </div>
+    
+                    <div class="pt-3 flex flex-column">
+                        <span class="text-sm font-medium">Author:</span>
+                        <p-dropdown [showClear]="true" appendTo="body" placeholder="Author"
+                            class="flex-auto pt-3" [options]="(advancedSearch.authors) || []"
+                            formControlName="lexicalEntryAuthor" optionValue="label" optionLabel="label">
+                            <ng-template let-author pTemplate="item">
+                                <div class="author-item">
+                                    <span class="counter">{{author.label}}</span>
+                                </div>
+                            </ng-template>
+                        </p-dropdown>
+                    </div>
+    
+                    <div class="pt-3 flex flex-column">
+                        <span class="text-sm font-medium">Language:</span>
+                        <p-dropdown [showClear]="true" appendTo="body" placeholder="Language"
+                            class="flex-auto pt-3" [options]="(advancedSearch.languages) || []"
+                            formControlName="lexicalEntryLanguage" optionValue="label" optionLabel="label">
+                            <ng-template let-languages pTemplate="item">
+                                <div class="languages-item">
+                                    <span class="counter">{{languages.label}}</span>
+                                </div>
+                            </ng-template>
+                        </p-dropdown>
+                    </div>
+    
+                    <div class="pt-3 flex flex-column">
+                        <span class="text-sm font-medium">Status:</span>
+                        <p-dropdown [showClear]="true" appendTo="body" placeholder="Status"
+                            class="flex-auto pt-3" [options]="(advancedSearch.status) || []"
+                            formControlName="lexicalEntryStatus" optionValue="label" optionLabel="label">
+                            <ng-template let-status pTemplate="item">
+                                <div class="status-item">
+                                    <span class="counter">{{status.label}}</span>
+                                </div>
+                            </ng-template>
+                        </p-dropdown>
+                    </div>
+                </div>
+
+                <!-- FORM -->
+                <div *ngIf="selectedLexiconOption == 'Form'">
+                    <div class="pt-3 flex flex-column" >
+                        <span class="text-sm font-medium pt-3">Text:</span>
+                        <div class="flex pt-3">
+                            <input type="text" class="w-full" formControlName="formText" placeholder="Enter some text..." pInputText />
+    
+                        </div>
+                    </div>
+
+                    <div class="mt-3" >
+                        <p-selectButton [options]="formSearchMode" optionValue="value" formControlName="formSearchMode" optionLabel="name"></p-selectButton>
+    
+                    </div>
+    
+                    <div class="pt-3 flex flex-column">
+                        <span class="text-sm font-medium">Author:</span>
+                        <p-dropdown [showClear]="true" appendTo="body" placeholder="Author"
+                            class="flex-auto pt-3" [options]="(advancedSearch.authors) || []"
+                            formControlName="formAuthor" optionValue="label" optionLabel="label">
+                            <ng-template let-author pTemplate="item">
+                                <div class="author-item">
+                                    <span class="counter">{{author.label}}</span>
+                                </div>
+                            </ng-template>
+                        </p-dropdown>
+                    </div>
+    
+                   
+                </div>
+
+                <div *ngIf="selectedLexiconOption == 'Autocomplete'">
+                    <div class="pt-3 flex flex-column" >
                     
-                </div>
+                    
 
-                <div class="pt-3 flex flex-column">
-                    <span class="text-sm font-medium">Type:</span>
-                    <p-dropdown [showClear]="true" appendTo="body" class="flex-auto pt-3"
-                        [options]="(advancedSearch.types) || []" formControlName="lexicalElementType" optionValue="label"
-                        optionLabel="label" placeholder="Type">
-                        <ng-template let-type pTemplate="item">
-                            <div class="type-item">
-                                <span class="counter">{{type.label}}</span>
-                            </div>
-                        </ng-template>
-                    </p-dropdown>
+                        <span class="text-sm font-medium pt-3">Lemma/Form:</span>
+                        <div class="flex pt-3">
+                            <p-autoComplete
+                                [appendTo]="'body'"
+                                (onClear)="clearLexicalEntry()"
+                                (onSelect)="handleAutocompleteFilter($event)"
+                                [suggestions]="(searchLexicon | async) || []" 
+                                (completeMethod)="autocompleteLexiconReq$.next($event)"
+                                formControlName="lexicalElementLabel"
+                                placeholder="Eg: legù"
+                                class="w-full"
+                                [group]="true"
+                                [showClear]="true"
+                                [showEmptyMessage]="true"
+                                emptyMessage="No results">
+    
+                                <!-- Templating per la label del gruppo -->
+                                <ng-template let-group pTemplate="group">
+                                    <div (click)="onSelectLexicalEntry(group)" style="cursor: pointer;">
+                                        <span style="font-size:14px;">{{group.label}}</span>
+                                        <span class="text-blue-800" style="font-size:14px;">@{{group.language}}</span>
+                                        <span class="text-red-800 pl-2 font-light" style="font-size: 14px">{{group.pos}}</span>
+                                    </div>
+                                </ng-template>
+                                
+                                <!-- Templating per gli elementi all'interno del gruppo -->
+                                <ng-template let-item pTemplate="item">
+                                    <div>
+                                        <span style="padding-left: 2rem; padding-right: 1rem; font-size:14px;">{{item.label}}</span>
+                                        <span *ngFor="let morpho of item.morphology">
+                                            <span *ngIf="morpho.trait != 'partOfSpeech'">
+                                                <span style="font-size: 12px" class="text-blue-800">{{morpho.value.split('#')[1]}} </span>
+                                            </span>
+                                        </span>
+                                    </div>
+                                </ng-template>
+    
+                                <!-- <ng-template let-value pTemplate="selectedItem">
+                                    <span style="font-size:18px">>{{value}}<</span>
+                                </ng-template> -->
+    
+                            </p-autoComplete>
+                        </div>
+                        
+                    </div>
                 </div>
+                
 
-                <div class="pt-3 flex flex-column">
-                    <span class="text-sm font-medium">Pos:</span>
-                    <p-dropdown [showClear]="true" appendTo="body" placeholder="Pos"
-                        class="flex-auto pt-3" [options]="(advancedSearch.pos) || []" formControlName="lexicalElementPos"
-                        optionValue="label" optionLabel="label">
-                        <ng-template let-pos pTemplate="item">
-                            <div class="pos-item">
-                                <span class="counter">{{pos.label}}</span>
-                            </div>
-                        </ng-template>
-                    </p-dropdown>
-                </div>
+                
 
-                <div class="pt-3 flex flex-column">
-                    <span class="text-sm font-medium">Author:</span>
-                    <p-dropdown [showClear]="true" appendTo="body" placeholder="Author"
-                        class="flex-auto pt-3" [options]="(advancedSearch.authors) || []"
-                        formControlName="lexicalElementAuthor" optionValue="label" optionLabel="label">
-                        <ng-template let-author pTemplate="item">
-                            <div class="author-item">
-                                <span class="counter">{{author.label}}</span>
-                            </div>
-                        </ng-template>
-                    </p-dropdown>
-                </div>
-
-                <div class="pt-3 flex flex-column">
-                    <span class="text-sm font-medium">Language:</span>
-                    <p-dropdown [showClear]="true" appendTo="body" placeholder="Language"
-                        class="flex-auto pt-3" [options]="(advancedSearch.languages) || []"
-                        formControlName="lexicalElementLanguage" optionValue="label" optionLabel="label">
-                        <ng-template let-languages pTemplate="item">
-                            <div class="languages-item">
-                                <span class="counter">{{languages.label}}</span>
-                            </div>
-                        </ng-template>
-                    </p-dropdown>
-                </div>
-
-                <div class="pt-3 flex flex-column">
-                    <span class="text-sm font-medium">Status:</span>
-                    <p-dropdown [showClear]="true" appendTo="body" placeholder="Status"
-                        class="flex-auto pt-3" [options]="(advancedSearch.status) || []"
-                        formControlName="lexicalElementStatus" optionValue="label" optionLabel="label">
-                        <ng-template let-status pTemplate="item">
-                            <div class="status-item">
-                                <span class="counter">{{status.label}}</span>
-                            </div>
-                        </ng-template>
-                    </p-dropdown>
-                </div>
+                
 
                 
 
@@ -350,7 +419,7 @@
                 <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">Title:</span>
                     <div id="text-radio-button" class="pt-2 p-inputgroup">
-                        <input id="float-input" type="text" (focus)="markAsTouched()"
+                        <input id="float-input" type="text"
                             placeholder="Enter title..." name="title" formControlName="bibliographyTitle" pInputText />
                     </div>
                 </div>
@@ -358,7 +427,7 @@
                 <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">ID:</span>
                     <div id="text-radio-button" class="pt-2 p-inputgroup">
-                        <input (focus)="markAsTouched()" id="float-input" type="text" placeholder="Enter ID..."
+                        <input  id="float-input" type="text" placeholder="Enter ID..."
                             formControlName="bibliographyID" pInputText />
 
                     </div>
@@ -366,7 +435,7 @@
 
                 <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">Date:</span>
-                    <div class="flex pt-3">
+                    <!-- <div class="flex pt-3">
                         <p-checkbox [(ngModel)]="isActiveInterval" [binary]="true" label="Interval"
                             [ngModelOptions]="{standalone: true}"></p-checkbox>
                     </div>
@@ -393,6 +462,21 @@
                                 </div>
                             </ng-template>
                         </p-dropdown>
+                    </div> -->
+
+                    <div class="flex pt-3">
+                        <p-checkbox [(ngModel)]="isActiveBibliographyInterval" (onChange)="setBibliographyDateInterval()" [binary]="true" label="Interval" [ngModelOptions]="{standalone: true}"></p-checkbox>
+                    </div>
+    
+                    <div class="flex align-items-center pt-3" *ngIf="!isActiveBibliographyInterval">
+                        {{mapBibliographySingle}}
+                        <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="startBiblio" [range]="false" [min]="1500" [max]="2023" class="w-full mx-5" (onChange)="onChangeBibliographySlider($event)"></p-slider>
+                    </div>
+                    
+                    <div class="flex align-items-center pt-3" *ngIf="isActiveBibliographyInterval">
+                        {{mappingBibliograpgyRange[0]}}
+                        <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="allowedBibliographyInterval"  [range]="true" [min]="1500" [max]="2023" class="w-full mx-5" (onChange)="onChangeBibliographySlider($event)"></p-slider>
+                        {{mappingBibliograpgyRange[1]}}
                     </div>
                 </div>
 
@@ -425,13 +509,13 @@
                     icon="fa-solid fa-times" 
                     iconPos="left">
                 </button>
-                <!-- <button pButton 
+                <button pButton 
                         type="submit"
                         label="Search" 
                         class="p-button-secondary border-noround flex-1"
                         icon="fa-solid fa-search" 
                         iconPos="right">
-                </button> -->
+                </button>
             </div>
 
 
