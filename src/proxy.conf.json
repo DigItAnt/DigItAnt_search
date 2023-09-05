@@ -1,5 +1,5 @@
 {
-    "/LexO-backend-itant_demo/service/*": {
+    "/LexO-backend-itant_itant/service/*": {
         "target": "https://digitant.ilc.cnr.it",
         "secure": true,
         "changeOrigin": true,
