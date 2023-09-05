@@ -119,7 +119,6 @@ export class TextsComponent implements OnInit, AfterViewInit {
 
 
   totalRecords: Observable<number> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -176,7 +175,6 @@ export class TextsComponent implements OnInit, AfterViewInit {
 
 
   paginationItems: Observable<TextMetadata[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,

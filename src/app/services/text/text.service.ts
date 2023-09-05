@@ -125,6 +125,7 @@ export interface SupportModel {
 
 export interface Text {
   type: string,
+  children : Text[],
   metadata : TextMetadata,
   "element-id" : number,
 }
@@ -258,6 +259,15 @@ export class TextsService {
   private documentSystem: DocumentSystem[] = [];
 
   texts$ : Observable<TextMetadata[]> = this.getTextCollection().pipe(
+    map(texts => {
+      let allFiles: Text[] = [];
+  
+      for (const text of texts) {
+        allFiles = allFiles.concat(this.extractFiles(text));
+      }
+  
+      return allFiles;
+    }),
     map(texts => texts.filter(text => text.type == 'file' && Object.keys(text.metadata).length > 0)),
     map(texts => this.mapData(texts)),
     tap(x=>console.log(x)),
@@ -279,6 +289,22 @@ export class TextsService {
     return this.http.get<DocumentSystem>(this.baseUrl + "api/public/getDocumentSystem?requestUUID=11").pipe(
       map(res => res.documentSystem),
     )
+  }
+
+  extractFiles(node: Text): Text[] {
+    let files: Text[] = [];
+  
+    if (node.type === 'file' && Object.keys(node.metadata).length > 0) {
+      files.push(node);
+    }
+  
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        files = files.concat(this.extractFiles(child));
+      }
+    }
+  
+    return files;
   }
 
   searchAttestations(formId: string, limit? : number, offset? : number): Observable<Attestation[]> {
