@@ -5,7 +5,7 @@
         "changeOrigin": true,
         "logLevel": "debug"
     },
-    "/cash_demo/*": {
+    "/cash_itant/*": {
         "target": "https://digitant.ilc.cnr.it",
         "secure": true,
         "changeOrigin": true,
