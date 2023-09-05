@@ -7,7 +7,7 @@ export const environment = {
 
   cashUrl : '/cash_itant/',
   leidenUrl : '/leiden_demo/',
-  lexoUrl : '/LexO-backend-itant_demo/service/',
+  lexoUrl : '/LexO-backend-itant_itant/service/',
   lexoKey: "PRINitant19",
 
   zoteroUrl : "https://api.zotero.org/groups/2552746/items",
