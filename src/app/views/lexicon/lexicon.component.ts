@@ -239,6 +239,8 @@ export class LexiconComponent implements OnInit {
   getCognatesReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
   getFormsListReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
   getAttestationsReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getAttestationsLexEntryReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
+
   getBibliographyReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
 
   formRequestComplete : boolean = false;
@@ -319,7 +321,7 @@ export class LexiconComponent implements OnInit {
     
     filter(instanceName => instanceName != ''),
     takeUntil(this.destroy$),
-    switchMap(instanceName => this.textService.searchAttestations(instanceName, 200, 0)),
+    switchMap(instanceName => this.textService.searchAttestations(instanceName, 100, 0)),
     map(res => {
       let idSet = new Set();
       let arrayFromSet : any[] = [];
@@ -327,15 +329,49 @@ export class LexiconComponent implements OnInit {
       idSet.forEach(
         (element : any)=> {
           let el = JSON.parse(element);
-          arrayFromSet.push(el.nodePath)
+          arrayFromSet.push(el.nodeId)
         }
       );
       return arrayFromSet;
     }),
-    map(paths => paths.map(el=>el.split('/')[el.split('/').length -1])),
-    map(res => res.map(el=>el.split('.xml')[0])),
-    tap(res => console.log(res))
+    switchMap(nodeIds => {
+      return this.textService.texts$.pipe(
+        map(textsArray => {
+          return textsArray.filter(text => nodeIds.includes(text['element-id']));
+        })
+      );
+    }),
    
+    map(res => res.map(el=> el.trismegistos.trismegistosID)),
+    
+  )
+
+  getAttestationsLexEntry : Observable<any> | undefined = this.getAttestationsLexEntryReq$.pipe(
+    
+    filter(instanceName => instanceName != ''),
+    takeUntil(this.destroy$),
+    switchMap(instanceName => this.textService.searchAttestationsLexEntry(instanceName, 100, 0)),
+    map(res => {
+      let idSet = new Set();
+      let arrayFromSet : any[] = [];
+      res.forEach(element=>{idSet.add(JSON.stringify({nodeId: element.nodeId, nodePath : element.nodePath}))})
+      idSet.forEach(
+        (element : any)=> {
+          let el = JSON.parse(element);
+          arrayFromSet.push(el.nodeId)
+        }
+      );
+      return arrayFromSet;
+    }),
+    switchMap(nodeIds => {
+      return this.textService.texts$.pipe(
+        map(textsArray => {
+          return textsArray.filter(text => nodeIds.includes(text['element-id']));
+        })
+      );
+    }),
+   
+    map(res => res.map(el=> el.trismegistos.trismegistosID)),
   )
 
   getBibliography : Observable<any> | undefined = this.getBibliographyReq$.pipe(
@@ -378,6 +414,7 @@ export class LexiconComponent implements OnInit {
             //è una lexical entry
             if(keys.length == 1){
               this.getLexicalEntryReq$.next(values[0])
+              this.getAttestationsLexEntryReq$.next(values[0])
             }
 
             //è una form

@@ -65,7 +65,6 @@ export class AdvancedsearchService {
     return forkJoin([lexiconSearch, inscriptionSearch, bibliographySearch]).pipe(
       switchMap(([lexiconSearch, inscriptionSearch, bibliographySearch]) => {
         
-        //TODO: logica per query expansion
         //se lexiconSearch/bibliography non è vuoto, allora prendi gli IRI
         //e attaccali alla catena CQL ed effettua una nuova ricerca
         //con i dati presi da LexO e/o Zotero e i valori del formValues

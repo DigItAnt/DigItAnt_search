@@ -313,6 +313,12 @@ export class TextsService {
     )
   }
 
+  searchAttestationsLexEntry(lexId: string, limit? : number, offset? : number): Observable<Attestation[]> {
+    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?limit=100&offset=0&query="+encodeURIComponent('[attestation__lexicalEntry="'+lexId+'"]'), null).pipe(
+      map(res => res.rows)
+    )
+  }
+
 
   filterAttestations(query : string, limit? : number, offset? : number): Observable<TextMetadata[]> {
 
@@ -489,15 +495,15 @@ export class TextsService {
     )
   }
 
-  getIndexOfText(fileId : string) : Observable<number> {
+  getIndexOfText(trismegistosID : string) : Observable<number> {
     return this.texts$.pipe(
-      map(texts => texts.findIndex(text => text.fileID == fileId))
+      map(texts => texts.findIndex(text => text.trismegistos.trismegistosID == trismegistosID))
     )
   }
 
   getFileIdByIndex(index : number) : Observable<string> {
     return this.texts$.pipe(
-      map(texts => texts[index].fileID)
+      map(texts => texts[index].trismegistos.trismegistosID)
     )
   }
 

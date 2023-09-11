@@ -526,6 +526,21 @@
                          
                         </div>
 
+                        <div id="lexical-entry-attestations" class="pt-5 flex flex-row align-items-baseline" 
+                            *ngIf="{data : getAttestationsLexEntry | async} as lexEntryAttestations">
+
+                            <span class="pt-2 text-xl font-light" *ngIf="lexEntryAttestations.data && lexEntryAttestations.data.length > 0">
+                                Attested in:
+                            </span>
+
+                            <div class="flex flex-column align-items-baseline pl-3" *ngIf="lexEntryAttestations.data && lexEntryAttestations.data.length > 0">
+                                <div class="flex flex-row attestation" *ngFor="let attestation of lexEntryAttestations.data">
+                                    <a class="text-xl font-normal" [href]="'/texts?file='+attestation" routerLink="../texts" [queryParams]="{file: attestation}">{{attestation}}:</a>
+                                    
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <div class="flex w-full h-full"
@@ -603,7 +618,6 @@
                                 Attested in:
                             </span>
 
-                            <!-- TODO: mettere sigla -->
                             <div class="flex flex-column align-items-baseline pl-3" >
                                 <div class="flex flex-row attestation" *ngFor="let attestation of form.attestations">
                                     <a class="text-xl font-normal" [href]="'/texts?file='+attestation" routerLink="../texts" [queryParams]="{file: attestation}">{{attestation}}:</a>

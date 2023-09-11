@@ -325,7 +325,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
   arrayDynamicComponents : Array<FormElement> = [];
 
   getTextPaginationIndex : Observable<number> = this.getTextPaginationIndexReq$.pipe(
-    switchMap(fileId => fileId != '' ? this.textService.getIndexOfText(fileId) : of()),
+    switchMap(trismegistosId => trismegistosId != '' ? this.textService.getIndexOfText(trismegistosId) : of()),
     tap(index => {
       if(index != -1){
         this.getFileByIndexReq$.next(index)
@@ -594,6 +594,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
             this.goToDefaultUrl(); 
             return;
           }
+
           if(keys){
             for(const [key, value] of Object.entries(event)) {
               if(!this.allowedOperators.includes(key) ||  
