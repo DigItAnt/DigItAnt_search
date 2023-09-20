@@ -1,7 +1,7 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Form, FormGroup } from '@angular/forms';
-import { concatAll, forkJoin, lastValueFrom, map, Observable, of, shareReplay, switchMap, tap, withLatestFrom } from 'rxjs';
+import { BehaviorSubject, concatAll, forkJoin, lastValueFrom, map, Observable, of, shareReplay, switchMap, tap, withLatestFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { LexicalElement, LexiconService } from '../lexicon/lexicon.service';
 import { AnnotationsRows, TextMetadata, TextsService } from '../text/text.service';
@@ -50,9 +50,14 @@ export class AdvancedsearchService {
   private cashUrl = environment.cashUrl;
   private zoteroUrl = environment.zoteroUrl;
 
+
+  private attestationsSubject = new BehaviorSubject<TextMetadata[]>([]);
+  private filteredResults : TextMetadata[] = [];
+  attestations$: Observable<TextMetadata[]> = this.attestationsSubject.asObservable();
+
   constructor(private http : HttpClient,
               private lexiconService : LexiconService,
-              private inscriptionService : TextsService
+              private inscriptionService : TextsService,
   ) { }
 
 
@@ -72,7 +77,7 @@ export class AdvancedsearchService {
         let bibliographyCQL : string[] = [];
         let inscriptionCQL : string[] = [];
 
-        if(lexiconSearch || bibliographySearch){
+        if(lexiconSearch.length > 0 || bibliographySearch.length > 0){
 
           if(lexiconSearch && typeof lexiconSearch != 'string' && lexiconSearch.length > 0){
 
@@ -80,7 +85,7 @@ export class AdvancedsearchService {
           }else if(typeof lexiconSearch == 'string'){
             const check = lexiconSearch.split('_').pop();
             if(check == 'entry'){
-              lexiconCQL.push(`attestation.lexicalEntry="${lexiconSearch}"`)
+              lexiconCQL.push(`attestation__lexicalEntry="${lexiconSearch}"`)
             }else if(check == 'form'){
               lexiconCQL.push(`attestation="${lexiconSearch}"`)
             }
@@ -105,7 +110,7 @@ export class AdvancedsearchService {
             }
           
             if (inscriptionCQL.length > 0) {
-              allQueries.push(`(${inscriptionCQL.join(' | ')})`);
+              allQueries.push(`(${inscriptionCQL.join(' & ')})`);
             }
           
             const query = allQueries.length > 0 ? `[${allQueries.join(' & ')}]` : '';
@@ -114,9 +119,35 @@ export class AdvancedsearchService {
 
           const finalQuery = combineQueries(lexiconCQL, bibliographyCQL, inscriptionCQL);
 
-          return this.http.post<AnnotationsRows>(this.cashUrl + "api/public/search?query="+encodeURIComponent(finalQuery), null)
+          const headers = new HttpHeaders({
+            'Content-Type': 'application/x-www-form-urlencoded'
+          });
+          
+          let params = new HttpParams().set('query', finalQuery);
+
+
+          return this.http.post<AnnotationsRows>(this.cashUrl + "api/public/search", params.toString(), { headers: headers }).pipe(
+            map(res => Array.from(res.rows.reduce((map, obj) => map.set(obj.nodeId, obj), new Map()).values())),
+            withLatestFrom(this.inscriptionService.texts$),
+            map(([postData, texts]) => {
+              let tmp : TextMetadata[] = [];
+              postData.forEach(
+                el=>{
+                  texts.forEach(
+                    t=>{
+                      if(el.nodeId == t['element-id'])tmp.push(t)
+                    }
+                  )
+                }
+              )
+              this.attestationsSubject.next(tmp);
+              this.filteredResults = tmp;
+              return tmp
+            }),
+            shareReplay()
+          )
         }else{
-          return inscriptionSearch;
+          return of(inscriptionSearch);
         }
       }),
       tap(res => console.log(res))
@@ -146,7 +177,14 @@ export class AdvancedsearchService {
 
       if(query != ''){
 
-        return this.http.post<AnnotationsRows>(this.cashUrl + "api/public/search?query="+encodeURIComponent(query), null).pipe(
+        const headers = new HttpHeaders({
+          'Content-Type': 'application/x-www-form-urlencoded'
+        });
+        
+        let params = new HttpParams().set('query', query);
+
+
+        return this.http.post<AnnotationsRows>(this.cashUrl + "api/public/search", params.toString(), { headers: headers }).pipe(
           map(res => Array.from(res.rows.reduce((map, obj) => map.set(obj.nodeId, obj), new Map()).values())),
           withLatestFrom(this.inscriptionService.texts$),
           map(([postData, texts]) => {
@@ -160,6 +198,8 @@ export class AdvancedsearchService {
                 )
               }
             )
+            this.attestationsSubject.next(tmp);
+            this.filteredResults = tmp;
             return tmp
           }),
           shareReplay()
@@ -306,7 +346,7 @@ export class AdvancedsearchService {
     lexiconResults.forEach(element => {
       
       if(element.lexicalEntry && !element.form){
-        queryParts.push(`attestation.lexicalEntry="${element.lexicalEntry}"`)
+        queryParts.push(`attestation__lexicalEntry="${element.lexicalEntry}"`)
       }else if(element.form){
         queryParts.push(`attestation="${element.form}"`)
       }
@@ -378,9 +418,32 @@ export class AdvancedsearchService {
     let queryParts: string[] = [];
 
     bibliographyResults.forEach(element=>{
-      queryParts.push(`attestation.bibliography.key="${element.key}"`);
+      queryParts.push(`attestation__bibliography__key="${element.key}"`);
     })
     return queryParts;
+  }
+
+  restoreFilterAttestations(){
+    this.filteredResults = [];
+    this.attestationsSubject.next([])
+  }
+
+  getFilteredResults(){
+    return this.filteredResults;
+  }
+
+  sliceFilteredAttestations(pageIndex: number, pageSize: number): Observable<TextMetadata[]> {
+    return this.attestations$.pipe(
+      switchMap(attestations => {
+        if(attestations && attestations.length > 0) {
+          return of(attestations.slice(pageIndex, pageSize));
+        } else {
+          return this.inscriptionService.texts$.pipe(
+            map(allAttestations => allAttestations.slice(pageIndex , pageSize))
+          );
+        }
+      })
+    );
   }
 
 }

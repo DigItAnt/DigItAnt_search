@@ -9,7 +9,8 @@
         groupType : groupTypes | async,
         groupLanguage : groupLanguages | async,
         groupMaterial : groupMaterial | async,
-        groupObjectTypes : groupObjectTypes | async} as text">
+        groupObjectTypes : groupObjectTypes | async,
+        geoData: geoData | async} as text">
 
         <div id="left-bar" class="flex flex-column">
             <p-tabView *ngIf="!text.activeFile" class="normal-tabview"(onChange)="onChangeTabView($event)" >
@@ -333,14 +334,13 @@
         
                         </li>
                     </ul>
-                    <div class="flex align-items-center map-button" *ngIf="{geoData: geoData | async} as map">
+                    <div class="flex align-items-center map-button">
                         <button (click)="overlayGeneralMap.toggle($event)" pButton type="button" class="p-button-secondary mr-2"
                             icon="fa-solid fa-map-location-dot" iconPos="left"></button>
         
                         <p-overlayPanel #overlayGeneralMap [appendTo]="'body'">
                             <ng-template pTemplate>
-                                <div class="relative mb-3" style="width: 800px;"
-                                    *ngIf="{geoData : getGeoData.next((text.groupLocations) || [])} as map">
+                                <div class="relative mb-3" style="width: 800px;">
                                     <div style="height: 600px;" leaflet [leafletOptions]="leafletMapOptions" [leafletLayers]="layers"
                                         [leafletMaxBounds]="bounds">
                                     </div>

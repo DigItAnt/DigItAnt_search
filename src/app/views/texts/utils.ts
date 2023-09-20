@@ -4,16 +4,26 @@ import { Book, BookAuthor, BookEditor, Graphic, ListAndId, TextMetadata, TextTok
 import { AuthorCounter, DateCounter } from "../lexicon/lexicon.component";
 import { CenturiesCounter, LocationsCounter, TypesCounter, LanguagesCounter, ObjectTypeCounter, MaterialCounter, DuctusCounter, WordDivisionTypeCounter } from "./texts.component";
 
-const allowedCenturies: number[] = [-600, 200];
+const allowedCenturies: number[] = [];
+for (let i = -600; i <= 200; i += 100) {
+    allowedCenturies.push(i);
+}
 
 export function groupByCenturies(texts: TextMetadata[]): CenturiesCounter[] {
     let tmp: CenturiesCounter[] = [];
-    let count: number = 0;
-
+    
     allowedCenturies.forEach(value => {
-        if (value < 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOriginNotBefore) >= value && parseInt(cur.dateOfOriginNotBefore) < (value + 100)) ? ++acc : acc, 0);
-        if (value > 0) count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOriginNotBefore) > (value - 100) && parseInt(cur.dateOfOriginNotBefore) <= value) ? ++acc : acc, 0);
-        if (count > 0) tmp.push({ century: value, count: count, label: CenturyPipe.prototype.transform(value) })
+        let count: number = 0;
+
+        if (value < 0) {
+            count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOriginNotBefore) >= value && parseInt(cur.dateOfOriginNotBefore) < (value + 100)) ? ++acc : acc, 0);
+        } else {
+            count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOriginNotBefore) > (value - 100) && parseInt(cur.dateOfOriginNotBefore) <= value) ? ++acc : acc, 0);
+        }
+
+        if (count > 0) {
+            tmp.push({ century: value, count: count, label: CenturyPipe.prototype.transform(value) });
+        }
     })
 
     return tmp;
@@ -127,11 +137,16 @@ export function groupDuctus(texts: TextMetadata[]): DuctusCounter[] {
 
     texts.forEach(text => {
         // Se ductus è null, undefined o una stringa vuota, continua alla prossima iterazione
-        if (!text.bodytextpart.ductus) {
+        if (!text.bodytextpart) {
             return;
         }
-
-        let count = texts.reduce((acc, cur) => cur.bodytextpart.ductus == text.bodytextpart.ductus ? ++acc : acc, 0);
+        
+        let count = texts.reduce((acc, cur) => {
+            if (cur.bodytextpart && cur.bodytextpart.ductus && cur.bodytextpart.ductus == text.bodytextpart.ductus) {
+                return ++acc;
+            }
+            return acc;
+        }, 0);
         if (count > 0) {
             tmp.push({ ductus: text.bodytextpart.ductus, count: count })
         }
@@ -150,7 +165,7 @@ export function groupWordDivisionType(texts: TextMetadata[]): WordDivisionTypeCo
 
     texts.forEach(text => {
         // Se ductus è null, undefined o una stringa vuota, continua alla prossima iterazione
-        if (!text.bodytextpart.ductus) {
+        if (!text.wordDivisionType) {
             return;
         }
 

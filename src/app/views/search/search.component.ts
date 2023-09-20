@@ -35,7 +35,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     return this.startBiblio;  // Direttamente ritornare il valore attuale perché già mappato nel range [1500, 2023]
   }
 
-  start : number = 0;
+  start : number = -200;
   startBiblio : number = 1500;
 
   get mappingInscriptionRange(): number[] {
@@ -48,13 +48,13 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
 
   
 
-  get mapInscriptionSingle(): number {
+  /* get mapInscriptionSingle(): number {
     let min = -200;
     let max = 300;
     let minSlider = 0;
     let maxSlider = 100;
     return (this.start - minSlider) * (max - min) / (maxSlider - minSlider) + min;
-  }
+  } */
 
   lexiconOptions = [{name: 'Lemma'}, {name: 'Form'}, {name:'Autocomplete'}]
   lexiconSearchMode = [{name: 'Start', value: 'startsWith'}, {name: 'Contains', value: 'contains'}, {name:'End', value: 'endsWith'}, {name:'Equals', value: 'equals'}]
@@ -116,7 +116,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
 
 
   totalRecords: Observable<number> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -172,7 +171,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
 
 
   paginationItems: Observable<TextMetadata[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -190,7 +188,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   )
 
   groupLocations : Observable<LocationsCounter[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -202,7 +199,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   )
 
   groupTypes : Observable<TypesCounter[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -214,7 +210,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   )
 
   groupLanguages : Observable<LanguagesCounter[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -226,7 +221,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   )
 
   groupObjectTypes : Observable<ObjectTypeCounter[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -238,7 +232,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   )
 
   groupMaterial : Observable<MaterialCounter[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -250,7 +243,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   )
 
   groupDuctus : Observable<DuctusCounter[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -262,7 +254,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   )
 
   groupWordDivisionType : Observable<WordDivisionTypeCounter[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -275,7 +266,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
 
   
   geoData : Observable<GlobalGeoDataModel[]> = this.groupLocations.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -288,7 +278,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   )
 
   groupDates : Observable<DateCounter[]> = this.bibliographyService.books$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -300,7 +289,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   )
 
   groupAuthors : Observable<AuthorCounter[]> = this.bibliographyService.books$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -472,10 +460,10 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     let rows = (this.first != this.rows) && (this.first < this.rows) ? this.rows : this.first + this.rows;
     if(args.length>0){args =args.filter(query=>query != null)}
 
-    if(args.length == 0){
+    if(this.advancedSearchService.getFilteredResults().length == 0){
       this.getAllData(this.first, rows);
     }else{
-      this.paginationItems = this.textService.sliceFilteredAttestations(this.first, rows);
+      this.paginationItems = this.advancedSearchService.sliceFilteredAttestations(this.first, rows);
     }
   }
 
@@ -525,6 +513,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   }
  */
   resetFields(){
+    this.advancedSearchForm.markAsUntouched();
     this.advancedSearchForm.patchValue(this.initialFormValues);
     this.first = 0;
     this.rows = 6;
@@ -570,12 +559,16 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   onChangeSlider(event : any){
     
     if(event.value){
-      this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.mapInscriptionSingle)
+      this.advancedSearchForm.get('dateOfOriginNotBefore')?.markAsTouched();
+      this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.start)
       this.advancedSearchForm.get('dateOfOriginNotAfter')?.setValue(null)
 
     }
 
     if(event.values){
+      this.advancedSearchForm.get('dateOfOriginNotBefore')?.markAsTouched();
+      this.advancedSearchForm.get('dateOfOriginNotAfter')?.markAsTouched();
+
       this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.mappingInscriptionRange[0])
       this.advancedSearchForm.get('dateOfOriginNotAfter')?.setValue(this.mappingInscriptionRange[1])
 
@@ -602,7 +595,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
       this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.mappingInscriptionRange[0])
       this.advancedSearchForm.get('dateOfOriginNotAfter')?.setValue(this.mappingInscriptionRange[1])
     }else{
-      this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.mapInscriptionSingle)
+      this.advancedSearchForm.get('dateOfOriginNotBefore')?.setValue(this.start)
       this.advancedSearchForm.get('dateOfOriginNotAfter')?.setValue(null)
     }
   }

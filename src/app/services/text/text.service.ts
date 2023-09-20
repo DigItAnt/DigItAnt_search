@@ -308,13 +308,13 @@ export class TextsService {
   }
 
   searchAttestations(formId: string, limit? : number, offset? : number): Observable<Attestation[]> {
-    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?limit=100&offset=0&query="+encodeURIComponent('[attestation="'+formId+'"]'), null).pipe(
+    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?limit=300&offset=0&query="+encodeURIComponent('[attestation="'+formId+'"]'), null).pipe(
       map(res => res.rows)
     )
   }
 
   searchAttestationsLexEntry(lexId: string, limit? : number, offset? : number): Observable<Attestation[]> {
-    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?limit=100&offset=0&query="+encodeURIComponent('[attestation__lexicalEntry="'+lexId+'"]'), null).pipe(
+    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?limit=300&offset=0&query="+encodeURIComponent('[attestation__lexicalEntry="'+lexId+'"]'), null).pipe(
       map(res => res.rows)
     )
   }

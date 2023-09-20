@@ -87,9 +87,10 @@
                     </div>
     
                     <div class="flex align-items-center pt-3" *ngIf="!isActiveInscriptionInterval">
-    
-                        {{mapInscriptionSingle}}
-                        <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="start" [range]="false" class="w-full mx-5" (onChange)="onChangeSlider($event)"></p-slider>
+                        <!-- {{mapInscriptionSingle}} -->
+                        {{start}}
+                        {{advancedSearchForm.get('dateOfOriginNotBefore')?.value}}
+                        <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="start" [range]="false" [min]="-200" [max]="300" class="w-full mx-5" (onChange)="onChangeSlider($event)"></p-slider>
                     </div>
     
                     <div class="flex align-items-center pt-3" *ngIf="isActiveInscriptionInterval">

@@ -192,7 +192,6 @@ export class TextsComponent implements OnInit, AfterViewInit {
   )
 
   groupLocations : Observable<LocationsCounter[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -204,7 +203,6 @@ export class TextsComponent implements OnInit, AfterViewInit {
   )
 
   groupTypes : Observable<TypesCounter[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -216,7 +214,6 @@ export class TextsComponent implements OnInit, AfterViewInit {
   )
 
   groupLanguages : Observable<LanguagesCounter[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -228,7 +225,6 @@ export class TextsComponent implements OnInit, AfterViewInit {
   )
 
   groupObjectTypes : Observable<ObjectTypeCounter[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -240,7 +236,6 @@ export class TextsComponent implements OnInit, AfterViewInit {
   )
 
   groupMaterial : Observable<MaterialCounter[]> = this.textService.texts$.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
@@ -253,14 +248,12 @@ export class TextsComponent implements OnInit, AfterViewInit {
 
   
   geoData : Observable<GlobalGeoDataModel[]> = this.groupLocations.pipe(
-    timeout(15000),
     catchError(err => 
       iif(
         () => err,
         this.thereWasAnError(), 
         of([]) 
     )),
-    take(1),
     switchMap(locations => this.mapsService.getGeoPlaceData(locations)),
     switchMap(geoData => {
       const searchAttestationsObservables = geoData.map(place => {
