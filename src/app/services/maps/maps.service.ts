@@ -146,7 +146,7 @@ export class MapsService {
         }
     
         // Se i dati di GeoNames sono disponibili, li aggiunge al risultato
-        if (geoNamesData) {
+        if (geoNamesData && (geoNamesData.title != undefined || !isNaN(geoNamesData.reprPoint.latitude))) {
           result.modernName = geoNamesData.title;
           result.modernBbox = geoNamesData.bbox;
           result.modernId = geoNamesData.id;

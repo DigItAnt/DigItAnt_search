@@ -551,7 +551,9 @@
             </div>
 
             <div class="flex w-full" *ngIf="lexicon.activeForm">
-                <div class="flex w-full" *ngIf="{data : getForm | async, attestations : getAttestations | async } as form">
+                <div class="flex w-full" *ngIf="{data : getForm | async, 
+                                                 attestations : getAttestations | async,
+                                                 lexicalEntry : getLexicalEntryFromForm | async} as form">
 
                     <div class="flex flex-column flex-auto"
                         *ngIf="form.data && lexicon.activeForm == form.data.form">
@@ -579,6 +581,8 @@
                                 </span> -->
                             </span>
 
+                            
+
                             <span id="lexical-entry-pos" class="pl-2">
                                 <span class="pt-2 text-xl font-light">
                                     Pos:
@@ -596,6 +600,19 @@
                             </span>
 
 
+                        </div>
+
+                        <div class="flex flex-row align-items-baseline" >
+                            <span id="lexical-entry-language"  *ngIf="form.lexicalEntry" >
+                                <span class="pt-2 text-xl font-light">
+                                    Lemma:
+                                </span>
+                                <a class="text-xl font-normal" [href]="'/lexicon?word='+form.lexicalEntry.lexicalEntry" routerLink="../lexicon" [queryParams]="{word: form.lexicalEntry.lexicalEntry}">{{form.lexicalEntry.label}}</a>
+                                
+                                <!-- <span *ngIf="form.data.language == ''" class="pt-2 text-lg font-light font-italic">
+                                    No info
+                                </span> -->
+                            </span>
                         </div>
 
                         <div class="flex flex-row align-items-baseline">

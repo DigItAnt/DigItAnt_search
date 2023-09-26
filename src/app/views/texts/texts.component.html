@@ -416,7 +416,8 @@
             <div class="flex flex-row flex-wrap flex-auto text-item-container" *ngIf="((text.totalRecords != 0 && !somethingWrong && !fileNotAvailable) && text.activeFile) 
                                                                                         && {index : getTextPaginationIndex | async,
                                                                                             fileID: getFileIdByIndex | async, 
-                                                                                            file : getFileByIndex | async} as textView">
+                                                                                            file : getFileByIndex | async,
+                                                                                            inscriptionType : getInscriptionType | async } as textView">
                 
                 <div class="flex flex-column flex-auto ">
                     <div [ngClass]="{'zIndex': text.activeFile}" class="flex flex-row horizontal-list m-3 text-container-top sticky top-0">
@@ -483,17 +484,6 @@
                             </div>
 
 
-                            <!-- <div class="flex grid data-list" *ngIf="textView.file.autopsyAuthor != undefined || textView.file.autopsyAuthor != ''">
-                                <div class="flex col-3 justify-content-end">
-                                    <span class="font-bold text-right">Autopsy author:</span>
-                                </div>
-                                <div class="flex flex-row col-9">
-
-                                    <span class="font-normal" *ngIf="textView.file.autopsyAuthor">{{textView.file.autopsyAuthor}}</span>
-                                    <span class="font-italic" *ngIf="textView.file.autopsyAuthor == undefined">No info</span>
-                                    
-                                </div>
-                            </div> -->
                             <div  class="flex grid data-list  pt-3 ">
                                 <div class="flex col-3 justify-content-end">
                                     <span class="font-bold text-right">IDs:</span>
@@ -577,26 +567,13 @@
                                 </div>
                             </div>
                             
-                            <!-- <div class="flex grid data-list" *ngIf="textView.file.palaeographicNotes != undefined && textView.file.palaeographicNotes != ''">
-                                <div class="flex col-3 justify-content-end">
-                                    <span class="font-bold text-right">Palaeographic notes:</span>
-                                </div>
-                                <div class="flex flex-row col-9">
-
-                                    <span class="font-normal" *ngIf="textView.file.palaeographicNotes">{{textView.file.palaeographicNotes}}</span>
-                                    <span class="font-italic" *ngIf="textView.file.palaeographicNotes == undefined">No info</span>
-                                    
-                                </div>
-                            </div> -->
-
-                            <div class="flex grid data-list" *ngIf="textView.file.inscriptionType != undefined && textView.file.inscriptionType != ''">
+                            <div class="flex grid data-list" *ngIf="textView.inscriptionType != undefined && textView.inscriptionType != ''">
                                 <div class="flex col-3 justify-content-end">
                                     <span class="font-bold text-right">Inscription type:</span>
                                 </div>
                                 <div class="flex flex-row col-9">
-
-                                    <span class="font-normal" *ngIf="textView.file.inscriptionType">{{textView.file.inscriptionType}}</span>
-                                    <span class="font-italic" *ngIf="textView.file.inscriptionType == undefined">No info</span>
+                                    <a class="font-bold text-red-800 " [href]="textView.inscriptionType.url" target="_blank">{{textView.inscriptionType.term}}</a>
+                                    <!-- <span class="font-normal" *ngIf="textView.inscriptionType">{{textView.inscriptionType}}</span> -->
                                     
                                 </div>
                             </div>
@@ -737,7 +714,8 @@
                                             </div> -->
 
                                             <div #interpretativeText id="interpretative-text" class="flex-column" class="mb-3 mr-3" *ngFor="let face of leiden.interpretative; let i = index">
-                                                <h4 class="mb-2" *ngIf="leiden.interpretative && leiden.interpretative.length > 1">Face_{{i === 0 ? 'a' : 'b'}}</h4>
+                                                <h4 class="mb-2" *ngIf="leiden.interpretative && leiden.interpretative.length > 1">  Face_{{getChar(i)}}
+                                                </h4>
                                                 <p [innerHTML]="face | noSanitize"></p>
                                             </div>
     
@@ -751,7 +729,8 @@
                                     <p-tabPanel header="Diplomatic">
                                         <div #diplomaticText id="diplomatic-text" [hidden]="loadingDiplomatic">
                                             <div class="mb-3" *ngFor="let face of leiden.diplomatic; let i = index">
-                                                <h4 class="mb-2" *ngIf="leiden.diplomatic && leiden.diplomatic.length > 1">Face_{{i === 0 ? 'a' : 'b'}}</h4>
+                                                <h4 class="mb-2" *ngIf="leiden.diplomatic && leiden.diplomatic.length > 1">  Face_{{getChar(i)}}
+                                                </h4>
                                                 <p [innerHTML]="face | noSanitize"></p>
                                             </div>
                                         </div>

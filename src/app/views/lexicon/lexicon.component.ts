@@ -264,6 +264,12 @@ export class LexiconComponent implements OnInit {
     tap(lex => console.log(lex))
   ) 
   
+  getLexicalEntryFromForm : Observable<LexicalElement> = this.getLexicalEntryReq$.pipe(
+    delay(100),
+    takeUntil(this.destroy$),
+    switchMap(instanceName => (instanceName != '') ? this.lexiconService.getLexicalEntryData(instanceName).pipe(catchError(err => this.thereWasAnError())) : of()),
+    tap(lex => console.log(lex))
+  ) 
 
   getForm : Observable<FormElement> = this.getFormReq$.pipe(
     delay(100),
@@ -419,6 +425,7 @@ export class LexiconComponent implements OnInit {
 
             //è una form
             if(keys.length == 2){
+              this.getLexicalEntryReq$.next(values[0])
               this.getFormReq$.next(values[1]);
               this.getAttestationsReq$.next(values[1])
             }

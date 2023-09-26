@@ -429,6 +429,30 @@ export function getCommentaryXml(rawHTML: string, renderer: Renderer2): any {
 
 }
 
+export function getInscriptionType(xml : string) : any {
+    if (Array.from(new DOMParser().parseFromString(xml, "text/xml").querySelectorAll('textClass')).length != 0) {
+        let inscriptionType = new DOMParser().parseFromString(xml, "text/xml").querySelectorAll('textClass')[0];
+        const termNode = inscriptionType.querySelector('term');
+        const keywordNode = inscriptionType.querySelector('keywords');
+
+        if (termNode && keywordNode) {
+            const term = termNode.textContent;
+            const url = keywordNode.getAttribute('scheme');
+
+            // Costruisce e ritorna l'oggetto JSON
+            if (term && url) {
+                return {
+                    term: term,
+                    url: url
+                };
+            }
+        }
+
+        // Ritorna null se non può estrare il termine e l'URL
+        return null;
+    }
+}
+
 export function getApparatus(rawXml: string, renderer: Renderer2): Array<string> {
 
     let apparatusArray: Array<string> = [];

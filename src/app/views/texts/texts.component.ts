@@ -12,7 +12,7 @@ import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.serv
 import { PopupService } from 'src/app/services/maps/popup/popup.service';
 import { AnnotationsRows, Book, BookAuthor, BookEditor, Graphic, ListAndId, TextMetadata, TextsService, TextToken, XmlAndId } from 'src/app/services/text/text.service';
 import { DynamicOverlayComponent } from './dynamic-overlay/dynamic-overlay.component';
-import { buildCustomInterpretative, getApparatus, getBibliography, getCommentaryXml, getFacsimile, getTeiChildren, getTranslationByXml, groupByCenturies, groupLanguages, groupLocations, groupMaterial, groupObjectTypes, groupTypes, leidenDiplomaticBuilder } from './utils';
+import { buildCustomInterpretative, getApparatus, getBibliography, getCommentaryXml, getFacsimile, getInscriptionType, getTeiChildren, getTranslationByXml, groupByCenturies, groupLanguages, groupLocations, groupMaterial, groupObjectTypes, groupTypes, leidenDiplomaticBuilder } from './utils';
 
 
 export interface CenturiesCounter {
@@ -293,6 +293,8 @@ export class TextsComponent implements OnInit, AfterViewInit {
   getApparatusReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
   getGetoDataFromFile$ : BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
+  getInscriptionType$ : BehaviorSubject<any> = new BehaviorSubject<any>(null);
+
 
   loadingInterpretative : boolean = false;
   loadingDiplomatic : boolean = false;
@@ -387,7 +389,8 @@ export class TextsComponent implements OnInit, AfterViewInit {
         this.getTranslationReq$.next(res);
         this.getBibliographyReq$.next(res.xml);
         this.getFacsimileReq$.next(res.xml);
-        this.getApparatusReq$.next(res.xml)
+        this.getApparatusReq$.next(res.xml);
+        this.getInscriptionType$.next(res.xml);
         this.getAutopsyAuthors(res.xml);
         //this.getCommentaryReq$.next(res.xml);
         
@@ -518,6 +521,12 @@ export class TextsComponent implements OnInit, AfterViewInit {
   getApparatus : Observable<Array<string>> = this.getApparatusReq$.pipe(
     filter(xml => xml != ''),
     map(xml => getApparatus(xml, this.renderer)),
+    tap(xml => this.loadingApparatus = false)
+  );
+
+  getInscriptionType : Observable<any> = this.getApparatusReq$.pipe(
+    filter(xml => xml != ''),
+    map(xml => getInscriptionType(xml)),
     tap(xml => this.loadingApparatus = false)
   );
 
@@ -687,6 +696,10 @@ export class TextsComponent implements OnInit, AfterViewInit {
         this.mapsLoading = false;
       }
     }
+  }
+
+  getChar(i: number): string {
+    return String.fromCharCode(97 + i);
   }
 
   buildTextQuery(formData : any){
