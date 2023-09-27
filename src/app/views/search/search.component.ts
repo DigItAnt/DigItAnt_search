@@ -10,8 +10,8 @@ import { LexicalElement, LexiconService } from 'src/app/services/lexicon/lexicon
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
 import { TextMetadata, TextsService } from 'src/app/services/text/text.service';
 import { AuthorCounter, DateCounter, StatisticsCounter } from '../lexicon/lexicon.component';
-import { AutoCompleteEvent, CenturiesCounter, DuctusCounter, LanguagesCounter, LocationsCounter, MaterialCounter, ObjectTypeCounter, TextFilter, TypesCounter, WordDivisionTypeCounter } from '../texts/texts.component';
-import { groupByAuthors, groupByCenturies, groupByDates, groupByLexicalEntry, groupDuctus, groupLanguages, groupLocations, groupMaterial, groupObjectTypes, groupTypes, groupWordDivisionType } from '../texts/utils';
+import { AlphabetCounter, AutoCompleteEvent, CenturiesCounter, DuctusCounter, LanguagesCounter, LocationsCounter, MaterialCounter, ObjectTypeCounter, TextFilter, TypesCounter, WordDivisionTypeCounter } from '../texts/texts.component';
+import { groupAlphabet, groupByAuthors, groupByCenturies, groupByDates, groupByLexicalEntry, groupDuctus, groupLanguages, groupLocations, groupMaterial, groupObjectTypes, groupTypes, groupWordDivisionType } from '../texts/utils';
 
 @Component({
   selector: 'app-search',
@@ -56,11 +56,11 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     return (this.start - minSlider) * (max - min) / (maxSlider - minSlider) + min;
   } */
 
-  lexiconOptions = [{name: 'Lemma'}, {name: 'Form'}, {name:'Autocomplete'}]
+  lexiconOptions = [{name: 'Entry'}, {name: 'Form'}, {name:'Autocomplete'}]
   lexiconSearchMode = [{name: 'Start', value: 'startsWith'}, {name: 'Contains', value: 'contains'}, {name:'End', value: 'endsWith'}, {name:'Equals', value: 'equals'}]
   formSearchMode = [{name: 'Start', value: 'startsWith'}, {name: 'Contains', value: 'contains'}, {name:'End', value: 'endsWith'}, {name:'Equals', value: 'equals'}]
   inscriptionSearchMode = [{name: 'Start', value: 'startsWith'}, {name: 'Contains', value: 'contains'}, {name:'End', value: 'endsWith'}, {name:'Equals', value: 'equals'}]
-  selectedLexiconOption: string = 'Lemma';
+  selectedLexiconOption: string = 'Entry';
   selectedInscriptionSearchMode: string = 'contains';
 
 
@@ -70,6 +70,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     title: new FormControl(null),
     id: new FormControl(null),
     language: new FormControl(null),
+    alphabet : new FormControl(null),
     dateOfOriginNotBefore: new FormControl(-200),
     dateOfOriginNotAfter: new FormControl(null),
     modernName: new FormControl(null),
@@ -220,6 +221,17 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(texts=> groupLanguages(texts)),
   )
 
+  groupAlphabet : Observable<AlphabetCounter[]> = this.textService.texts$.pipe(
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), 
+        of([]) 
+    )),
+    takeUntil(this.destroy$),
+    map(texts=> groupAlphabet(texts)),
+  )
+
   groupObjectTypes : Observable<ObjectTypeCounter[]> = this.textService.texts$.pipe(
     catchError(err => 
       iif(
@@ -324,6 +336,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     id: null,
     idExactMatch: false,
     language: null,
+    alphabet : null,
     dateOfOriginNotBefore: -200,
     dateOfOriginNotAfter: null,
     modernName: null,
@@ -434,7 +447,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
           this.totalRecords = of(res.length)
         }, 100);
       }),
-      //map(res => res.slice(0, 6))
+      map(res => res.slice(0, 6))
     )
     console.log(this.advancedSearchForm.value)
     

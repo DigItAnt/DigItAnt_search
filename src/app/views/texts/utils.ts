@@ -2,7 +2,7 @@ import { Renderer2 } from "@angular/core";
 import { CenturyPipe } from "src/app/pipes/century-pipe/century-pipe.pipe";
 import { Book, BookAuthor, BookEditor, Graphic, ListAndId, TextMetadata, TextToken, XmlAndId } from "src/app/services/text/text.service";
 import { AuthorCounter, DateCounter } from "../lexicon/lexicon.component";
-import { CenturiesCounter, LocationsCounter, TypesCounter, LanguagesCounter, ObjectTypeCounter, MaterialCounter, DuctusCounter, WordDivisionTypeCounter } from "./texts.component";
+import { CenturiesCounter, LocationsCounter, TypesCounter, LanguagesCounter, ObjectTypeCounter, MaterialCounter, DuctusCounter, WordDivisionTypeCounter, AlphabetCounter } from "./texts.component";
 
 const allowedCenturies: number[] = [];
 for (let i = -600; i <= 200; i += 100) {
@@ -70,6 +70,23 @@ export function groupTypes(texts: TextMetadata[]): TypesCounter[] {
 
     tmp = Object.values(
         tmp.reduce((acc, object) => ({ ...acc, [object.inscriptionType]: object }), {})
+    )
+
+    return tmp;
+}
+
+export function groupAlphabet(texts: TextMetadata[]): AlphabetCounter[] {
+    let tmp: AlphabetCounter[] = [];
+    let count: number = 0;
+    texts.forEach(text => {
+        count = texts.reduce((acc, cur) => cur.alphabet == text.alphabet ? ++acc : acc, 0);
+        if (count > 0) {
+            tmp.push({ alphabet: text.alphabet, count: count })
+        }
+    });
+
+    tmp = Object.values(
+        tmp.reduce((acc, object) => ({ ...acc, [object.alphabet]: object }), {})
     )
 
     return tmp;
@@ -599,7 +616,8 @@ export function buildCustomInterpretative(renderer: Renderer2, TEINodes: Array<A
                         if (sub instanceof HTMLElement) {
                             HTML += sub.outerHTML;
                         }
-                        if (sub instanceof Text && sub.textContent != null && /[\a-z*]/.test(sub.textContent)) {
+
+                        if (sub instanceof Text && sub.textContent != null && /[a-zA-ZàèìòùÀÈÌÒÙáéíóúýÁÉÍÓÚÝâêîôûÂÊÎÔÛãñõäëïöüÿÄËÏÖÜŸ]/.test(sub.textContent)) {
                             token.forEach(
                                 tok => {
                                     if (tok.xmlid == nodeValue) {
@@ -615,6 +633,17 @@ export function buildCustomInterpretative(renderer: Renderer2, TEINodes: Array<A
                                     }
                                 }
                             )
+                        }
+
+                        if(sub instanceof HTMLBRElement){
+                            let span = renderer.createElement('span') as Element;
+                                renderer.addClass(span, 'linenumber');
+                                span.setAttribute('xmlid', sub.id);
+                                let text = renderer.createText((lineCounter + 1).toString());
+                                renderer.appendChild(span, text);
+
+                                HTML += span.outerHTML;
+                                lineCounter = lineCounter + 1;
                         }
 
                     });

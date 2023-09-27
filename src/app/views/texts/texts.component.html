@@ -10,6 +10,7 @@
         groupLanguage : groupLanguages | async,
         groupMaterial : groupMaterial | async,
         groupObjectTypes : groupObjectTypes | async,
+        groupAlphabet : groupAlphabet | async,
         geoData: geoData | async} as text">
 
         <div id="left-bar" class="flex flex-column">
@@ -18,7 +19,14 @@
                 <p-tabPanel header="Categories" [selected]="text.activeTab != 'search'">
         
                     <ul class="home-menu">
-        
+                        <a  (click)="getAllData()" [href]="'/texts'"
+                            class="categories no-underline" routerLink="./"  
+                            [ngClass]="{'active' : text.activeTab == null}">
+                            <li class="pl-4 flex align-items-center">
+                                <span class="icon"></span>
+                                <span class="route flex-1">All</span>
+                            </li>
+                        </a>
                         <a *ngFor="let filter of allowedFilters" (click)="getAllData()" [href]="'/texts?filter='+filter"
                             class="categories no-underline" routerLink="./" [queryParams]="{filter : filter}" routerLinkActive="active"
                             [routerLinkActiveOptions]="{exact : false}">
@@ -121,6 +129,22 @@
                                     <ng-template let-item pTemplate="item">
                                         <div class="language-item">
                                             <span class="counter">{{item.language}} - {{item.count}}</span>
+                                        </div>
+                                    </ng-template>
+                                </p-dropdown>
+                            </div>
+
+            
+                        </p-panel>
+
+                        <p-panel class="cursor-pointer" header="Alphabet" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
+                            
+                            <div class="flex pt-3">
+                                <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupAlphabet) || []" formControlName="alphabet"
+                                    optionValue="alphabet" optionLabel="alphabet" placeholder="Select language...">
+                                    <ng-template let-item pTemplate="item">
+                                        <div class="language-item">
+                                            <span class="counter">{{item.alphabet}} - {{item.count}}</span>
                                         </div>
                                     </ng-template>
                                 </p-dropdown>
@@ -277,7 +301,7 @@
         <div id="texts-container" class="flex flex-column flex-1">
             
             <!-- TEXT FILTER ALL -->
-            <div id="filter-texts-container" class="flex flex-column text-container-top" *ngIf="text.activeTab == 'all' || text.activeTab == 'search'">
+            <div id="filter-texts-container" class="flex flex-column text-container-top" *ngIf="(text.activeTab == null || text.activeTab == 'search') && !text.activeFile">
                 <div class="flex flex-row align-items-center horizontal-list m-3 text-center">
                     <h2 class="flex-1 loading" *ngIf="!text.totalRecords && !somethingWrong && text.totalRecords != 0">Loading <span>.</span><span>.</span><span>.</span>
                     </h2>
@@ -448,13 +472,7 @@
                     
                     <div class="main-section flex flex-column p-3 m-3" *ngIf="textView.file">
 
-                        <div class="flex justify-content-start" *ngIf="externalReferences && externalReferences.length > 0">
-                            <p-splitButton pTooltip="Other images" tooltipPosition="left" [appendTo]="'body'" label="Normal" styleClass="p-button-rounded p-button-sm p-button-danger bg-primary" [model]="externalReferences">
-                                <ng-template pTemplate="content">
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                </ng-template>
-                            </p-splitButton>
-                        </div>
+                        
                         
 
                         <div id="facsimile-div" class="flex flex-column flex-auto pt-3" *ngIf="{facsimile : getFacsimile | async } as images">
@@ -476,6 +494,15 @@
                             </div>
                         </div> 
 
+                        <div class="flex justify-content-start" *ngIf="externalReferences && externalReferences.length > 0">
+                            <p-splitButton pTooltip="Other images" tooltipPosition="left" [appendTo]="'body'" label="Normal" styleClass="p-button-rounded p-button-sm p-button-danger bg-primary" [model]="externalReferences">
+                                <ng-template pTemplate="content">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+
+                                    <span class="pl-3">External images</span>
+                                </ng-template>
+                            </p-splitButton>
+                        </div>
 
                         <div id="text-data-div" class="flex flex-column flex-auto pt-3">
                             <div id="text-data-div-title" class="flex flex-row">
@@ -488,16 +515,27 @@
                                 <div class="flex col-3 justify-content-end">
                                     <span class="font-bold text-right">IDs:</span>
                                 </div>
-                                <div class="flex flex-row col-9">
+                                <div class="flex flex-column col-9">
+                                    <div class="flex flex-row pl-2" *ngIf="textView.file.trismegistos">
+                                        <a [href]="'//'+textView.file.trismegistos.trismegistosID_url" target="_blank" class="font-bold text-red-800">{{textView.file.trismegistos.trismegistosID}}</a>
+                                    </div>
+                                    <div class="flex flex-column">
 
-                                    <div class="flex flex-column" *ngIf="textView.file.traditionalIDs.length > 0">
+                                    </div>
+                                    <div class="flex flex-column" *ngIf="isTraditionalIdArray">
                                         <div class="flex flex-column">
                                             <a class="font-bold text-red-800 pl-2" *ngFor="let traditionalIDs of textView.file.traditionalIDs" [href]="traditionalIDs.traditionalID_URL" target="_blank">{{traditionalIDs.traditionalID}}</a>
                                         </div>
                                         
-                                        <div class="flex flex-row pl-2" *ngIf="textView.file.trismegistos">
-                                            <a [href]="'//'+textView.file.trismegistos.trismegistosID_url" target="_blank" class="font-bold text-red-800">{{textView.file.trismegistos.trismegistosID}}</a>
+                                        
+                                    </div>
+
+                                    <div class="flex flex-column" *ngIf="!isTraditionalIdArray">
+                                        <div class="flex flex-column">
+                                            <a class="font-bold text-red-800 pl-2" [href]="textView.file.traditionalIDs.traditionalID_URL" target="_blank">{{textView.file.traditionalIDs.traditionalID}}</a>
                                         </div>
+                                        
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -555,12 +593,11 @@
                                 </div>
                             </div>
 
-                            <div class="flex grid data-list">
+                            <div class="flex grid data-list"  *ngIf="textView.file.wordDivisionType && textView.file.wordDivisionType != ''">
                                 <div class="flex col-3 justify-content-end">
                                     <span class="font-bold text-right">Word division type:</span>
                                 </div>
                                 <div class="flex flex-row col-9">
-
                                     <span class="font-normal" *ngIf="textView.file.wordDivisionType">{{textView.file.wordDivisionType}}</span>
                                     <span class="font-italic" *ngIf="textView.file.wordDivisionType == undefined">No info</span>
                                     
@@ -580,20 +617,18 @@
 
                             <div class="flex grid data-list">
                                 <div class="flex col-3 justify-content-end">
-                                    <span class="font-bold text-right">Execution:</span>
+                                    <span class="font-bold text-right">Ductus:</span>
                                 </div>
                                 <div class="flex flex-column col-9" *ngIf="isBodyTextPartArray">
 
                                     <div class="flex flex-column mb-3" *ngFor="let ductus of textView.file.bodytextpart">
                                         <div>
-                                            <span class="font-bold text-red-800 ">Ductus:</span> <span class="font-normal ">{{ductus.ductus}}</span>
+                                            <!-- <span class="font-bold text-red-800 ">Ductus:</span>  --><span class="font-normal ">{{ductus.ductus}}</span>
                                         </div>
                                         <div>
-                                            <span class="font-bold text-red-800 ">Section:</span> <span class="font-normal ">{{ductus.section}}</span>
+                                            <!-- <span class="font-bold text-red-800 ">Section:</span> --> <span class="font-normal ">{{ductus.section}}</span>
                                         </div>
-                                       <!--  <div>
-                                            <span class="font-bold text-red-800 ">Text direction:</span> <span class="font-normal ">{{ductus.textDirection}}</span>
-                                        </div> -->
+                                      
 
                                     </div>
                                     
@@ -602,15 +637,36 @@
                                 <div class="flex flex-column col-9" *ngIf="!isBodyTextPartArray">
 
                                     <div>
-                                        <span class="font-bold text-red-800 ">Ductus:</span> <span class="font-normal ">{{textView.file.bodytextpart.ductus}}</span>
+                                        <span class="font-normal ">{{textView.file.bodytextpart.ductus}}</span>
                                     </div>
-                                    <!-- <div>
-                                        <span class="font-bold text-red-800 ">Section:</span> <span class="font-normal ">{{textView.file.bodytextpart.section}}</span>
-                                    </div>
-                                    <div>
-                                        <span class="font-bold text-red-800 ">Text direction:</span> <span class="font-normal ">{{textView.file.bodytextpart.textDirection}}</span>
-                                    </div> -->
                                     
+                                    
+                                </div>
+                            </div>
+
+                            <div class="flex grid data-list">
+                                <div class="flex col-3 justify-content-end">
+                                    <span class="font-bold text-right">Execution:</span>
+                                </div>
+                                <div class="flex flex-row col-9">
+
+                                    <div class="flex flex-column" *ngIf="textView.file.execution != undefined">
+
+                                        <div class="flex flex-column">
+                                            <a class="font-bold text-red-800 " [href]="textView.file.execution_conceptUrl" target="_blank">{{textView.file.execution}}</a>
+
+                                        </div>
+                                        
+                                    </div>
+
+                                    <div class="flex flex-column" *ngIf="textView.file.execution == undefined">
+
+                                        <div class="flex flex-column">
+                                            <span class="font-italic " >No info</span>
+
+                                        </div>
+                                        
+                                    </div>
                                 </div>
                             </div>
 
@@ -850,23 +906,22 @@
                                 </div>
                             </div>
 
-                            <div class="flex grid data-list" *ngIf="textView.file.dimensions != undefined">
-
+                            <div class="flex grid data-list" *ngIf="textView.file.dimensions != undefined && textView.file.dimensions.width != ''">
                                 <div class="flex col-3 justify-content-end" >
                                     <span class="font-bold text-right">Dimensions:</span>
                                 </div>
                                 <div class="flex flex-column col-9">
 
-                                    <div>
-                                        <span class="font-bold text-red-800 " *ngIf="textView.file.dimensions.width != ''">Width:</span> 
+                                    <div  *ngIf="textView.file.dimensions.width != ''">
+                                        <span class="font-bold text-red-800 ">Width:</span> 
                                         <span class="font-normal pl-3">{{textView.file.dimensions.width}} cm</span>
                                     </div>
-                                    <div>
-                                        <span class="font-bold text-red-800 " *ngIf="textView.file.dimensions.height != ''">Height:</span> 
+                                    <div *ngIf="textView.file.dimensions.height != ''">
+                                        <span class="font-bold text-red-800 " >Height:</span> 
                                         <span class="font-normal pl-3">{{textView.file.dimensions.height}} cm</span>
                                     </div>
-                                    <div>
-                                        <span class="font-bold text-red-800 " *ngIf="textView.file.dimensions.depth != ''">Depth:</span> 
+                                    <div *ngIf="textView.file.dimensions.depth != ''">
+                                        <span class="font-bold text-red-800 " >Depth:</span> 
                                         <span class="font-normal pl-3">{{textView.file.dimensions.depth}} cm</span>
                                     </div>
                                 </div>

@@ -28,7 +28,7 @@ const lexicalElementFields = [
 
 const inscriptionFields = [
   'word', 'wordSearchMode', 'title', 'id',
-  'language', 'dateOfOriginNotBefore', 'dateOfOriginNotAfter', 'modernName',
+  'language', 'alphabet', 'dateOfOriginNotBefore', 'dateOfOriginNotAfter', 'modernName',
   'inscriptionType', 'objectType', 'material', 'ductus', 'wordDivisionType'
 ];
 
@@ -123,7 +123,9 @@ export class AdvancedsearchService {
             'Content-Type': 'application/x-www-form-urlencoded'
           });
           
-          let params = new HttpParams().set('query', finalQuery);
+          let params = new HttpParams()
+            .set('query', finalQuery)
+            .set('limit', '1000');;
 
 
           return this.http.post<AnnotationsRows>(this.cashUrl + "api/public/search", params.toString(), { headers: headers }).pipe(
@@ -181,7 +183,10 @@ export class AdvancedsearchService {
           'Content-Type': 'application/x-www-form-urlencoded'
         });
         
-        let params = new HttpParams().set('query', query);
+        let params = new HttpParams()
+          .set('query', query)
+          .set('limit', '1000');
+        
 
 
         return this.http.post<AnnotationsRows>(this.cashUrl + "api/public/search", params.toString(), { headers: headers }).pipe(
@@ -377,6 +382,10 @@ export class AdvancedsearchService {
 
     if (advancedSearchForm.get('language')?.touched && formValues.language) {
       queryParts.push(`_doc__language__ident="${formValues.language}"`);
+    }
+
+    if (advancedSearchForm.get('alphabet')?.touched && formValues.alphabet) {
+      queryParts.push(`_doc__alphabet="${formValues.alphabet}"`);
     }
 
     if (advancedSearchForm.get('dateOfOriginNotBefore')?.touched && formValues.dateOfOriginNotBefore) {

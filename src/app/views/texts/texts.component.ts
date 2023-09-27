@@ -12,7 +12,7 @@ import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.serv
 import { PopupService } from 'src/app/services/maps/popup/popup.service';
 import { AnnotationsRows, Book, BookAuthor, BookEditor, Graphic, ListAndId, TextMetadata, TextsService, TextToken, XmlAndId } from 'src/app/services/text/text.service';
 import { DynamicOverlayComponent } from './dynamic-overlay/dynamic-overlay.component';
-import { buildCustomInterpretative, getApparatus, getBibliography, getCommentaryXml, getFacsimile, getInscriptionType, getTeiChildren, getTranslationByXml, groupByCenturies, groupLanguages, groupLocations, groupMaterial, groupObjectTypes, groupTypes, leidenDiplomaticBuilder } from './utils';
+import { buildCustomInterpretative, getApparatus, getBibliography, getCommentaryXml, getFacsimile, getInscriptionType, getTeiChildren, getTranslationByXml, groupAlphabet, groupByCenturies, groupLanguages, groupLocations, groupMaterial, groupObjectTypes, groupTypes, leidenDiplomaticBuilder } from './utils';
 
 
 export interface CenturiesCounter {
@@ -35,6 +35,11 @@ export interface LocationsCounter {
 
 export interface TypesCounter {
   inscriptionType: string,
+  count: number,
+}
+
+export interface AlphabetCounter {
+  alphabet: string,
   count: number,
 }
 
@@ -103,7 +108,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
   isActiveInterval : boolean = false;
   first: number = 0;
   rows : number = 6;
-  allowedFilters : string[] = ['all', 'date', 'location', 'type', 'search'];
+  allowedFilters : string[] = ['date', 'location', 'type', 'search'];
   allowedOperators: string[] = ['filter', 'date', 'place', 'type', 'file'];
   searchOptions : Array<string> = ['start', 'equals', 'contains', 'ends']
 
@@ -129,12 +134,17 @@ export class TextsComponent implements OnInit, AfterViewInit {
     map((texts) => texts.length || 0),
   );
 
-  activeTab : Observable<string> = this.activatedRoute.queryParams.pipe(
+  activeTab: Observable<string | null> = this.activatedRoute.queryParams.pipe(
     takeUntil(this.destroy$),
-    filter(params => Object.keys(params).length != 0),
-    map((queryParams : Params) => queryParams as TextFilter),
-    map((filter : TextFilter) => filter.filter),
-    tap(index => index == 'search' ? this.activeIndex = 1 : this.activeIndex = 0)
+    map((queryParams: Params) => 
+      Object.keys(queryParams).length === 0 ? null : queryParams as TextFilter
+    ),
+    map((filter: TextFilter | null) => 
+      filter ? filter.filter : null
+    ),
+    tap(index => 
+      index === 'search' ? this.activeIndex = 1 : this.activeIndex = 0
+    )
   );
 
   activeDate : Observable<number> = this.activatedRoute.queryParams.pipe(
@@ -211,6 +221,17 @@ export class TextsComponent implements OnInit, AfterViewInit {
     )),
     takeUntil(this.destroy$),
     map(texts=> groupTypes(texts)),
+  )
+
+  groupAlphabet : Observable<AlphabetCounter[]> = this.textService.texts$.pipe(
+    catchError(err => 
+      iif(
+        () => err,
+        this.thereWasAnError(), 
+        of([]) 
+    )),
+    takeUntil(this.destroy$),
+    map(texts=> groupAlphabet(texts)),
   )
 
   groupLanguages : Observable<LanguagesCounter[]> = this.textService.texts$.pipe(
@@ -341,6 +362,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
   )
 
   isBodyTextPartArray : boolean = false;
+  isTraditionalIdArray : boolean = false;
   onlyTextCommentary : string[] = [];
   referencedCommentary : any[] = [];
 
@@ -348,6 +370,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
     switchMap(index => !isNaN(index) ? this.textService.getFileByIndex(index) : of()),
     tap(file => {
       if(file){
+        console.log(file)
         this.onlyTextCommentary = [];
         this.referencedCommentary = [];
         this.tempXml = null;
@@ -362,6 +385,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
         this.getGetoDataFromFile$.next(file);
         this.getTextContentReq$.next(file['element-id']);
         this.isBodyTextPartArray = Array.isArray(file.bodytextpart)
+        this.isTraditionalIdArray =  Array.isArray(file.traditionalIDs)
       }
     })
   )
@@ -567,7 +591,8 @@ export class TextsComponent implements OnInit, AfterViewInit {
     ancientName: new FormControl(null),
     inscriptionType: new FormControl(null),
     objectType: new FormControl(null),
-    material: new FormControl(null)
+    material: new FormControl(null),
+    alphabet : new FormControl(null)
   });
 
 
@@ -592,10 +617,10 @@ export class TextsComponent implements OnInit, AfterViewInit {
           this.fileNotAvailable = false;
           const keys  = Object.keys(event);
           const values = Object.values(event);
-          if(keys.length == 0) {
+          /* if(keys.length == 0) {
             this.goToDefaultUrl(); 
             return;
-          }
+          } */
 
           if(keys){
             for(const [key, value] of Object.entries(event)) {
@@ -715,15 +740,15 @@ export class TextsComponent implements OnInit, AfterViewInit {
     let queryParts: string[] = [];
 
     if (formData.word) {
-      queryParts.push(`word="${formData.word}"`);
+      queryParts.push(`word="_REGEX_.*${formData.word}.*"`);
     }
 
     if (formData.title) {
-      queryParts.push(`_doc__title="${formData.title}"`);
+      queryParts.push(`_doc__title="_REGEX_.*${formData.title}.*"`);
     }
 
     if (formData.id) {
-      queryParts.push(`_doc__id="${formData.id}"`);
+      queryParts.push(`_doc__trismegistos__trismegistosID="_REGEX_.*${formData.id}.*"`);
     }
 
     if (formData.dateOfOriginNotBefore) {
@@ -922,10 +947,11 @@ export class TextsComponent implements OnInit, AfterViewInit {
 
     let rows = (this.first != this.rows) && (this.first < this.rows) ? this.rows : this.first + this.rows;
     if(args.length>0){args =args.filter(query=>query != null)}
+    if(args.length == 0){
+      this.getAllData(this.first, rows);
+    }
     if(args.length==1){
-      if(args[0] == 'all'){
-        this.getAllData(this.first, rows);
-      }else if(args[0]=='search'){
+      if(args[0]=='search'){
         this.paginationItems = this.textService.sliceFilteredAttestations(this.first, rows);
       }
       

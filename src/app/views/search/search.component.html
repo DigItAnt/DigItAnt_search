@@ -11,6 +11,7 @@
     groupObjectTypes : groupObjectTypes | async,
     groupDuctus : groupDuctus | async,
     groupDates : groupDates | async,
+    groupAlphabet : groupAlphabet | async,
     groupWordDivisionType : groupWordDivisionType | async,
     types : typesList | async,
     pos : posList | async, 
@@ -89,7 +90,6 @@
                     <div class="flex align-items-center pt-3" *ngIf="!isActiveInscriptionInterval">
                         <!-- {{mapInscriptionSingle}} -->
                         {{start}}
-                        {{advancedSearchForm.get('dateOfOriginNotBefore')?.value}}
                         <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="start" [range]="false" [min]="-200" [max]="300" class="w-full mx-5" (onChange)="onChangeSlider($event)"></p-slider>
                     </div>
     
@@ -131,6 +131,20 @@
                             <ng-template let-item pTemplate="item">
                                 <div class="language-item">
                                     <span class="counter">{{item.language}} - {{item.count}}</span>
+                                </div>
+                            </ng-template>
+                        </p-dropdown>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex flex-column">
+                    <span class="text-sm font-medium">Alphabet:</span>
+                    <div class="flex pt-3">
+                        <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupAlphabet) || []" formControlName="alphabet"
+                            optionValue="alphabet" optionLabel="alphabet" placeholder="Select alphabet...">
+                            <ng-template let-item pTemplate="item">
+                                <div class="alphabet-item">
+                                    <span class="counter">{{item.alphabet}} - {{item.count}}</span>
                                 </div>
                             </ng-template>
                         </p-dropdown>
@@ -237,7 +251,7 @@
                 </div>
 
                 <!-- LEMMA -->
-                <div *ngIf="selectedLexiconOption == 'Lemma'">
+                <div *ngIf="selectedLexiconOption == 'Entry'">
                     <div class="pt-3 flex flex-column" >
                         <span class="text-sm font-medium pt-3">Text:</span>
                         <div class="flex pt-3">
@@ -548,11 +562,11 @@
             </div>
     
             <a class="flex no-underline text-item m-2" *ngFor="let item of paginationItems | async"
-                [href]="'/texts?file='+item.fileID" routerLink="/texts" [queryParams]="{file: item.fileID}">
+            [href]="'/texts?file='+item.trismegistos.trismegistosID" routerLink="/texts" [queryParams]="{file: item.trismegistos.trismegistosID}">
 
                 <div class="flex flex-row  ">
                     <div class="flex text-item-id p-2">
-                        {{item.itAnt_ID}}
+                        {{item.trismegistos.trismegistosID}}
                     </div>
     
                     <div class="flex flex-column text-item-preview p-2">

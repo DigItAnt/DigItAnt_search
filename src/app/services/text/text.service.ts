@@ -53,7 +53,7 @@ export interface TextMetadata {
   summary : string,
   support : SupportModel,
   title: string,
-  traditionalIDs : Array<TraditionalIDs>,
+  traditionalIDs : Array<TraditionalIDs> & TraditionalIDs,
   trismegistos : Trismegistos,
   wordDivisionType : string,
   writingSystem : string,
