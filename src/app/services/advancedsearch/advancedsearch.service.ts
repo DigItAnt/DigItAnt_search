@@ -125,7 +125,7 @@ export class AdvancedsearchService {
           
           let params = new HttpParams()
             .set('query', finalQuery)
-            .set('limit', '1000');;
+            .set('limit', '1000');
 
 
           return this.http.post<AnnotationsRows>(this.cashUrl + "api/public/search", params.toString(), { headers: headers }).pipe(

@@ -1,3 +1,4 @@
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import {  AfterViewInit, Component, ComponentRef, ElementRef, NgZone, OnInit, Renderer2, ViewChild, ViewContainerRef } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router, ActivatedRoute, Params } from '@angular/router';
@@ -11,6 +12,7 @@ import { FormElement, LexiconService } from 'src/app/services/lexicon/lexicon.se
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
 import { PopupService } from 'src/app/services/maps/popup/popup.service';
 import { AnnotationsRows, Book, BookAuthor, BookEditor, Graphic, ListAndId, TextMetadata, TextsService, TextToken, XmlAndId } from 'src/app/services/text/text.service';
+import { environment } from 'src/environments/environment';
 import { DynamicOverlayComponent } from './dynamic-overlay/dynamic-overlay.component';
 import { buildCustomInterpretative, getApparatus, getBibliography, getCommentaryXml, getFacsimile, getInscriptionType, getTeiChildren, getTranslationByXml, groupAlphabet, groupByCenturies, groupLanguages, groupLocations, groupMaterial, groupObjectTypes, groupTypes, leidenDiplomaticBuilder } from './utils';
 
@@ -278,10 +280,16 @@ export class TextsComponent implements OnInit, AfterViewInit {
     switchMap(locations => this.mapsService.getGeoPlaceData(locations)),
     switchMap(geoData => {
       const searchAttestationsObservables = geoData.map(place => {
+        const headers = new HttpHeaders({
+          'Content-Type': 'application/x-www-form-urlencoded'
+        });
         const cqlQuery = `[_doc__originalPlace__modernNameUrl="${place.modernUri}" | _doc__originalPlace__ancientNameUrl="${place.ancientUri}"]`;
+        let params = new HttpParams()
+        .set('query', cqlQuery)
+        .set('offset', '0')
+        .set('limit', '1000');
         
-        
-        return this.textService.filterAttestations(cqlQuery).pipe(
+        return this.http.post<AnnotationsRows>(environment.cashUrl + "api/public/search", params.toString(), { headers: headers }).pipe(
           map(attestations => ({ ...place, attestations }))
         );
       });
@@ -605,6 +613,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
               private ngZone : NgZone,
               private popupService : PopupService,
               private renderer : Renderer2,
+              private http: HttpClient,
   ) { }
 
   ngOnInit(): void {
@@ -955,7 +964,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
         this.paginationItems = this.textService.sliceFilteredAttestations(this.first, rows);
       }
       
-      this.getAllData(this.first, rows);
+      /* this.getAllData(this.first, rows); */
     }
     if(args.length>1){
       let filter = args[0];

@@ -321,9 +321,20 @@ export class TextsService {
 
 
   filterAttestations(query : string, limit? : number, offset? : number): Observable<TextMetadata[]> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+    
+    let params = new HttpParams()
+      .set('query', query)
+      .set('offset', '0')
+      .set('limit', '1000');
 
+    //TODO: da rimuovere
     if(limit){
-      return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?limit="+limit+"&offset="+offset+"&query="+encodeURIComponent(query), null).pipe(
+
+      
+      return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search", params.toString(), { headers: headers }).pipe(
       
         map(res => res.rows),
         map(postData => Array.from(postData.reduce((map, obj) => map.set(obj.nodeId, obj), new Map()).values())), // Aggiunto per rimuovere duplicati
@@ -346,7 +357,7 @@ export class TextsService {
       )
     }
 
-    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?limit=100&offset=0&query="+encodeURIComponent(query), null).pipe(
+    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search", params.toString(), { headers: headers }).pipe(
       
       map(res => res.rows),
       map(postData => Array.from(postData.reduce((map, obj) => map.set(obj.nodeId, obj), new Map()).values())), // Aggiunto per rimuovere duplicati
