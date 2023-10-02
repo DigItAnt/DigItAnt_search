@@ -450,11 +450,11 @@ export function getInscriptionType(xml : string) : any {
     if (Array.from(new DOMParser().parseFromString(xml, "text/xml").querySelectorAll('textClass')).length != 0) {
         let inscriptionType = new DOMParser().parseFromString(xml, "text/xml").querySelectorAll('textClass')[0];
         const termNode = inscriptionType.querySelector('term');
-        const keywordNode = inscriptionType.querySelector('keywords');
+        
 
-        if (termNode && keywordNode) {
+        if (termNode) {
             const term = termNode.textContent;
-            const url = keywordNode.getAttribute('scheme');
+            const url = termNode.getAttribute('ref');
 
             // Costruisce e ritorna l'oggetto JSON
             if (term && url) {
