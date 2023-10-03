@@ -1199,16 +1199,16 @@ export class TextsComponent implements OnInit, AfterViewInit {
           let seenAuthors = {
             name: element.textContent ? element.textContent : '',
             subtype : element.getAttribute('subtype') || '',
-            when : element.getAttribute('when') ? element.getAttribute('when') : NaN,
-            notAfter : element.getAttribute('notAfter') ? element.getAttribute('notAfter') : NaN,
+            when : element.getAttribute('when') ? element.getAttribute('when') : null,
+            notAfter : element.getAttribute('notAfter') ? element.getAttribute('notAfter') : null,
           };
           this.seenAuthors.push(seenAuthors);
         }else if(element.getAttribute('subtype') == 'autopsied'){
           let autopsyAuthor = {
             name: element.textContent ? element.textContent : '',
             subtype : element.getAttribute('subtype') || '',
-            when : element.getAttribute('when') ? element.getAttribute('when') : NaN,
-            notAfter : element.getAttribute('notAfter') ? element.getAttribute('notAfter') : NaN,
+            when : element.getAttribute('when') ? element.getAttribute('when') : null,
+            notAfter : element.getAttribute('notAfter') ? element.getAttribute('notAfter') : null,
           };
           this.autopsyAuthors.push(autopsyAuthor)
 

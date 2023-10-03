@@ -506,15 +506,15 @@ export class TextsService {
     )
   }
 
-  getIndexOfText(trismegistosID : string) : Observable<number> {
+  getIndexOfText(itAnt_ID : string) : Observable<number> {
     return this.texts$.pipe(
-      map(texts => texts.findIndex(text => text.trismegistos.trismegistosID == trismegistosID))
+      map(texts => texts.findIndex(text => text.itAnt_ID == itAnt_ID))
     )
   }
 
   getFileIdByIndex(index : number) : Observable<string> {
     return this.texts$.pipe(
-      map(texts => texts[index].trismegistos.trismegistosID)
+      map(texts => texts[index].itAnt_ID)
     )
   }
 

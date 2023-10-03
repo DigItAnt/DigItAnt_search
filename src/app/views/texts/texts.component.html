@@ -406,11 +406,11 @@
                 </div>
         
                 <a class="flex no-underline text-item m-2" *ngFor="let item of paginationItems | async"
-                    [href]="'/text?file='+item.trismegistos.trismegistosID" routerLink="./" [queryParams]="{file: item.trismegistos.trismegistosID}">
+                    [href]="'/text?file='+item.itAnt_ID" routerLink="./" [queryParams]="{file: item.itAnt_ID}">
 
                     <div class="flex flex-row  ">
                         <div class="flex text-item-id p-2">
-                            {{item.trismegistos.trismegistosID}}
+                            {{item.itAnt_ID}}
                         </div>
         
                         <div class="flex flex-column text-item-preview p-2">
@@ -722,7 +722,7 @@
                                 <div class="flex flex-column col-9">
                                     <div class="flex flex-column mb-3" *ngFor="let autopsy of autopsyAuthors">
                                         <div>
-                                            <span class="font-bold text-red-800 ">{{autopsy.name}}</span>: <span class="font-normal ">({{autopsy.when ? autopsy.when : autopsy.notAfter}})</span>
+                                            <span class="font-bold text-red-800 ">{{autopsy.name}}</span>: <span class="font-normal " *ngIf="autopsy.when != null">({{autopsy.when ? autopsy.when : autopsy.notAfter}})</span>
                                         </div>                        
                                     </div>
                                 </div>
