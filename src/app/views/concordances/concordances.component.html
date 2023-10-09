@@ -25,13 +25,27 @@
 
         <div class="flex flex-column flex-auto overflow-auto px-3 pt-3" style="height: 100px;" *ngIf="concordances.texts">
             
-            <p-table [paginator]="true" [rows]="6"  [value]="(texts | async) || []" responsiveLayout="scroll" [scrollable]="true" scrollHeight="flex">
+            <p-table #concordancesTable [paginator]="true" [rows]="6"  [value]="(texts | async) || []" responsiveLayout="scroll" [scrollable]="true" scrollHeight="flex">
                 <ng-template pTemplate="header">
                     <tr>
-                        <th style="max-width:200px">ItAnt ID</th>
-                        <th style="min-width:200px">Title</th>
-                        <th  style="min-width:200px">Trismegistos ID</th>
+                        <th pSortableColumn="itAnt_ID" style="max-width:200px">ItAnt ID <p-sortIcon field="itAnt_ID"></p-sortIcon></th>
+                        <th pSortableColumn="inscriptionTitle" style="min-width:200px">Title <p-sortIcon field="inscriptionTitle"></p-sortIcon></th>
+                        <th pSortableColumn="trismegistos.trismegistosID" style="min-width:200px">Trismegistos ID <p-sortIcon field="trismegistos.trismegistosID"></p-sortIcon></th>
                         <th  style="min-width:200px">Other IDs</th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <p-columnFilter type="text" field="itAnt_ID" matchMode="contains"></p-columnFilter>
+                        </th>
+                        <th>
+                            <p-columnFilter type="text" field="inscriptionTitle" matchMode="contains"></p-columnFilter>
+                        </th>
+                        <th>
+                            <p-columnFilter type="text" field="trismegistos.trismegistosID" matchMode="contains"></p-columnFilter>
+                        </th>
+                        <th>
+                            <input pInputText type="text" (input)="concordancesTable.filter(getInputValue($event), 'traditionalIDs', 'custom')">
+                        </th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-product>

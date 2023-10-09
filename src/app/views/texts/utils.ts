@@ -239,6 +239,8 @@ export function getBibliography(rawXml: string): Array<any> {
         let entry = Array.from(element.querySelectorAll('biblScope[unit="entry"]'));
         let issue = Array.from(element.querySelectorAll('biblScope[unit="issue"]'));
 
+        let citedRangePage = Array.from(element.querySelectorAll('citedRange[unit="page"]'));
+        let citedRangeEntry = Array.from(element.querySelectorAll('citedRange[unit="entry"]'));
 
         if (title.length > 0) {
             title.forEach(t => {
@@ -315,6 +317,12 @@ export function getBibliography(rawXml: string): Array<any> {
             }
         }
 
+        if (citedRangePage.length > 0) {
+            citedRangePage.forEach(p => {
+                book_obj.citedRangePage = p.innerHTML;
+            })
+        }
+
         //console.log(book_obj);
         biblio_array.push(book_obj)
     })
@@ -369,7 +377,7 @@ export function getCommentaryXml(rawHTML: string, renderer: Renderer2): any {
                             }
 
                             if (isAFile) {
-                                link.setAttribute('href', biblioTargetUrl ? "/texts?file=" + biblioTargetUrl.replace('.xml', '') : '')
+                                link.setAttribute('href', biblioTargetUrl ? "/epilexo_search_test/texts?file=" + biblioTargetUrl.replace('.xml', '') : '')
                                 link.setAttribute('target', '_blank')
                             } else {
                                 link.setAttribute('href', biblioTargetUrl ? biblioTargetUrl : '')
@@ -416,6 +424,14 @@ export function getCommentaryXml(rawHTML: string, renderer: Renderer2): any {
 
                                 if (correspData != '') {
                                     span.setAttribute('xmlid', correspData?.toString() ? correspData.toString() : '')
+                                }
+
+                                let xmlLang = element.getAttribute('xml:lang');
+
+                                if(xmlLang && xmlLang.includes('osc')){
+                                    renderer.addClass(span, 'font-bold');
+                                }else if(xmlLang){
+                                    renderer.addClass(span, 'font-italic');
                                 }
 
                                 let spanText = renderer.createText(element.textContent ? element.textContent : '')
@@ -517,7 +533,7 @@ export function getApparatus(rawXml: string, renderer: Renderer2): Array<string>
                     renderer.appendChild(contentSpan, renderer.createText(' and '));
                 }
             });
-            if (rdgNode) renderer.appendChild(contentSpan, renderer.createText(')'));
+            //if (rdgNode) renderer.appendChild(contentSpan, renderer.createText(')'));
 
             // Append the lineNumberSpan and contentSpan to the containerSpan
             renderer.appendChild(containerSpan, lineNumberSpan);
@@ -534,7 +550,7 @@ export function getApparatus(rawXml: string, renderer: Renderer2): Array<string>
 }
 
 export function getFacsimile(rawXml: string): Array<Graphic> {
-
+    let index = 0;
     let graphic_array: Array<Graphic> = [];
     let nodes = Array.from(new DOMParser().parseFromString(rawXml, "text/xml").querySelectorAll('facsimile graphic'))
 
@@ -543,6 +559,11 @@ export function getFacsimile(rawXml: string): Array<Graphic> {
 
         let desc = Array.from(element.querySelectorAll('desc'));
         let url = element.getAttribute('url');
+        let copyright = element.querySelector('ref');
+
+        graphic_obj.index = index;
+
+        index += 1;
 
         if (desc.length > 0) {
             desc.forEach(d => {
@@ -553,6 +574,10 @@ export function getFacsimile(rawXml: string): Array<Graphic> {
                 }
 
             })
+        }
+
+        if(copyright && copyright.textContent){
+            graphic_obj.copyright = copyright.textContent
         }
 
         if (url) {

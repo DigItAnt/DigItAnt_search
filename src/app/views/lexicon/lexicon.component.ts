@@ -348,7 +348,7 @@ export class LexiconComponent implements OnInit {
       );
     }),
    
-    map(res => res.map(el=> el.trismegistos.trismegistosID)),
+    map(res => res.map(el=> el.itAnt_ID)),
     
   )
 

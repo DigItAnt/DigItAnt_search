@@ -225,6 +225,8 @@ export interface Book {
   entry : string,
   issue : string,
   page : string,
+  citedRangePage: string,
+  citedRangeEntry: string,
   title : string,
   url : string,
   volume : string
@@ -241,9 +243,11 @@ export interface BookEditor extends BookAuthor{
 
 export interface Graphic {
   description : string,
+  index : number,
   url : string,
   isPdf : boolean,
-  isExternalRef : boolean
+  isExternalRef : boolean,
+  copyright: string
 }
 
 
@@ -508,19 +512,58 @@ export class TextsService {
 
   getIndexOfText(itAnt_ID : string) : Observable<number> {
     return this.texts$.pipe(
-      map(texts => texts.findIndex(text => text.itAnt_ID == itAnt_ID))
+      withLatestFrom(this.attestations$),
+      map(([texts, attestations]) => {
+        let index;
+  
+        // Se non trovi l'indice in texts$, cerca in attestations$
+        if(attestations && attestations.length > 0){
+          index = attestations.findIndex(text => text.itAnt_ID === itAnt_ID);
+        }else{
+          index = texts.findIndex(attestation => attestation.itAnt_ID === itAnt_ID);
+
+        }
+        
+        return index;
+      })
     )
   }
 
   getFileIdByIndex(index : number) : Observable<string> {
     return this.texts$.pipe(
-      map(texts => texts[index].itAnt_ID)
+      withLatestFrom(this.attestations$),
+      map(([texts, attestations]) => {
+        let itAnt_ID = '';
+  
+        // Se non trovi l'indice in texts$, cerca in attestations$
+        if(attestations && attestations.length > 0){
+          itAnt_ID = attestations[index].itAnt_ID;
+        }else{
+          itAnt_ID = texts[index].itAnt_ID
+
+        }
+        
+        return itAnt_ID;
+      })
     )
   }
 
   getFileByIndex(index : number) : Observable<TextMetadata> {
     return this.texts$.pipe(
-      map(texts => texts[index])
+      withLatestFrom(this.attestations$),
+      map(([texts, attestations]) => {
+        let itAnt_ID : TextMetadata;
+  
+        // Se non trovi l'indice in texts$, cerca in attestations$
+        if(attestations && attestations.length > 0){
+          itAnt_ID = attestations[index];
+        }else{
+          itAnt_ID = texts[index]
+
+        }
+        
+        return itAnt_ID;
+      })
     )
   }
 

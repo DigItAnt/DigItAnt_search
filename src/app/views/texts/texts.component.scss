@@ -3,7 +3,7 @@
     width: 66%;
     margin: 0 17%;
     h2 {
-        color: $red;
+        color: $blue;
     }
     
 }
@@ -26,14 +26,14 @@
 
 .notation {
     cursor: pointer;
-    border-bottom: 2px solid $red;
+    border-bottom: 2px solid $blue;
     border-bottom-style: dashed;
 
 }
 
 .notation:hover {
     cursor: pointer;
-    border-bottom: 2px solid $dark-red;
+    border-bottom: 2px solid $dark-blue;
     border-bottom-style: dashed;
 
 }

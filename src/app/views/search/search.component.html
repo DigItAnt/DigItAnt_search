@@ -82,6 +82,17 @@
                 </div>
 
                 <div class="pt-3 flex flex-column">
+                    <span class="text-sm font-medium">Other IDs</span>
+                    <div id="text-radio-button" class="pt-2 p-inputgroup">
+                        
+                        <input id="float-input" type="text"
+                            placeholder="Enter other id's..."
+                            formControlName="otherId" pInputText /> 
+                        
+                    </div>
+                </div>
+
+                <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">Date:</span>
                     <div class="flex pt-3">
                         <p-checkbox [(ngModel)]="isActiveInscriptionInterval" (onChange)="setInscriptionDateInterval()" [binary]="true" label="Interval" [ngModelOptions]="{standalone: true}"></p-checkbox>

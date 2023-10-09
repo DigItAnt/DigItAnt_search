@@ -96,7 +96,7 @@ app-root {
 #left-bar {
     background-color: $black;
     color: white;
-    width: 30%;
+    width: 20rem;
     position: relative;
     z-index: 1;
 
@@ -140,11 +140,11 @@ app-root {
         }
 
         a.categories.active {
-            background: $red !important;
+            background: $blue !important;
         }
 
         a.categories:hover {
-            background: $red !important;
+            background: $blue !important;
 
             span.icon {
                 color: $dark-gray;
@@ -418,7 +418,7 @@ app-root {
         }
 
         .red {
-            color: $red;
+            color: $blue;
             font-weight: 700;
         }
     }
@@ -496,7 +496,7 @@ app-root {
         .text-item-id {
             word-break: break-all;
             width: 7rem;
-            color: $red;
+            color: $blue;
             font-weight: 900;
         }
     }
@@ -504,7 +504,7 @@ app-root {
     .text-item:hover,
     .lexicon-item:hover,
     .bibliography-item:hover {
-        border-color: $red;
+        border-color: $blue;
     }
 
     .text-item-preview {
@@ -537,7 +537,7 @@ app-root {
 
         li.letter-list-element.active {
             a {
-                background-color: $red !important;
+                background-color: $blue !important;
                 color: white !important;
                 text-decoration: none !important;
             }
@@ -591,7 +591,7 @@ app-root {
             }
 
             .p-badge {
-                background: $red;
+                background: $blue;
                 font-family: "M PLUS Rounded 1c", sans-serif !important;
             }
         }
@@ -605,7 +605,7 @@ app-root {
             }
 
             .p-badge {
-                background: $red;
+                background: $blue;
                 font-family: "M PLUS Rounded 1c", sans-serif !important;
             }
         }
@@ -619,7 +619,7 @@ app-root {
             }
 
             .p-badge {
-                background: $red;
+                background: $blue;
                 font-family: "M PLUS Rounded 1c", sans-serif !important;
             }
         }
@@ -663,11 +663,11 @@ p-tabview.normal-tabview {
 
             li.p-highlight .p-tabview-nav-link {
                 color: white;
-                border-color: $red;
+                border-color: $blue;
             }
 
             .p-tabview-ink-bar {
-                background-color: $red;
+                background-color: $blue;
             }
         }
 
@@ -758,11 +758,11 @@ p-tree {
         .p-tree-container {
             .p-treenode {
                 .p-treenode-content:focus {
-                    box-shadow: inset 0 0 0 0.15rem $red;
+                    box-shadow: inset 0 0 0 0.15rem $blue;
                 }
 
                 .p-treenode-content.p-highlight {
-                    color: $red !important;
+                    color: $blue !important;
                     background: $light-gray !important;
                 }
 
@@ -802,7 +802,7 @@ p-tree {
 
 .counter {
     font-weight: 900;
-    color: $red !important;
+    color: $blue !important;
 }
 
 //HOME

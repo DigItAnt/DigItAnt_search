@@ -377,7 +377,11 @@ export class AdvancedsearchService {
     }
 
     if (advancedSearchForm.get('id')?.touched && formValues.id) {
-      queryParts.push(`_doc__fileID="${formValues.fileID}"`);
+      queryParts.push(`_doc__itAnt_ID="${formValues.id}"`);
+    }
+
+    if (advancedSearchForm.get('otherId')?.touched && formValues.otherId) {
+      queryParts.push(`_doc__traditionalIDs__traditionalID="${formValues.otherId}"`);
     }
 
     if (advancedSearchForm.get('language')?.touched && formValues.language) {

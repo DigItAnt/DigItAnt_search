@@ -190,7 +190,7 @@ export class LexiconService {
     lang: '',
     status: '',
     offset: 0,
-    limit: 500
+    limit: 1000
   }
 
   lexicon$: Observable<LexicalElement[]> = this.getLexicalEntryList(this.initParams).pipe(
@@ -239,7 +239,7 @@ export class LexiconService {
       representationType: "writtenRep",
       author: "",
       offset: 0,
-      limit: 500
+      limit: 1000
     }
     return this.http.post<LexiconList>(this.baseUrl + "lexicon/data/filteredForms", params).pipe(
       map((res) => res.list),

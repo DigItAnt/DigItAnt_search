@@ -69,6 +69,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     wordSearchMode : new FormControl('contains'),
     title: new FormControl(null),
     id: new FormControl(null),
+    otherId : new FormControl(null),
     language: new FormControl(null),
     alphabet : new FormControl(null),
     dateOfOriginNotBefore: new FormControl(-200),

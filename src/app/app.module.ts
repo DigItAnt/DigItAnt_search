@@ -35,6 +35,7 @@ import {ImageModule} from 'primeng/image';
 import {DialogModule} from 'primeng/dialog';
 import {SliderModule} from 'primeng/slider';
 import {SplitButtonModule} from 'primeng/splitbutton';
+import {GalleriaModule} from 'primeng/galleria';
 
 
 
@@ -66,6 +67,7 @@ import { UrlDecoderPipe } from './pipes/url-decoder/url-decoder.pipe';
 import { NoSanitizePipe } from './pipes/no-sanitize/no-sanitize.pipe';
 import { HighlightModule, HIGHLIGHT_OPTIONS } from 'ngx-highlightjs';
 import { IsArrayPipe } from './views/concordances/isArrayPipe/is-array.pipe';
+import { LabelMappingPipe } from './pipes/language-pipe/language-pipe.pipe';
 
 
 @NgModule({
@@ -89,7 +91,8 @@ import { IsArrayPipe } from './views/concordances/isArrayPipe/is-array.pipe';
     UrlDecoderPipe,
     NoSanitizePipe,
     DynamicOverlayComponent,
-    IsArrayPipe
+    IsArrayPipe,
+    LabelMappingPipe
   ],
   imports: [
     BrowserModule,
@@ -125,7 +128,8 @@ import { IsArrayPipe } from './views/concordances/isArrayPipe/is-array.pipe';
     HighlightModule,
     DialogModule,
     SliderModule,
-    SplitButtonModule
+    SplitButtonModule,
+    GalleriaModule
   ],
   providers: [
     {
