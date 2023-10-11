@@ -94,7 +94,7 @@ app-root {
 }
 
 #left-bar {
-    background-color: $black;
+    background-color: $blue;
     color: white;
     width: 20rem;
     position: relative;
@@ -110,7 +110,7 @@ app-root {
         display: flex;
         flex-direction: column;
         list-style-type: none;
-        background: $transparentBlack;
+        background: $transparentBlue;
 
         a.categories {
             color: white;
@@ -152,13 +152,13 @@ app-root {
         }
 
         a.categories:nth-child(even) {
-            background: #2b2e31;
+            background: #0e2c4fdb;
         }
     }
 
     p-panel {
         .p-panel-header {
-            background: #000000 !important;
+            background: $transparentBlue !important;
             color: white !important;
             border-top-left-radius: 0 !important;
             border-top-right-radius: 0 !important;
@@ -192,7 +192,7 @@ app-root {
         }
 
         .p-panel-content {
-            background: #000000cf !important;
+            background: #0e396d !important;
             border-bottom-left-radius: 0 !important;
             border-bottom-right-radius: 0 !important;
             border: 0 !important;
@@ -513,7 +513,7 @@ app-root {
     }
 
     .text-item-preview-top {
-        color: $black;
+        color: $blue;
         font-weight: 900;
     }
 
@@ -652,7 +652,7 @@ p-tabview.normal-tabview {
 
         .p-tabview-nav {
             font-size: 0.85rem !important;
-            background: $black !important;
+            background: #0e396d !important;
 
             
 
@@ -699,7 +699,7 @@ p-tabview.normal-tabview {
         }
 
         .search-button-div button {
-            background: $black;
+            background: #0e396d;
             color: white;
             border-top-left-radius: 0;
             border-top-right-radius: 0;
@@ -716,7 +716,7 @@ p-tabview.normal-tabview {
 
 .normal-tabview{
     .search-button-div button {
-        background: $black;
+        background: $blue;
         color: white;
         border-top-left-radius: 0;
         border-top-right-radius: 0;
@@ -750,7 +750,7 @@ p-tree {
         font-size: 0.85rem;
         font-weight: 800;
         border: none;
-        background: $transparentBlack;
+        background: $transparentBlue;
         color: white;
         padding: 0;
         border-radius: 0;

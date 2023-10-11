@@ -110,20 +110,24 @@
 
                         <p-panel class="cursor-pointer" header="Provenance" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
 
-                            <p-autoComplete 
-                                            (onClear)="clearLocation()"
-                                            (onSelect)="handleAutocompleteFilter($event)"
-                                            [suggestions]="(searchLocations | async) || []" 
-                                            (completeMethod)="autocomplete$.next($event)"
-                                            field="ancientPlaceLabel"
-                                            placeholder="Eg: Samnium"
-                                            [showClear]="true">
+                            <div class="flex pt-3">
+                                <p-autoComplete 
+                                (onClear)="clearLocation()"
+                                (onSelect)="handleAutocompleteFilter($event)"
+                                [suggestions]="(searchLocations | async) || []" 
+                                (completeMethod)="autocomplete$.next($event)"
+                                
+                                field="ancientPlaceLabel"
+                                placeholder="Eg: Samnium"
+                                [showClear]="true">
 
-                                            <ng-template let-item pTemplate="item">
-                                                <div>{{item.ancientPlaceLabel}}</div>
-                                                <sub>{{item.modernPlaceLabel}}</sub>
-                                            </ng-template>
-                            </p-autoComplete>
+                                <ng-template let-item pTemplate="item">
+                                    <div>{{item.ancientPlaceLabel}}</div>
+                                    <sub>{{item.modernPlaceLabel}}</sub>
+                                </ng-template>
+                </p-autoComplete>
+                            </div>
+                            
 
                         </p-panel>
 
