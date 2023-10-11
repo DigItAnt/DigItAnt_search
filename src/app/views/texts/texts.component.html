@@ -499,7 +499,7 @@
                                 </div> -->
                                 <p-galleria [visible]="displayCustom" [activeIndex]="galleryActiveIndex" [fullScreen]="true" [value]="images.facsimile" [containerStyle]="{'max-width': '40rem'}" [numVisible]="5"> 
                                     <ng-template pTemplate="item" let-item>
-                                        <img [src]="item.url" style="display: block;" />
+                                        <img [src]="item.url" style="max-width: 75rem; display: block;" />
                                     </ng-template>
                                     <ng-template pTemplate="thumbnail" let-item>
                                         <div class="grid grid-nogutter justify-content-center">
