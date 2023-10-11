@@ -427,7 +427,7 @@
                         <div class="flex flex-column text-item-preview p-2">
         
                             <div class="text-item-preview-top">
-                                {{item.inscriptionTitle != '' ? item.inscriptionTitle : item.itAnt_ID}}
+                                {{item.itAnt_ID}}
                             </div>
         
                             <div class="text-item-preview-bottom flex flex-column mt-3">
@@ -499,7 +499,7 @@
                                 </div> -->
                                 <p-galleria [visible]="displayCustom" [activeIndex]="galleryActiveIndex" [fullScreen]="true" [value]="images.facsimile" [containerStyle]="{'max-width': '40rem'}" [numVisible]="5"> 
                                     <ng-template pTemplate="item" let-item>
-                                        <img [src]="item.url" style="max-width: 30rem; display: block;" />
+                                        <img [src]="item.url" style="display: block;" />
                                     </ng-template>
                                     <ng-template pTemplate="thumbnail" let-item>
                                         <div class="grid grid-nogutter justify-content-center">
@@ -507,7 +507,7 @@
                                         </div>
                                     </ng-template>
                                     <ng-template pTemplate="caption" let-item>
-                                        <h4 style="margin-bottom: .5rem; color: #ffffff;">{{item.desc}}</h4>
+                                        <h4 style="margin-bottom: .5rem; color: #ffffff;">{{item.description}}</h4>
                                         <p>{{item.copyright}}</p>
                                     </ng-template>
                                 </p-galleria>
@@ -521,10 +521,10 @@
                                             <img [src]="item.url" style="display: block; max-width: 5rem" (click)="displayCustom = true; imageClick(item)" />
                                         </div>
                                     </ng-template>
-                                    <ng-template pTemplate="caption" let-item>
+                                   <!--  <ng-template pTemplate="caption" let-item>
                                         <h4 style="margin-bottom: .5rem; color: #ffffff;">{{item.desc}}</h4>
                                         <p>{{item.copyright}}</p>
-                                    </ng-template>
+                                    </ng-template> -->
                                 </p-galleria>
                                  
                             </div>

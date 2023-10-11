@@ -568,7 +568,7 @@ export function getFacsimile(rawXml: string): Array<Graphic> {
         if (desc.length > 0) {
             desc.forEach(d => {
                 if (d.textContent != undefined || d.textContent != null) {
-                    graphic_obj.description = d.textContent
+                    graphic_obj.description = d.textContent.split('\n')[0]
                 } else {
                     graphic_obj.description = 'No description'
                 }
