@@ -9,53 +9,42 @@ for (let i = -600; i <= 200; i += 100) {
     allowedCenturies.push(i);
 }
 
-export function groupByCenturies(texts: TextMetadata[]): CenturiesCounter[] {
-    let tmp: CenturiesCounter[] = [];
-    
-    allowedCenturies.forEach(value => {
-        let count: number = 0;
-
-        if (value < 0) {
-            count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOriginNotBefore) >= value && parseInt(cur.dateOfOriginNotBefore) < (value + 100)) ? ++acc : acc, 0);
-        } else {
-            count = texts.reduce((acc, cur) => (parseInt(cur.dateOfOriginNotBefore) > (value - 100) && parseInt(cur.dateOfOriginNotBefore) <= value) ? ++acc : acc, 0);
-        }
-
-        if (count > 0) {
-            tmp.push({ century: value, count: count, label: CenturyPipe.prototype.transform(value) });
-        }
-    })
-
-    return tmp;
-}
-
-export function groupLocations(texts: TextMetadata[], truncatePlaces?: boolean): LocationsCounter[] {
-    let tmp: LocationsCounter[] = [];
-    let count: number = 0;
+export function groupByCenturies(texts: string[]): CenturiesCounter[] {
+    const centuryMap: { [key: number]: number } = {};
 
     texts.forEach(text => {
-        count = texts.reduce((acc, cur) => cur.originalPlace.ancientNameUrl == text.originalPlace.ancientNameUrl ? ++acc : acc, 0);
-        if (count > 0) {
-            let ancientPlaceStripId = text.originalPlace.ancientNameUrl.split('/')[text.originalPlace.ancientNameUrl.split('/').length - 1];
-            let modernPlaceStripId = text.originalPlace.modernNameUrl.split('/')[text.originalPlace.modernNameUrl.split('/').length - 1];
-            tmp.push({
-                ancientPlaceUrl: text.originalPlace.ancientNameUrl,
-                ancientPlaceId: ancientPlaceStripId,
-                ancientPlaceLabel: (truncatePlaces ? text.originalPlace.ancientName : text.originalPlace.ancientName.split(',')[0]),
-                modernPlaceUrl: text.originalPlace.modernNameUrl,
-                modernPlaceId: modernPlaceStripId,
-                modernPlaceLabel: text.originalPlace.modernName,
-                count: count
-            })
+        if (text.trim() === '') return;  // Salta le stringhe vuote
+
+        const year = parseInt(text, 10);
+        let century: number;
+
+        if (year <= 0) {
+            century = Math.ceil(year / 100) * 100;
+        } else if (year === 1) {  // Anno 1 d.C.
+            century = 100;
+        } else {
+            century = (Math.floor(year / 100) + 1) * 100;
         }
+
+        // Aggiornamento del conteggio per il secolo corrispondente
+        centuryMap[century] = (centuryMap[century] || 0) + 1;
     });
 
-    tmp = Object.values(
-        tmp.reduce((acc, object) => ({ ...acc, [object.ancientPlaceId]: object }), {})
-    )
+    // Creazione del risultato
+    let result: CenturiesCounter[] = [];
+    for (let century in centuryMap) {
+        if (centuryMap.hasOwnProperty(century)) {
+            result.push({
+                century: century == '0' ? 100 : parseInt(century, 10),
+                count: centuryMap[century],
+                label: CenturyPipe.prototype.transform(parseInt(century, 10))
+            });
+        }
+    }
 
-    return tmp;
+    return result;
 }
+
 
 
 export function groupTypes(texts: TextMetadata[]): TypesCounter[] {
@@ -574,6 +563,8 @@ export function getFacsimile(rawXml: string): Array<Graphic> {
                 }
 
             })
+        }else{
+            graphic_obj.description = 'No description'
         }
 
         if(copyright && copyright.textContent){

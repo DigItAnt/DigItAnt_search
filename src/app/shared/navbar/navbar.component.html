@@ -2,7 +2,7 @@
 <div id="navbar">
     <p-toolbar class="block">
 
-        <div class="p-toolbar-group-left" *ngIf="{ text : textItems | async } as textData ">
+        <div class="p-toolbar-group-left" >
             <a href="/home" (click)="$event.preventDefault()">                
                 <button routerLink="/home" routerLinkActive="active" pButton pRipple type="button" label="Home" class="p-button-secondary p-button-text"></button>
             </a>

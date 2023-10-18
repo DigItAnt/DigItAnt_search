@@ -1,23 +1,29 @@
 <div class="flex flex-1 flex-row" *ngIf="{activeTab : activeTab | async, 
-    totalRecords: totalRecords | async, 
-    groupCenturies : groupCenturies | async, 
+    
     activeLocation : activeLocation | async,
     activeFile : activeFile | async, 
-    groupAuthors : groupAuthors | async,
+    groupCenturies : groupCenturies | async,
     groupLocations : groupLocations | async,
     groupType : groupTypes | async,
     groupLanguage : groupLanguages | async,
     groupMaterial : groupMaterial | async,
     groupObjectTypes : groupObjectTypes | async,
     groupDuctus : groupDuctus | async,
-    groupDates : groupDates | async,
     groupAlphabet : groupAlphabet | async,
     groupWordDivisionType : groupWordDivisionType | async,
+    geoData: geoData | async,
     types : typesList | async,
     pos : posList | async, 
     authors : authorsList | async,
     languages : languagesList | async,
-    status : statusList | async} as advancedSearch">
+    status : statusList | async,
+    totalRecords: totalRecords | async} as advancedSearch">
+   <!--  , 
+     
+    groupAuthors : groupAuthors | async,
+    
+    groupDates : groupDates | async,
+     -->
     <div id="left-bar" class="flex flex-column normal-tabview">
 
 
@@ -116,18 +122,18 @@
                     <span class="text-sm font-medium">Location:</span>
                     <div class="flex pt-3">
                         <p-autoComplete 
-                        (onClear)="clearLocation()"
-                        (onSelect)="handleAutocompleteFilterLocation($event)"
-                        [suggestions]="(searchLocations | async) || []" 
-                        (completeMethod)="autocompleteLocationReq$.next($event)"
-                        field="modernPlaceLabel"
-                        placeholder="Eg: Samnium"
-                        class="w-full"
-                        [showClear]="true">
+                            [disabled]="!advancedSearch.geoData"
+                            (onClear)="clearLocation()"
+                            (onSelect)="handleAutocompleteFilterLocation($event)"
+                            [suggestions]="(searchLocations | async) || []" 
+                            (completeMethod)="autocompleteLocationReq$.next($event)"
+                            field="modernName"
+                            placeholder="Eg: Samnium"
+                            class="w-full"
+                            [showClear]="true">
 
                         <ng-template let-item pTemplate="item">
-                            <div>{{item.ancientPlaceLabel}}</div>
-                            <sub>{{item.modernPlaceLabel}}</sub>
+                            <div>{{item.modernName}}</div>
                         </ng-template>
                     </p-autoComplete>
                     </div>
@@ -141,7 +147,7 @@
                             optionValue="language" optionLabel="language" placeholder="Select language...">
                             <ng-template let-item pTemplate="item">
                                 <div class="language-item">
-                                    <span class="counter">{{item.language}} - {{item.count}}</span>
+                                    <span class="counter">{{item.language  | labelMapping}} </span>
                                 </div>
                             </ng-template>
                         </p-dropdown>
@@ -155,26 +161,26 @@
                             optionValue="alphabet" optionLabel="alphabet" placeholder="Select alphabet...">
                             <ng-template let-item pTemplate="item">
                                 <div class="alphabet-item">
-                                    <span class="counter">{{item.alphabet}} - {{item.count}}</span>
+                                    <span class="counter">{{item.alphabet}}</span>
                                 </div>
                             </ng-template>
                         </p-dropdown>
                     </div>
                 </div>
 
-                <!-- <div class="pt-3 flex flex-column">
+                <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">Object Type:</span>
                     <div class="flex pt-3">
                         <p-dropdown [appendTo]="'body'" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupObjectTypes) || []" formControlName="objectType"
                             optionValue="objectType" optionLabel="objectType" placeholder="Select object type...">
                             <ng-template let-objectType pTemplate="item">
                                 <div class="language-item">
-                                    <span class="counter">{{objectType.objectType}} - {{objectType.count}}</span>
+                                    <span class="counter">{{objectType.objectType}}</span>
                                 </div>
                             </ng-template>
                         </p-dropdown>
                     </div>
-                </div> -->
+                </div>
 
                 <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">Inscription Type:</span>
@@ -183,7 +189,7 @@
                             optionValue="inscriptionType" optionLabel="inscriptionType" placeholder="Select inscription type...">
                             <ng-template let-inscriptionType pTemplate="item">
                                 <div class="language-item">
-                                    <span class="counter">{{inscriptionType.inscriptionType}} - {{inscriptionType.count}}</span>
+                                    <span class="counter">{{inscriptionType.inscriptionType}} </span>
                                 </div>
                             </ng-template>
                         </p-dropdown>
@@ -197,7 +203,7 @@
                             optionValue="objectType" optionLabel="objectType" placeholder="Select object type...">
                             <ng-template let-objectType pTemplate="item">
                                 <div class="language-item">
-                                    <span class="counter">{{objectType.objectType}} - {{objectType.count}}</span>
+                                    <span class="counter">{{objectType.objectType}} </span>
                                 </div>
                             </ng-template>
                         </p-dropdown>
@@ -211,7 +217,7 @@
                             optionValue="material" optionLabel="material" placeholder="Select material...">
                             <ng-template let-materials pTemplate="item">
                                 <div class="language-item">
-                                    <span class="counter">{{materials.material}} - {{materials.count}}</span>
+                                    <span class="counter">{{materials.material}}</span>
                                 </div>
                             </ng-template>
                         </p-dropdown>
@@ -225,7 +231,7 @@
                             optionValue="ductus" optionLabel="ductus" placeholder="Select ductus...">
                             <ng-template let-ductus pTemplate="item">
                                 <div class="ductus-item">
-                                    <span class="counter">{{ductus.ductus}} - {{ductus.count}}</span>
+                                    <span class="counter">{{ductus.ductus}}</span>
                                 </div>
                             </ng-template>
                         </p-dropdown>
@@ -239,7 +245,7 @@
                             optionValue="type" optionLabel="type" placeholder="Select word division type...">
                             <ng-template let-item pTemplate="item">
                                 <div class="word-type-item">
-                                    <span class="counter">{{item.type}} - {{item.count}}</span>
+                                    <span class="counter">{{item.type}}</span>
                                 </div>
                             </ng-template>
                         </p-dropdown>
@@ -509,7 +515,7 @@
                 <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">Author:</span>
                     <div class="flex pt-3">
-                        <p-dropdown appendTo="body" [showClear]="true" class="flex-auto"
+                        <!-- <p-dropdown appendTo="body" [showClear]="true" class="flex-auto"
                             [options]="(advancedSearch.groupAuthors) || []" formControlName="bibliographyAuthor"
                             optionValue="name" optionLabel="name" placeholder="Select author...">
                             <ng-template let-item pTemplate="item">
@@ -517,7 +523,7 @@
                                     <span class="counter">{{item.name}}</span>
                                 </div>
                             </ng-template>
-                        </p-dropdown>
+                        </p-dropdown> -->
                     </div>
                 </div>
             </p-panel>
@@ -567,17 +573,17 @@
 
 
         <div class="flex flex-row flex-wrap ml-5 flex-auto text-item-container" *ngIf="(advancedSearch.totalRecords != 0 && !somethingWrong) && !advancedSearch.activeFile">
-            <div class="flex flex-row m-2 w-full" *ngIf="!advancedSearch.totalRecords">
+            <div class="flex flex-row m-2 w-full" *ngIf="showSpinner">
                 <p-progressSpinner class="flex flex-1"></p-progressSpinner>
     
             </div>
     
             <a class="flex no-underline text-item m-2" *ngFor="let item of paginationItems | async"
-            [href]="'/texts?file='+item.trismegistos.trismegistosID" routerLink="/texts" [queryParams]="{file: item.trismegistos.trismegistosID}">
+            [href]="'/texts?file='+item.itAnt_ID" routerLink="/texts" [queryParams]="{file: item.itAnt_ID}">
 
                 <div class="flex flex-row  ">
                     <div class="flex text-item-id p-2">
-                        {{item.trismegistos.trismegistosID}}
+                        {{item.itAnt_ID}}
                     </div>
     
                     <div class="flex flex-column text-item-preview p-2">
@@ -607,7 +613,7 @@
         <p-paginator *ngIf="(advancedSearch.totalRecords != 0 && !somethingWrong) && !advancedSearch.activeFile" [dropdownAppendTo]="'body'" [first]="first" [rows]="rows"
                 [totalRecords]="(totalRecords | async) || 0"
                 (onPageChange)="pagination($event, (advancedSearch.activeTab || null))"
-                [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[6,12,24]"></p-paginator>
+                [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[8,16,32]"></p-paginator>
             
                 
         <div class="m-5 flex flex-row flex-wrap flex-auto text-item-container" *ngIf="advancedSearch.totalRecords == 0 && !somethingWrong">

@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute, NavigationEnd, NavigationStart, Params, Router } from '@angular/router';
 import { Paginator } from 'primeng/paginator';
-import { BehaviorSubject, catchError, debounceTime, delay, EMPTY, filter, iif, map, Observable, of, Subject, Subscription, switchMap, take, takeUntil, tap, timeout } from 'rxjs';
+import { BehaviorSubject, catchError, debounceTime, delay, EMPTY, filter, iif, map, Observable, of, shareReplay, Subject, Subscription, switchMap, take, takeUntil, tap, timeout, withLatestFrom } from 'rxjs';
 import { CenturyPipe } from 'src/app/pipes/century-pipe/century-pipe.pipe';
 import { AdvancedsearchService } from 'src/app/services/advancedsearch/advancedsearch.service';
 import { BibliographyService } from 'src/app/services/bibliography/bibliography.service';
@@ -11,7 +11,7 @@ import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.serv
 import { TextMetadata, TextsService } from 'src/app/services/text/text.service';
 import { AuthorCounter, DateCounter, StatisticsCounter } from '../lexicon/lexicon.component';
 import { AlphabetCounter, AutoCompleteEvent, CenturiesCounter, DuctusCounter, LanguagesCounter, LocationsCounter, MaterialCounter, ObjectTypeCounter, TextFilter, TypesCounter, WordDivisionTypeCounter } from '../texts/texts.component';
-import { groupAlphabet, groupByAuthors, groupByCenturies, groupByDates, groupByLexicalEntry, groupDuctus, groupLanguages, groupLocations, groupMaterial, groupObjectTypes, groupTypes, groupWordDivisionType } from '../texts/utils';
+import { groupAlphabet, groupByAuthors, groupByCenturies, groupByDates, groupByLexicalEntry, groupDuctus, groupLanguages, groupMaterial, groupObjectTypes, groupTypes, groupWordDivisionType } from '../texts/utils';
 
 @Component({
   selector: 'app-search',
@@ -100,11 +100,12 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   });
 
   first: number = 0;
-  rows: number = 6;
+  rows: number = 8;
   
 
   autocompleteLocationReq$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
   autocompleteLexiconReq$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
+  getFileByIdReq$: BehaviorSubject<string> = new BehaviorSubject<string>('');
 
   typesList : Observable<StatisticsCounter[]> = this.lexiconService.types$;
   posList : Observable<StatisticsCounter[]> = this.lexiconService.pos$;
@@ -117,16 +118,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   destroy$: Subject<boolean> = new Subject<boolean>();
 
 
-  totalRecords: Observable<number> = this.textService.texts$.pipe(
-    catchError(err => 
-      iif(
-        () => err,
-        this.thereWasAnError(), // -- true, 
-        of([]) 
-    )),
-    takeUntil(this.destroy$),
-    map((texts) => texts.length || 0),
-  );
+
 
   activeTab : Observable<string> = this.activatedRoute.queryParams.pipe(
     takeUntil(this.destroy$),
@@ -171,80 +163,98 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     })
   );
 
+  totalRecords: Observable<number> = this.textService.countFiles().pipe(
+    takeUntil(this.destroy$),
+  );
 
-  paginationItems: Observable<TextMetadata[]> = this.textService.texts$.pipe(
-    catchError(err => 
+  paginationItems: Observable<TextMetadata[]> = this.textService.paginationItems().pipe(
+    tap(x=> this.showSpinner = true),
+    catchError(err =>
       iif(
         () => err,
         this.thereWasAnError(), // -- true, 
-        of([]) 
-    )),
+        of([])
+      )),
     takeUntil(this.destroy$),
-    map((texts) => texts.slice(this.first, this.rows)),
     tap((x) => this.showSpinner = false)
   );
 
-  groupCenturies: Observable<CenturiesCounter[]> = this.textService.texts$.pipe(
+
+
+  groupCenturies: Observable<CenturiesCounter[]> = this.textService.getUniqueMetadata('_doc__dateOfOriginNotBefore').pipe(
     takeUntil(this.destroy$),
     map(texts => groupByCenturies(texts)),
   )
 
-  groupLocations : Observable<LocationsCounter[]> = this.textService.texts$.pipe(
-    catchError(err => 
-      iif(
-        () => err,
-        this.thereWasAnError(), 
-        of([]) 
-    )),
+  groupLocations: Observable<LocationsCounter[]> = this.textService.getUniqueMetadata('_doc__originalPlace__modernNameUrl').pipe(
     takeUntil(this.destroy$),
-    map(texts=> groupLocations(texts)),
+    map(data => data.map((item : any) => {
+      const match = item.match(/(\d+)(?="?$)/);
+      return match ? match[1] : null;
+    }).filter((id : any) => id)),   // Filtra gli eventuali valori null
+    map(data => data.map((item : any) => ({ modernPlaceId: item }))),
+    tap(x => console.log(x))
   )
 
-  groupTypes : Observable<TypesCounter[]> = this.textService.texts$.pipe(
-    catchError(err => 
+  groupTypes: Observable<any[]> = this.textService.getUniqueMetadata('_doc__inscriptionType').pipe(
+    catchError(err =>
       iif(
         () => err,
-        this.thereWasAnError(), 
-        of([]) 
-    )),
+        this.thereWasAnError(),
+        of([])
+      )),
     takeUntil(this.destroy$),
-    map(texts=> groupTypes(texts)),
+    map(texts => texts.filter((text : any) => text && text.trim() !== '')), // Filtra le stringhe vuot
+    map(texts => texts.map((text : any) => ({inscriptionType : text})))
   )
 
-  groupLanguages : Observable<LanguagesCounter[]> = this.textService.texts$.pipe(
-    catchError(err => 
+  groupLanguages: Observable<LanguagesCounter[]> = this.textService.getUniqueMetadata('_doc__language__ident').pipe(
+    catchError(err =>
       iif(
         () => err,
-        this.thereWasAnError(), 
-        of([]) 
-    )),
+        this.thereWasAnError(),
+        of([])
+      )),
     takeUntil(this.destroy$),
-    map(texts=> groupLanguages(texts)),
+    map(texts => texts.filter((text : any) => text && text.trim() !== '' && !text.includes('Ital-x'))),
+    map(lang => lang.map((l : any) => ({ language : l.replace(/[\"]/g,'')}))
+    ) 
   )
 
-  groupAlphabet : Observable<AlphabetCounter[]> = this.textService.texts$.pipe(
-    catchError(err => 
+  groupAlphabet: Observable<AlphabetCounter[]> = this.textService.getUniqueMetadata('_doc__alphabet').pipe(
+    catchError(err =>
       iif(
         () => err,
-        this.thereWasAnError(), 
-        of([]) 
-    )),
+        this.thereWasAnError(),
+        of([])
+      )),
     takeUntil(this.destroy$),
-    map(texts=> groupAlphabet(texts)),
+    map(alphabets => alphabets.map((alpha : any) => ({alphabet : alpha}))),
   )
 
-  groupObjectTypes : Observable<ObjectTypeCounter[]> = this.textService.texts$.pipe(
-    catchError(err => 
+  groupObjectTypes: Observable<ObjectTypeCounter[]> = this.textService.getUniqueMetadata('_doc__support__objectType').pipe(
+    catchError(err =>
       iif(
         () => err,
-        this.thereWasAnError(), 
-        of([]) 
-    )),
+        this.thereWasAnError(),
+        of([])
+      )),
     takeUntil(this.destroy$),
-    map(texts=> groupObjectTypes(texts)),
+    map(objectTypes => objectTypes.map((obj : any) => ({objectType : obj.replace(/[\"]/g,'')}))),
   )
 
-  groupMaterial : Observable<MaterialCounter[]> = this.textService.texts$.pipe(
+  groupMaterial: Observable<MaterialCounter[]> = this.textService.getUniqueMetadata('_doc__support__material').pipe(
+    catchError(err =>
+      iif(
+        () => err,
+        this.thereWasAnError(),
+        of([])
+      )),
+    takeUntil(this.destroy$),
+    map(materials => materials.map((mat : any) => ({material : mat.replace(/[\"]/g,'')}))),
+  ) 
+
+  groupDuctus : Observable<DuctusCounter[]> = this.textService.getUniqueMetadata('_doc__bodytextpart__ductus').pipe(
     catchError(err => 
       iif(
         () => err,
@@ -252,10 +262,11 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
         of([]) 
     )),
     takeUntil(this.destroy$),
-    map(texts=> groupMaterial(texts)),
+    map(texts => texts.filter((text : any) => text && text.trim() !== '')), 
+    map(materials => materials.map((mat : any) => ({ductus : mat.replace(/[\"]/g,'')}))),
   )
 
-  groupDuctus : Observable<DuctusCounter[]> = this.textService.texts$.pipe(
+  groupWordDivisionType : Observable<WordDivisionTypeCounter[]> = this.textService.getUniqueMetadata('_doc__wordDivisionType').pipe(
     catchError(err => 
       iif(
         () => err,
@@ -263,18 +274,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
         of([]) 
     )),
     takeUntil(this.destroy$),
-    map(texts=> groupDuctus(texts)),
-  )
-
-  groupWordDivisionType : Observable<WordDivisionTypeCounter[]> = this.textService.texts$.pipe(
-    catchError(err => 
-      iif(
-        () => err,
-        this.thereWasAnError(), 
-        of([]) 
-    )),
-    takeUntil(this.destroy$),
-    map(texts=> groupWordDivisionType(texts)),
+    map(materials => materials.map((mat : any) => ({type : mat.replace(/[\"]/g,'')}))),
   )
 
   
@@ -285,11 +285,13 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
         this.thereWasAnError(), 
         of([]) 
     )),
-    take(1),
     switchMap(locations => this.mapsService.getGeoPlaceData(locations)),
     
   )
 
+  
+
+  /*
   groupDates : Observable<DateCounter[]> = this.bibliographyService.books$.pipe(
     catchError(err => 
       iif(
@@ -310,14 +312,16 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     )),
     takeUntil(this.destroy$),
     map(books=> groupByAuthors(books)),
-  )
+  ) */
+
   
-  searchLocations : Observable<LocationsCounter[]> = this.autocompleteLocationReq$.pipe(
-    debounceTime(1000),
+  
+  searchLocations: Observable<any[]> = this.autocompleteLocationReq$.pipe(
     filter(autoCompleteEvent => autoCompleteEvent.query != ''),
-    switchMap(autoCompleteEvent=> this.textService.searchLocation(autoCompleteEvent.query)),
-    map(texts=> groupLocations(texts, true)),
-    tap(results => this.autocompleteLocations = results)
+    withLatestFrom(this.geoData),
+    map(([query, r]) => {
+      return r.filter(item => item.modernName.includes(query.query))
+    }),
   )
 
   searchLexicon : Observable<LexicalElement[]> = this.autocompleteLexiconReq$.pipe(
@@ -394,13 +398,11 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
               } */
             }
           }
-          if(keys.length>1){
-            //this.pagination({} as Paginator, keys[1], values[1])
-          }
+          
           if(keys[0] == 'file'){
             
-            /* let fileId = values[0];
-            this.getTextPaginationIndexReq$.next(fileId); */
+            let fileId = values[0];
+            this.getFileByIdReq$.next(fileId);
           }
           
         }
@@ -413,7 +415,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
       debounceTime(1000)).subscribe(
       data=>{
         if(this.advancedSearchForm.touched){
-          this.buildTextQuery(data)
+          this.buildTextQuery()
         }
       }
     ) */
@@ -448,7 +450,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
           this.totalRecords = of(res.length)
         }, 100);
       }),
-      map(res => res.slice(0, 6))
+      map(texts => texts.slice(this.first, this.rows))
     )
     console.log(this.advancedSearchForm.value)
     
@@ -468,8 +470,9 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   }
 
   pagination(event: Paginator, ...args : any[]){
+    this.showSpinner = true;
     if(Object.keys(event).length != 0){this.first = event.first; this.rows = event.rows;}
-    if(Object.keys(event).length == 0){this.first = 0; this.rows = 6;}
+    if(Object.keys(event).length == 0){this.first = 0; this.rows = 8;}
 
     let rows = (this.first != this.rows) && (this.first < this.rows) ? this.rows : this.first + this.rows;
     if(args.length>0){args =args.filter(query=>query != null)}
@@ -477,18 +480,30 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     if(this.advancedSearchService.getFilteredResults().length == 0){
       this.getAllData(this.first, rows);
     }else{
-      this.paginationItems = this.advancedSearchService.sliceFilteredAttestations(this.first, rows);
+
+      let rows = this.first >= this.rows ? this.first + this.rows : this.rows;
+      this.paginationItems = this.advancedSearchService.crossQuery(this.advancedSearchForm.value, this.advancedSearchForm).pipe(
+        tap(x => this.showSpinner =false),
+        map(texts => texts.slice(this.first, rows)),
+        shareReplay(),
+      );
+
     }
   }
 
   getAllData(f? : number, r? : number): void {
+    this.showSpinner = true;
     let rows = 0;
-    if(f && r){this.first = f; rows = r; }
-    if(!f && !r){this.first = 0; this.rows = 6;}
-    
-   
-    this.paginationItems = this.textService.texts$.pipe(map(texts => texts.slice(this.first, rows == 0 ? this.rows : rows)));
-    this.totalRecords = this.textService.texts$.pipe(map(texts=>texts.length || 0))
+    if (f && r) { this.first = f; rows = r; }
+    if (!f && !r) { this.first = 0; this.rows = 8; }
+
+
+    this.paginationItems = this.textService.paginationItems(this.first+1, this.rows).pipe(
+      tap(x => this.showSpinner =false),
+      shareReplay(),
+    );
+
+    this.totalRecords = this.textService.countFiles();
   }
 
   clearDates(){
@@ -522,25 +537,26 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     return EMPTY;
   }
 
-  /* markAsTouched(){
-    this.advancedSearchForm.markAllAsTouched();
-  }
- */
+  
   resetFields(){
     this.advancedSearchForm.markAsUntouched();
     this.advancedSearchForm.patchValue(this.initialFormValues);
     this.first = 0;
-    this.rows = 6;
-    this.paginationItems = this.textService.texts$.pipe(map(texts => texts.slice(0, 6)));
-    this.totalRecords = this.textService.texts$.pipe(map(texts=>texts.length || 0))
+    this.rows = 8;
+    this.paginationItems = this.textService.paginationItems(this.first+1, this.rows).pipe(
+      tap(x => this.showSpinner =false),
+      shareReplay(),
+    );
+
+    this.totalRecords = this.textService.countFiles();
   }
 
   handleAutocompleteFilterLocation(evt: any){
-    
-    this.advancedSearchForm.markAllAsTouched();
+    this.advancedSearchForm.get('modernName')?.markAsTouched();
+    //this.advancedSearchForm.markAllAsTouched();
 
-    if(evt.ancientPlaceLabel != ''){
-      this.advancedSearchForm.get('modernName')?.setValue(evt.modernPlaceLabel, {emitEvent: false})
+    if(evt.modernName != ''){
+      this.advancedSearchForm.get('modernName')?.setValue(evt.modernUri, {emitEvent: false})
     }
 
     this.advancedSearchForm.updateValueAndValidity({ onlySelf: false, emitEvent: true })

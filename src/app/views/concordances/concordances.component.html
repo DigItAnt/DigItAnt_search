@@ -1,5 +1,5 @@
 
-<div class="flex flex-1 flex-row" *ngIf="{texts : texts | async} as concordances">
+<div class="flex flex-1 flex-row" > <!-- *ngIf="{texts : texts | async} as concordances" -->
 
     <div id="left-bar" class="flex flex-column">
         
@@ -23,7 +23,7 @@
     </div>
     <div id="conventions-content" class="flex flex-column flex-1">
 
-        <div class="flex flex-column flex-auto overflow-auto px-3 pt-3" style="height: 100px;" *ngIf="concordances.texts">
+        <!-- <div class="flex flex-column flex-auto overflow-auto px-3 pt-3" style="height: 100px;" *ngIf="concordances.texts">
             
             <p-table #concordancesTable [paginator]="true" [rows]="6"  [value]="(texts | async) || []" responsiveLayout="scroll" [scrollable]="true" scrollHeight="flex">
                 <ng-template pTemplate="header">
@@ -75,7 +75,7 @@
 
         <div class="flex flex-column flex-auto overflow-auto px-3 pt-3" *ngIf="!concordances.texts">
             Loading...
-        </div>
+        </div> -->
        
     </div>
 </div>

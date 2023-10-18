@@ -8,9 +8,9 @@
     groupAuthors : groupAuthors | async,
     groupDates : groupDates | async,
     groupTitles : groupTitles | async,
-    groupTexts : groupTexts | async,
     getChildren : getChildren | async,
-    totalRecords : totalRecords | async} as bibliography">
+    totalRecords : totalRecords | async} as bibliography">    <!--  groupTexts : groupTexts | async,
+ -->
 
     <div id="left-bar" class="flex flex-column">
         <p-tabView  [ngClass]="{'noZIndex': displayModal}" class="normal-tabview">
@@ -107,7 +107,7 @@
                         [toggler]="'header'">
 
                         <div class="flex pt-3">
-                            <p-dropdown appendTo="body" (onClear)="clearInscription()" [disabled]="!bibliography.groupTexts" [showClear]="true"
+                            <!-- <p-dropdown appendTo="body" (onClear)="clearInscription()" [disabled]="!bibliography.groupTexts" [showClear]="true"
                                 class="flex-auto" [options]="(bibliography.groupTexts) || []"
                                 formControlName="inscriptionId" optionValue="fileID" optionLabel="fileID"
                                 placeholder="Select inscription...">
@@ -116,11 +116,11 @@
                                         <span class="counter">{{inscription.fileID}}</span>
                                     </div>
                                 </ng-template>
-                            </p-dropdown>
+                            </p-dropdown> -->
                         </div>
 
                         <div class="flex pt-3">
-                            <p-autoComplete (onClear)="clearLocation()" [disabled]="!bibliography.groupTexts" (onSelect)="handleAutocompleteFilter($event)"
+                            <!-- <p-autoComplete (onClear)="clearLocation()" [disabled]="!bibliography.groupTexts" (onSelect)="handleAutocompleteFilter($event)"
                                 [suggestions]="(searchLocations | async) || []"
                                 (completeMethod)="autocomplete$.next($event)" field="ancientPlaceLabel"
                                 placeholder="Eg: Samnium" [showClear]="true" class="flex-1">
@@ -129,14 +129,14 @@
                                     <div>{{item.ancientPlaceLabel}}</div>
                                     <sub>{{item.modernPlaceLabel}}</sub>
                                 </ng-template>
-                            </p-autoComplete>
+                            </p-autoComplete> -->
                         </div>
 
                         <div class="flex pt-3">
-                            <div id="text-radio-button"  class="pt-2 p-inputgroup">
+                            <!-- <div id="text-radio-button"  class="pt-2 p-inputgroup">
                                 <input id="float-input" [disabled]="!bibliography.groupTexts" type="text" (focus)="markAsTouched()"
                                     placeholder="Full text search" name="title" formControlName="word" pInputText />
-                            </div>
+                            </div> -->
 
                         </div>
 

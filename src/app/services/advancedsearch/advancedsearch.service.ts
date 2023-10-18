@@ -4,7 +4,7 @@ import { Form, FormGroup } from '@angular/forms';
 import { BehaviorSubject, concatAll, forkJoin, lastValueFrom, map, Observable, of, shareReplay, switchMap, tap, withLatestFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { LexicalElement, LexiconService } from '../lexicon/lexicon.service';
-import { AnnotationsRows, TextMetadata, TextsService } from '../text/text.service';
+import { AnnotationsRows, GetFilesResponse, TextMetadata, TextsService } from '../text/text.service';
 
 
 const lexiconFields = [
@@ -100,13 +100,13 @@ export class AdvancedsearchService {
 
           const combineQueries = (lexiconCQL: string[], bibliographyCQL: string[], inscriptionCQL: string[]): string => {
             let allQueries: string[] = [];
-          
+            
             if (lexiconCQL.length > 0) {
-              allQueries.push(`(${lexiconCQL.join(' | ')})`);
+              allQueries.push(`(${lexiconCQL.join('|')})`);
             }
           
             if (bibliographyCQL.length > 0) {
-              allQueries.push(`(${bibliographyCQL.join(' | ')})`);
+              allQueries.push(`(${bibliographyCQL.join('|')})`);
             }
           
             if (inscriptionCQL.length > 0) {
@@ -125,29 +125,16 @@ export class AdvancedsearchService {
           
           let params = new HttpParams()
             .set('query', finalQuery)
+            .set('offset','0')
             .set('limit', '1000');
 
 
-          return this.http.post<AnnotationsRows>(this.cashUrl + "api/public/search", params.toString(), { headers: headers }).pipe(
-            map(res => Array.from(res.rows.reduce((map, obj) => map.set(obj.nodeId, obj), new Map()).values())),
-            withLatestFrom(this.inscriptionService.texts$),
-            map(([postData, texts]) => {
-              let tmp : TextMetadata[] = [];
-              postData.forEach(
-                el=>{
-                  texts.forEach(
-                    t=>{
-                      if(el.nodeId == t['element-id'])tmp.push(t)
-                    }
-                  )
-                }
-              )
-              this.attestationsSubject.next(tmp);
-              this.filteredResults = tmp;
-              return tmp
-            }),
-            shareReplay()
-          )
+            return this.http.post<GetFilesResponse>(this.cashUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
+              map(res => res.files),
+              map(texts => this.inscriptionService.mapData(texts)),
+              tap(res => this.filteredResults = res),
+              shareReplay(),
+            );
         }else{
           return of(inscriptionSearch);
         }
@@ -185,32 +172,19 @@ export class AdvancedsearchService {
         
         let params = new HttpParams()
           .set('query', query)
+          .set('offset', '0')
           .set('limit', '1000');
         
 
 
-        return this.http.post<AnnotationsRows>(this.cashUrl + "api/public/search", params.toString(), { headers: headers }).pipe(
-          map(res => Array.from(res.rows.reduce((map, obj) => map.set(obj.nodeId, obj), new Map()).values())),
-          withLatestFrom(this.inscriptionService.texts$),
-          map(([postData, texts]) => {
-            let tmp : TextMetadata[] = [];
-            postData.forEach(
-              el=>{
-                texts.forEach(
-                  t=>{
-                    if(el.nodeId == t['element-id'])tmp.push(t)
-                  }
-                )
-              }
-            )
-            this.attestationsSubject.next(tmp);
-            this.filteredResults = tmp;
-            return tmp
-          }),
-          shareReplay()
-        )
+          return this.http.post<GetFilesResponse>(this.cashUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
+            map(res => res.files),
+            map(texts => this.inscriptionService.mapData(texts)),
+            tap(res => this.filteredResults = res),
+            shareReplay(),
+          );
       }else{
-        return this.inscriptionService.texts$
+        return of([])
       }
     }else{
       return of([])
@@ -220,13 +194,13 @@ export class AdvancedsearchService {
   filterLexicon(formValues : any, advancedSearchForm : FormGroup){
 
     const shouldCallLexO = lexiconFields.some(field => 
-      formValues[field] !== null && advancedSearchForm.get(field)?.touched
+      (formValues[field] !== null) && advancedSearchForm.get(field)?.touched
     );
 
     if(shouldCallLexO){
       const shouldQueryLexicalEntries = lexicalEntryFields.some(field => {
         const control = advancedSearchForm.get(field);
-        return control && control.touched && (control.value !== null || control.value !== '');
+        return control && control.touched && (control.value !== null && control.value !== '');
       }
       
       );
@@ -347,22 +321,31 @@ export class AdvancedsearchService {
 
   CQLLexiconBuilder(lexiconResults : any[]){
     let queryParts: string[] = [];
-
+    let isLexicalEntry : boolean = false;
     lexiconResults.forEach(element => {
       
       if(element.lexicalEntry && !element.form){
-        queryParts.push(`attestation__lexicalEntry="${element.lexicalEntry}"`)
+        isLexicalEntry = true;
+        queryParts.push(`${element.lexicalEntry}`)
       }else if(element.form){
-        queryParts.push(`attestation="${element.form}"`)
+        isLexicalEntry = false;
+        queryParts.push(`${element.form}`)
       }
     });
 
-    return queryParts
+    if(isLexicalEntry){
+      return [`attestation__lexicalEntry="${queryParts.join('|')}"`];
+
+    }else{
+      return [`attestation="${queryParts.join('|')}"`];
+
+    }
   }
 
   CQLInscriptionBuilder(formValues : any, advancedSearchForm : FormGroup){
     let queryParts: string[] = [];
 
+    queryParts.push(`_doc__itAnt_ID="_REGEX_.*"`)
     if (advancedSearchForm.get('word')?.touched && formValues.word) {
       switch(formValues.wordSearchMode){
         case 'startsWith' : queryParts.push(` word="_REGEX_${formValues.word}.*"`); break;
@@ -377,7 +360,7 @@ export class AdvancedsearchService {
     }
 
     if (advancedSearchForm.get('id')?.touched && formValues.id) {
-      queryParts.push(`_doc__itAnt_ID="${formValues.id}"`);
+      queryParts.push(`_doc__itAnt_ID="_REGEX_.*${formValues.id}.*"`);
     }
 
     if (advancedSearchForm.get('otherId')?.touched && formValues.otherId) {
@@ -401,7 +384,7 @@ export class AdvancedsearchService {
     }
 
     if (advancedSearchForm.get('modernName')?.touched && formValues.modernName) {
-      queryParts.push(`_doc__originalPlace__modernName="${formValues.modernName}"`);
+      queryParts.push(`_doc__originalPlace__modernNameUrl="${formValues.modernName}"`);
     }
 
     if (advancedSearchForm.get('inscriptionType')?.touched && formValues.inscriptionType) {
@@ -431,9 +414,9 @@ export class AdvancedsearchService {
     let queryParts: string[] = [];
 
     bibliographyResults.forEach(element=>{
-      queryParts.push(`attestation__bibliography__key="${element.key}"`);
+      queryParts.push(`${element.key}`);
     })
-    return queryParts;
+    return [`attestation__bibliography__key="${queryParts.join('|')}"`];
   }
 
   restoreFilterAttestations(){
@@ -445,7 +428,7 @@ export class AdvancedsearchService {
     return this.filteredResults;
   }
 
-  sliceFilteredAttestations(pageIndex: number, pageSize: number): Observable<TextMetadata[]> {
+  /* sliceFilteredAttestations(pageIndex: number, pageSize: number): Observable<TextMetadata[]> {
     return this.attestations$.pipe(
       switchMap(attestations => {
         if(attestations && attestations.length > 0) {
@@ -457,6 +440,6 @@ export class AdvancedsearchService {
         }
       })
     );
-  }
+  } */
 
 }

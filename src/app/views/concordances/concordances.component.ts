@@ -11,7 +11,7 @@ import { FilterService } from 'primeng/api';
 export class ConcordancesComponent implements OnInit {
 
   
-  texts : Observable<TextMetadata[]> = this.textsService.texts$;
+  /* texts : Observable<TextMetadata[]> = this.textsService.texts$; */
   constructor(private textsService : TextsService, private filterService : FilterService) { }
 
   ngOnInit(): void {

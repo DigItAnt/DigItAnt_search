@@ -14,7 +14,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   items: MenuItem[] = [];
   menuItems: MenuItem[] = [];
   isActive : boolean = false;
-  textItems = this.textService.texts$;
+ /*  textItems = this.textService.texts$; */
   browseButtonActive = ['texts', 'lexicon', 'bibliography']
   destroy$: Subject<boolean> = new Subject<boolean>();
 

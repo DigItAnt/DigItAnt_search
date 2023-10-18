@@ -38,6 +38,7 @@ export interface GlobalGeoDataModel {
   ancientName : string,
   modernName : string,
   ancientBbox : BBoxModel,
+  attestations? : any,
   modernBbox: BBoxModel,
   modernId: string,
   ancientId : string
@@ -92,7 +93,7 @@ export class MapsService {
       id: id,
       reprPoint: { latitude: parseFloat(place.lat), longitude: parseFloat(place.lng) },
       title: place.name,
-      uri: uri,
+      uri: 'https://sws.geonames.org/'+id,
     }
   }
 
@@ -167,10 +168,10 @@ export class MapsService {
     return forkJoin(
       locations.map((req) => {
         // Effettua entrambe le chiamate HTTP in parallelo
-        const pleiadesRequest = this.http.get(this.pleiadesBaseUrl + req.ancientPlaceId + '/json').pipe(
+        /* const pleiadesRequest = this.http.get(this.pleiadesBaseUrl + req.ancientPlaceId + '/json').pipe(
           catchError(err => of(null)), // In caso di errore, restituisce null
           map((res : any) => res ? this.mapPleiadesData(res) : null) // Mappa i risultati solo se non sono nulli
-        );
+        ); */
   
         const geoNamesRequest = this.http.get(
           this.geoNamesBaseUrl +
@@ -182,9 +183,9 @@ export class MapsService {
         );
   
         // Restituisce entrambi i risultati in un unico oggetto
-        return forkJoin([pleiadesRequest, geoNamesRequest]).pipe(
-          map(([pleiadesData, geoNamesData]) => {
-            if (!pleiadesData && !geoNamesData) {
+        return forkJoin([geoNamesRequest]).pipe(
+          map(([geoNamesData]) => {
+            if (!geoNamesData) {
               return null; // Return null if both requests fail
             }
         
@@ -203,14 +204,14 @@ export class MapsService {
             };
         
             // Se i dati di Pleiades sono disponibili, li aggiunge al risultato
-            if (pleiadesData) {
+            /* if (pleiadesData) {
               result.ancientName = pleiadesData.title;
               result.ancientBbox = pleiadesData.bbox;
               result.ancientId = pleiadesData.id;
               result.description = pleiadesData.description;
               result.reprPoint = pleiadesData.reprPoint;
               result.ancientUri = pleiadesData.uri;
-            }
+            } */
         
             // Se i dati di GeoNames sono disponibili, li aggiunge al risultato
             if (geoNamesData) {

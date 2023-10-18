@@ -340,7 +340,7 @@ export class LexiconComponent implements OnInit {
       );
       return arrayFromSet;
     }),
-    switchMap(nodeIds => {
+   /*  switchMap(nodeIds => {
       return this.textService.texts$.pipe(
         map(textsArray => {
           return textsArray.filter(text => nodeIds.includes(text['element-id']));
@@ -349,7 +349,7 @@ export class LexiconComponent implements OnInit {
     }),
    
     map(res => res.map(el=> el.itAnt_ID)),
-    
+     */
   )
 
   getAttestationsLexEntry : Observable<any> | undefined = this.getAttestationsLexEntryReq$.pipe(
@@ -369,7 +369,7 @@ export class LexiconComponent implements OnInit {
       );
       return arrayFromSet;
     }),
-    switchMap(nodeIds => {
+    /* switchMap(nodeIds => {
       return this.textService.texts$.pipe(
         map(textsArray => {
           return textsArray.filter(text => nodeIds.includes(text['element-id']));
@@ -377,7 +377,7 @@ export class LexiconComponent implements OnInit {
       );
     }),
    
-    map(res => res.map(el=> el.trismegistos.trismegistosID)),
+    map(res => res.map(el=> el.trismegistos.trismegistosID)), */
   )
 
   getBibliography : Observable<any> | undefined = this.getBibliographyReq$.pipe(

@@ -11,7 +11,7 @@ import { TextMetadata, TextsService } from 'src/app/services/text/text.service';
 import * as data from '../../../assets/mock/words.json'
 import { AlphaCounter, AuthorCounter, DateCounter, LexiconFilter, TreeEvent } from '../lexicon/lexicon.component';
 import { AutoCompleteEvent, LocationsCounter, PaginatorEvent } from '../texts/texts.component';
-import { groupByAuthors, groupByDates, groupLocations } from '../texts/utils';
+import { groupByAuthors, groupByDates } from '../texts/utils';
 
 @Component({
   selector: 'app-bibliography',
@@ -178,9 +178,9 @@ export class BibliographyComponent implements OnInit {
     map(books=> groupByDates(books)),
   )
 
-  groupTexts : Observable<TextMetadata[]> = this.textsService.texts$.pipe(
+ /*  groupTexts : Observable<TextMetadata[]> = this.textsService.texts$.pipe(
     tap(x=> console.log(x))
-  );
+  ); */
 
   paginationItems: Observable<Book[]> = this.bibliographyService.books$.pipe(
     timeout(15000),
@@ -404,13 +404,13 @@ export class BibliographyComponent implements OnInit {
   }
 
   autocompleteLocations: Array<LocationsCounter> = [];
-  searchLocations : Observable<LocationsCounter[]> = this.autocomplete$.pipe(
+  /* searchLocations : Observable<LocationsCounter[]> = this.autocomplete$.pipe(
     debounceTime(1000),
     filter(autoCompleteEvent => autoCompleteEvent.query != ''),
     switchMap(autoCompleteEvent=> this.textsService.searchLocation(autoCompleteEvent.query)),
     map(texts=> groupLocations(texts, true)),
     tap(results => this.autocompleteLocations = results)
-  )
+  ) */
 
   markAsTouched(){
     this.bibliographySearchForm.markAllAsTouched();

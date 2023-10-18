@@ -1,17 +1,24 @@
 <div class="flex flex-1 flex-row" *ngIf="{activeTab : activeTab | async, 
         totalRecords: totalRecords | async, 
-        groupCenturies : groupCenturies | async, 
-        activeDate : activeDate | async, 
-        activeLocation : activeLocation | async,
-        activeType : activeType | async,
-        activeFile : activeFile | async, 
+        groupCenturies : groupCenturies | async,
         groupLocations : groupLocations | async,
         groupType : groupTypes | async,
         groupLanguage : groupLanguages | async,
+        groupAlphabet : groupAlphabet | async,
         groupMaterial : groupMaterial | async,
         groupObjectTypes : groupObjectTypes | async,
-        groupAlphabet : groupAlphabet | async,
-        geoData: geoData | async} as text">
+        activeDate : activeDate | async, 
+        activeLocation : activeLocation | async,
+        activeType : activeType | async,
+        activeFile : activeFile | async,
+        geoData: geoData | async } as text">
+
+       <!--  
+        ,
+        
+        
+        ,
+         -->
 
         <div id="left-bar" class="flex flex-column">
             <p-tabView *ngIf="!text.activeFile" class="normal-tabview"(onChange)="onChangeTabView($event)" >
@@ -27,12 +34,12 @@
                                 <span class="route flex-1">All</span>
                             </li>
                         </a>
-                        <a *ngFor="let filter of allowedFilters" (click)="getAllData()" [href]="'/texts?filter='+filter"
+                        <a *ngFor="let filter of allowedFilters"  [href]="'/texts?filter='+filter"
                             class="categories no-underline" routerLink="./" [queryParams]="{filter : filter}" routerLinkActive="active"
                             [routerLinkActiveOptions]="{exact : false}">
                             <li class="pl-4 flex align-items-center" *ngIf="filter != 'search'">
                                 <span class="icon"></span>
-                                <span class="route flex-1">{{filter | titlecase}}</span>
+                                <span class="route flex-1">{{filter | titlecase}}</span> <!-- (click)="getAllData()" -->
                             </li>
                         </a>
                     </ul>
@@ -112,20 +119,21 @@
 
                             <div class="flex pt-3">
                                 <p-autoComplete 
-                                (onClear)="clearLocation()"
-                                (onSelect)="handleAutocompleteFilter($event)"
-                                [suggestions]="(searchLocations | async) || []" 
-                                (completeMethod)="autocomplete$.next($event)"
-                                
-                                field="ancientPlaceLabel"
-                                placeholder="Eg: Samnium"
-                                [showClear]="true">
+                                    [disabled]="!text.geoData"
+                                    (onClear)="clearLocation()"
+                                    (onSelect)="handleAutocompleteFilter($event)"
+                                    [suggestions]="(searchLocations | async) || []" 
+                                    (completeMethod)="autocomplete$.next($event)"
+                                    styleClass="w-full"
+                                    field="modernName"
+                                    placeholder="Eg: Samnium"
+                                    [showClear]="true">
 
-                                <ng-template let-item pTemplate="item">
-                                    <div>{{item.ancientPlaceLabel}}</div>
-                                    <sub>{{item.modernPlaceLabel}}</sub>
-                                </ng-template>
-                </p-autoComplete>
+                                    <ng-template let-item pTemplate="item">
+                                        <div>{{item.modernName}}</div>
+                                        <sub>{{item.modernUri}}</sub>
+                                    </ng-template>
+                                </p-autoComplete>
                             </div>
                             
 
@@ -139,7 +147,7 @@
                                     optionValue="language" optionLabel="language" placeholder="Select language...">
                                     <ng-template let-item pTemplate="item">
                                         <div class="language-item">
-                                            <span class="counter">{{item.language | labelMapping}} - {{item.count}}</span>
+                                            <span class="counter">{{item.language | labelMapping}}</span>
                                         </div>
                                     </ng-template>
                                 </p-dropdown>
@@ -155,7 +163,7 @@
                                     optionValue="alphabet" optionLabel="alphabet" placeholder="Select language...">
                                     <ng-template let-item pTemplate="item">
                                         <div class="language-item">
-                                            <span class="counter">{{item.alphabet}} - {{item.count}}</span>
+                                            <span class="counter">{{item.alphabet}}</span>
                                         </div>
                                     </ng-template>
                                 </p-dropdown>
@@ -357,18 +365,19 @@
                 <div class="flex flex-row horizontal-list resizer m-3 text-container-top justify-content-between">
         
                     <h2 class="loading text-center flex-1 flex align-items-center justify-content-center"
-                        *ngIf="!text.groupLocations">Loading <span>.</span><span>.</span><span>.</span>
+                        *ngIf="!text.geoData">Loading <span>.</span><span>.</span><span>.</span>
                     </h2>
-                    <ul class="flex-wrap align-items-center" *ngIf="text.groupLocations">
-                        <li *ngFor="let item of text.groupLocations"
+                    <ul class="flex-wrap align-items-center" *ngIf="text.geoData">
+                        <li *ngFor="let item of text.geoData"
                             class="my-2 mr-2 align-items-center border-round-2xl century-list-element" routerLink="./"
-                            [class.active]="(text.activeLocation == item.ancientPlaceId)"
-                            [queryParams]="{filter: 'location', place: ((item.ancientPlaceId == '' || item.ancientPlaceId == 'unknown') ? item.modernPlaceId : item.ancientPlaceId)}">
-                            <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
-                            <a class="no-underline font-bold">{{(item.modernPlaceLabel != '' || item.ancientPlaceLabel == 'unknown') ? item.modernPlaceLabel : item.ancientPlaceLabel}}</a>
+                            [class.active]="(text.activeLocation == item.modernId)"
+                            [queryParams]="{filter: 'location', place: item.modernId}">
+                           <!--  <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge> -->
+                            <a class="no-underline font-bold">{{item.modernName}}</a>
         
                         </li>
                     </ul>
+
                     <div class="flex align-items-center map-button">
                         <button (click)="overlayGeneralMap.toggle($event)" pButton type="button" class="p-button-secondary mr-2"
                             icon="fa-solid fa-map-location-dot" iconPos="left"></button>
@@ -396,12 +405,12 @@
         
                     <ul class="flex-wrap align-items-center" *ngIf="text.groupType">
         
-                        <li *ngFor="let item of text.groupType" [class.active]="text.activeType == item.inscriptionType"
-                            (click)="filterByType(item.inscriptionType)"
+                        <li *ngFor="let item of text.groupType" [class.active]="text.activeType == item"
+                            (click)="filterByType(item)"
                             class="my-2 mr-2 align-items-center border-round-2xl type-list-element" routerLink="./"
-                            [queryParams]="{filter: 'type', type: item.inscriptionType | urlDecoder}">
-                            <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
-                            <a class="no-underline font-bold">{{item.inscriptionType}}</a>
+                            [queryParams]="{filter: 'type', type: item | urlDecoder}">
+                            <!-- <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge> -->
+                            <a class="no-underline font-bold">{{item}}</a>
                         </li>
         
         
@@ -411,11 +420,11 @@
         
             <!-- TEXTS LIST -->
             <div class="flex flex-row flex-wrap ml-5 flex-auto text-item-container" *ngIf="(text.totalRecords != 0 && !somethingWrong) && !text.activeFile">
-                <div class="flex flex-row m-2 w-full" *ngIf="!text.totalRecords">
+                <div class="flex flex-row m-2 w-full" *ngIf="showSpinner || !(paginationItems | async)">
                     <p-progressSpinner class="flex flex-1"></p-progressSpinner>
         
                 </div>
-        
+                
                 <a class="flex no-underline text-item m-2" *ngFor="let item of paginationItems | async"
                     [href]="'/text?file='+item.itAnt_ID" routerLink="./" [queryParams]="{file: item.itAnt_ID}">
 
@@ -449,16 +458,14 @@
 
             <!-- TEXT VIEW -->
             <div class="flex flex-row flex-wrap flex-auto text-item-container" *ngIf="((text.totalRecords != 0 && !somethingWrong && !fileNotAvailable) && text.activeFile) 
-                                                                                        && {index : getTextPaginationIndex | async,
-                                                                                            fileID: getFileIdByIndex | async, 
-                                                                                            file : getFileByIndex | async,
-                                                                                            inscriptionType : getInscriptionType | async } as textView">
+                                                                                        && {file : getFileById | async,
+                                                                                            inscriptionType : getInscriptionType | async } as textView"> 
                 
                 <div class="flex flex-column flex-auto ">
                     <div [ngClass]="{'zIndex': text.activeFile}" class="flex flex-row horizontal-list m-3 text-container-top sticky top-0">
                         
                         
-                        <p-paginator *ngIf="(text.totalRecords != 0 && !somethingWrong)"
+                        <!-- <p-paginator *ngIf="(text.totalRecords != 0 && !somethingWrong)"
                             id="text-view-paginator"
                             [dropdownAppendTo]="'body'" [first]="(textView.index) || 0" [rows]="1"
                             [totalRecords]="(text.totalRecords) || 0"
@@ -466,7 +473,7 @@
                             [showJumpToPageDropdown]="false" 
                             [showPageLinks]="false">
                     
-                        </p-paginator>
+                        </p-paginator> -->
 
                         <div id="text-view-id" class="select-none absolute h-full flex justify-content-center align-items-center">
                             
@@ -492,12 +499,11 @@
                            
                             <div id="facsimile-div-panel" *ngIf="!loadingFacsimile && images.facsimile" class="flex ml-3 pt-3 justify-content-center"> 
                             
-                                <!-- <div class="flex flex-row align-items-baseline book-element pl-2" *ngFor="let img of images.facsimile">
-                                    <p-image *ngIf="!img.isPdf && !img.isExternalRef" [src]="img.url" alt="Image" width="500" [preview]="true"></p-image>
-
-
-                                </div> -->
-                                <p-galleria [visible]="displayCustom" [activeIndex]="galleryActiveIndex" [fullScreen]="true" [value]="images.facsimile" [containerStyle]="{'max-width': '40rem'}" [numVisible]="5"> 
+                                <div class="flex flex-row align-items-baseline book-element pl-2" *ngFor="let img of images.facsimile">
+                                    <p-image *ngIf="!img.isPdf && !img.isExternalRef" [src]="img.url" alt="Image" width="250" [preview]="true"></p-image>
+                                    
+                                </div>
+                                <!-- <p-galleria [visible]="displayCustom" [activeIndex]="galleryActiveIndex" [fullScreen]="true" [value]="images.facsimile" [containerStyle]="{'max-width': '40rem'}" [numVisible]="5"> 
                                     <ng-template pTemplate="item" let-item>
                                         <img [src]="item.url" style="max-width: 75rem; display: block;" />
                                     </ng-template>
@@ -521,11 +527,11 @@
                                             <img [src]="item.url" style="display: block; max-width: 5rem" (click)="displayCustom = true; imageClick(item)" />
                                         </div>
                                     </ng-template>
-                                   <!--  <ng-template pTemplate="caption" let-item>
+                                    <ng-template pTemplate="caption" let-item>
                                         <h4 style="margin-bottom: .5rem; color: #ffffff;">{{item.desc}}</h4>
                                         <p>{{item.copyright}}</p>
-                                    </ng-template> -->
-                                </p-galleria>
+                                    </ng-template>
+                                </p-galleria> -->
                                  
                             </div>
 
@@ -1070,7 +1076,7 @@
 
                                     <div class="flex flex-column">
                                         <a class="font-bold text-red-800 " [href]="textView.file.originalPlace.modernNameUrl" target="_blank">{{textView.file.originalPlace.modernName}}</a>
-
+                                        <span *ngIf="textView.file.detailedFindSpot">{{textView.file.detailedFindSpot}}</span>
                                     </div>
                                     
                                 </div>
@@ -1223,7 +1229,7 @@
             <p-paginator *ngIf="(text.totalRecords != 0 && !somethingWrong) && !text.activeFile" [dropdownAppendTo]="'body'" [first]="first" [rows]="rows"
                 [totalRecords]="(totalRecords | async) || 0"
                 (onPageChange)="pagination($event, (text.activeTab || null), (text.activeDate || null), (text.activeLocation || null), (text.activeType || null))"
-                [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[6,12,24]"></p-paginator>
+                [showJumpToPageDropdown]="true" [rowsPerPageOptions]="[8,16,32]"></p-paginator>
             
                 
             <div class="m-5 flex flex-row flex-wrap flex-auto text-item-container" *ngIf="text.totalRecords == 0 && !somethingWrong">

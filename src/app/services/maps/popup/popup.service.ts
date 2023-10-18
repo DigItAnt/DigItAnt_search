@@ -27,12 +27,11 @@ export class PopupService {
     `
 
     // Se places.attestations è un array con elementi, aggiungi una lista di attestazioni
-    if(places.attestations && Array.isArray(places.attestations) && places.attestations.length > 0) {
+    if(places.attestations && Array.isArray(places.attestations.files) && places.attestations.files.length > 0) {
         output += '<div style="max-height: 10vh; overflow: auto;">Attestations: <ul>'
-
         // Aggiungi ogni attestazione come un elemento della lista
-        places.attestations.forEach((attestation:TextMetadata) => {
-            output += `<li><a href="texts?file=${attestation.trismegistos.trismegistosID}" target="_blank">${attestation.trismegistos.trismegistosID}</a></li>`
+        places.attestations.files.forEach((attestation:any) => {
+            output += `<li><a href="texts?file=${attestation.metadata.itAnt_ID}" target="_blank">${attestation.metadata.itAnt_ID}</a></li>`
         })
 
         output += '</ul></div>'

@@ -8,6 +8,14 @@ export interface DocumentSystem {
   documentSystem : Text[]
 }
 
+export interface GetFilesResponse {
+  files : Text[]
+}
+
+export interface GetCountFiles {
+  results : number
+}
+
 export interface TextMetadata {
   alphabet : string,
   alphabet_url : string,
@@ -259,24 +267,8 @@ export class TextsService {
 
   private baseUrl = environment.cashUrl;
   private leidenUrl = environment.leidenUrl;
-  private lexoUrl = environment.lexoUrl;
   private documentSystem: DocumentSystem[] = [];
 
-  texts$ : Observable<TextMetadata[]> = this.getTextCollection().pipe(
-    map(texts => {
-      let allFiles: Text[] = [];
-  
-      for (const text of texts) {
-        allFiles = allFiles.concat(this.extractFiles(text));
-      }
-  
-      return allFiles;
-    }),
-    map(texts => texts.filter(text => text.type == 'file' && Object.keys(text.metadata).length > 0)),
-    map(texts => this.mapData(texts)),
-    tap(x=>console.log(x)),
-    shareReplay()
-  )
 
   private attestationsSubject = new BehaviorSubject<TextMetadata[]>([]);
   attestations$: Observable<TextMetadata[]> = this.attestationsSubject.asObservable();
@@ -288,27 +280,81 @@ export class TextsService {
   ) { }
 
 
-  getTextCollection() : Observable<Text[]> {
+  paginationItems(first?: number, row?: number) : Observable<TextMetadata[]> {
+    const defaultQuery = '[_doc__itAnt_ID="_REGEX_.*"]';
+    const defaultOffset = '1';
+    const defaultLimit = '8';
     
-    return this.http.get<DocumentSystem>(this.baseUrl + "api/public/getDocumentSystem?requestUUID=11").pipe(
-      map(res => res.documentSystem),
-    )
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+    
+    let params = new HttpParams();
+    params = params.set('query', defaultQuery);
+    
+    if (first !== undefined) {
+      params = params.set('offset', first.toString());
+    } else {
+      params = params.set('offset', defaultOffset);
+    }
+    
+    if (row !== undefined) {
+      params = params.set('limit', row.toString());
+    } else {
+      params = params.set('limit', defaultLimit);
+    }
+
+    return this.http.post<GetFilesResponse>(this.baseUrl + "api/public/searchFiles", params.toString(), { headers: headers })
+      .pipe(
+        map(res => res.files),
+        map(texts => this.mapData(texts)),
+        shareReplay(),
+    );
   }
 
-  extractFiles(node: Text): Text[] {
-    let files: Text[] = [];
-  
-    if (node.type === 'file' && Object.keys(node.metadata).length > 0) {
-      files.push(node);
+  getFileByID(fileId: string) : Observable<TextMetadata> {
+    const defaultQuery = `[_doc__itAnt_ID="${fileId}"]`;
+   
+    
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+    
+    let params = new HttpParams();
+    params = params.set('query', defaultQuery)
+                   .set('offset', '0')
+                   .set('limit', '1')
+   
+
+    return this.http.post<GetFilesResponse>(this.baseUrl + "api/public/searchFiles", params.toString(), { headers: headers })
+      .pipe(
+        map(res => res.files),
+        map(texts => this.mapData(texts)),
+        map(texts => texts[0]),
+        shareReplay(),
+    );
+  }
+
+  countFiles(extParam? : any) : Observable<number> {
+    let query = '';
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+
+    let params = new HttpParams();
+
+    if(!extParam){
+      query = '[_doc__itAnt_ID="_REGEX_.*"]';
+      params = params.set('query', query);  // Important: assign the new instance to the variable
+    }else{
+      params = params.set('query', extParam); 
     }
-  
-    if (node.children && node.children.length > 0) {
-      for (const child of node.children) {
-        files = files.concat(this.extractFiles(child));
-      }
-    }
-  
-    return files;
+
+    return this.http.post<GetCountFiles>(this.baseUrl + "api/public/countFiles", params.toString(), { headers: headers }).pipe(
+      map(res => res.results),
+      shareReplay(),
+    );
   }
 
   searchAttestations(formId: string, limit? : number, offset? : number): Observable<Attestation[]> {
@@ -323,66 +369,56 @@ export class TextsService {
     )
   }
 
-
-  filterAttestations(query : string, limit? : number, offset? : number): Observable<TextMetadata[]> {
+  getUniqueMetadata(field : string) : Observable<any> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/x-www-form-urlencoded'
     });
-    
+
     let params = new HttpParams()
-      .set('query', query)
+      .set('field', field)
       .set('offset', '0')
-      .set('limit', '1000');
+      .set('limit', '100');
 
-    //TODO: da rimuovere
-    if(limit){
+    return this.http.post<any>(this.baseUrl + "api/public/uniqueMetadataValues", params.toString(), { headers: headers }).pipe(
+      map(res => res.values)
+    )
+  }
+  
+  filterAttestations(query : string, first? : number, row? : number): Observable<TextMetadata[]> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
 
-      
-      return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search", params.toString(), { headers: headers }).pipe(
-      
-        map(res => res.rows),
-        map(postData => Array.from(postData.reduce((map, obj) => map.set(obj.nodeId, obj), new Map()).values())), // Aggiunto per rimuovere duplicati
-        withLatestFrom(this.texts$),
-        map(([postData, texts]) => {
-          let tmp : TextMetadata[] = [];
-          postData.forEach(
-            el=>{
-              texts.forEach(
-                t=>{
-                  if(el.nodeId == t['element-id'])tmp.push(t)
-                }
-              )
-            }
-          )
-          this.attestationsSubject.next(tmp);
-          return tmp
-        }),
-        shareReplay()
-      )
+    const defaultOffset = '0';
+    const defaultLimit = '8';
+
+    /* if(first && row && (first>=row)){
+      row = first+row;
+    } */
+    
+    let params = new HttpParams();
+    params = params.set('query', query);
+    
+    if (first !== undefined) {
+      params = params.set('offset', first.toString());
+    } else {
+      params = params.set('offset', defaultOffset);
+    }
+    
+    if (row !== undefined) {
+      params = params.set('limit', row.toString());
+    } else {
+      params = params.set('limit', defaultLimit);
     }
 
-    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search", params.toString(), { headers: headers }).pipe(
+    
       
-      map(res => res.rows),
-      map(postData => Array.from(postData.reduce((map, obj) => map.set(obj.nodeId, obj), new Map()).values())), // Aggiunto per rimuovere duplicati
-      withLatestFrom(this.texts$),
-      map(([postData, texts]) => {
-        let tmp : TextMetadata[] = [];
-        postData.forEach(
-          el=>{
-            texts.forEach(
-              t=>{
-                if(el.nodeId == t['element-id'])tmp.push(t)
-              }
-            )
-          }
-        )
-        this.attestationsSubject.next(tmp);
-        return tmp
-      }),
-      shareReplay()
+    return this.http.post<GetFilesResponse>(this.baseUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
+      map(res => res.files),
+      map(texts => this.mapData(texts)),
+      tap(res => this.attestationsSubject.next(res)),
+      shareReplay(),
     )
-
   }
 
   thereWasAnError(err? : HttpResponseBase, source? : string){
@@ -399,20 +435,6 @@ export class TextsService {
     this.attestationsSubject.next([])
   }
 
-  sliceFilteredAttestations(pageIndex: number, pageSize: number): Observable<TextMetadata[]> {
-    return this.attestations$.pipe(
-      switchMap(attestations => {
-        if(attestations && attestations.length > 0) {
-          return of(attestations.slice(pageIndex, pageSize));
-        } else {
-          return this.texts$.pipe(
-            map(allAttestations => allAttestations.slice(pageIndex , pageSize))
-          );
-        }
-      })
-    );
-  }
-
 
   setDocumentSystem(fileSystem: DocumentSystem[]) {
     this.documentSystem = fileSystem;
@@ -421,7 +443,7 @@ export class TextsService {
   getDocumentSystem() {
     return this.documentSystem;
   }
-
+  
   mapData(texts : Text[]): TextMetadata[]{
     return texts.map((text : Text) => ({
       alphabet : text.metadata.alphabet,
@@ -475,97 +497,157 @@ export class TextsService {
     }))
   }
 
-  filterByDate(century : number): Observable<TextMetadata[]>{
-    return this.texts$.pipe(
+  filterByDate(century : number, first? : number, row? : number): Observable<TextMetadata[]>{
+    const defaultQuery = `[_doc__itAnt_ID="_REGEX_.*" & _doc__dateOfOriginNotBefore="${century}" & _doc__dateOfOriginNotAfter="${century+100}"]`;
+    const defaultOffset = '0';
+    const defaultLimit = '1000';
+    
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+    
+    let params = new HttpParams();
+    params = params.set('query', defaultQuery);
+   
+    
+    if (first !== undefined) {
+      params = params.set('offset', first.toString());
+    } else {
+      params = params.set('offset', defaultOffset);
+    }
+    
+    if (row !== undefined) {
+      params = params.set('limit', row.toString());
+    } else {
+      params = params.set('limit', defaultLimit);
+    }
+    return this.http.post<GetFilesResponse>(this.baseUrl + "api/public/searchFiles", params.toString(), { headers: headers })
+      .pipe(
+        map(res => res.files),
+        map(texts => this.mapData(texts)),
+        shareReplay(),
+    );
+
+
+   /*  return this.texts$.pipe(
       map(texts => texts.filter((text)=> {
         if(century < 0) return parseInt(text.dateOfOriginNotBefore) >= century && parseInt(text.dateOfOriginNotBefore) < (century + 100);
         return parseInt(text.dateOfOriginNotBefore) > (century-100) && parseInt(text.dateOfOriginNotBefore) <= century
       })),
-    )
+    ) */
   }
 
-  filterByLocation(location : number): Observable<TextMetadata[]>{
-    return this.texts$.pipe(
-      map(texts => texts.filter((text)=> {
-        let uniqueId = (text.originalPlace.ancientNameUrl == '' || text.originalPlace.ancientNameUrl == 'unknown') ? text.originalPlace.modernNameUrl : text.originalPlace.ancientNameUrl;
-        uniqueId = uniqueId.split('/')[uniqueId.split('/').length-1];
-        return parseInt(uniqueId) == location;
-      }))
+  savedSearch : any = [];
+  getSavedSearchLocation() {
+    return this.savedSearch;
+  }
+
+  restoredLocationSearch(){
+    this.savedSearch = [];
+  }
+
+  filterByLocation(location : string, first? : number, row? : number): Observable<TextMetadata[]>{
+    const defaultQuery = `[_doc__itAnt_ID="_REGEX_.*" & _doc__originalPlace__modernNameUrl="https://sws.geonames.org/${location}"]`;
+    const defaultOffset = '0';
+    const defaultLimit = '1000';
+    
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+    
+    let params = new HttpParams();
+    params = params.set('query', defaultQuery);
+   
+    
+    if (first !== undefined) {
+      params = params.set('offset', first.toString());
+    } else {
+      params = params.set('offset', defaultOffset);
+    }
+    
+    if (row !== undefined) {
+      params = params.set('limit', row.toString());
+    } else {
+      params = params.set('limit', defaultLimit);
+    }
+    return this.http.post<GetFilesResponse>(this.baseUrl + "api/public/searchFiles", params.toString(), { headers: headers })
+      .pipe(
+        map(res => res.files),
+        map(texts => this.mapData(texts)),
+        tap(x => this.savedSearch = x),
+        shareReplay(),
     );
   }
 
-  filterByType(type: string) {
-    return this.texts$.pipe(
-      map(texts => texts.filter((text)=> {
-        return text.inscriptionType == type;
-      }))
+   
+  typeSavedSearch : any = [];
+  getTypeSavedSearch() {
+    return this.typeSavedSearch;
+  }
+
+  restoredTypeSearch(){
+    this.typeSavedSearch = [];
+  }
+
+  filterByType(type: string, first? : number, row? : number) {
+    const defaultQuery = `[_doc__itAnt_ID="_REGEX_.*" & _doc__inscriptionType="${type}"]`;
+    const defaultOffset = '0';
+    const defaultLimit = '1000';
+    
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+    
+    let params = new HttpParams();
+    params = params.set('query', defaultQuery);
+   
+    
+    if (first !== undefined) {
+      params = params.set('offset', first.toString());
+    } else {
+      params = params.set('offset', defaultOffset);
+    }
+    
+    if (row !== undefined) {
+      params = params.set('limit', row.toString());
+    } else {
+      params = params.set('limit', defaultLimit);
+    }
+    return this.http.post<GetFilesResponse>(this.baseUrl + "api/public/searchFiles", params.toString(), { headers: headers })
+      .pipe(
+        map(res => res.files),
+        map(texts => this.mapData(texts)),
+        tap(x => this.typeSavedSearch = x),
+        shareReplay(),
     );
   }
+
+  
 
   searchLocation(query : string) : Observable<TextMetadata[]>{
-    return this.texts$.pipe(
-      map(texts=>texts.filter((text) => {
-        return text.originalPlace.ancientName.includes(query) || text.originalPlace.modernName.includes(query);
-      })),
-    )
+    const defaultQuery = `[_doc__itAnt_ID="_REGEX_.*" & _doc__originalPlace__modernNameUrl="_REGEX_.*${query}.*"]`;
+    const defaultOffset = '0';
+    const defaultLimit = '1000';
+    
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+    
+    let params = new HttpParams();
+    params = params.set('query', defaultQuery);
+    params = params.set('offset', defaultOffset);
+    params = params.set('limit', defaultLimit);
+    
+    return this.http.post<GetFilesResponse>(this.baseUrl + "api/public/searchFiles", params.toString(), { headers: headers })
+      .pipe(
+        map(res => res.files),
+        map(texts => this.mapData(texts)),
+        tap(x => this.typeSavedSearch = x),
+        shareReplay(),
+    );
   }
 
-  getIndexOfText(itAnt_ID : string) : Observable<number> {
-    return this.texts$.pipe(
-      withLatestFrom(this.attestations$),
-      map(([texts, attestations]) => {
-        let index;
-  
-        // Se non trovi l'indice in texts$, cerca in attestations$
-        if(attestations && attestations.length > 0){
-          index = attestations.findIndex(text => text.itAnt_ID === itAnt_ID);
-        }else{
-          index = texts.findIndex(attestation => attestation.itAnt_ID === itAnt_ID);
-
-        }
-        
-        return index;
-      })
-    )
-  }
-
-  getFileIdByIndex(index : number) : Observable<string> {
-    return this.texts$.pipe(
-      withLatestFrom(this.attestations$),
-      map(([texts, attestations]) => {
-        let itAnt_ID = '';
-  
-        // Se non trovi l'indice in texts$, cerca in attestations$
-        if(attestations && attestations.length > 0){
-          itAnt_ID = attestations[index].itAnt_ID;
-        }else{
-          itAnt_ID = texts[index].itAnt_ID
-
-        }
-        
-        return itAnt_ID;
-      })
-    )
-  }
-
-  getFileByIndex(index : number) : Observable<TextMetadata> {
-    return this.texts$.pipe(
-      withLatestFrom(this.attestations$),
-      map(([texts, attestations]) => {
-        let itAnt_ID : TextMetadata;
-  
-        // Se non trovi l'indice in texts$, cerca in attestations$
-        if(attestations && attestations.length > 0){
-          itAnt_ID = attestations[index];
-        }else{
-          itAnt_ID = texts[index]
-
-        }
-        
-        return itAnt_ID;
-      })
-    )
-  }
+ 
 
   getContent(nodeId : number) : Observable<XmlAndId> {
     return this.http.get<GetContentResponse>(`${this.baseUrl}api/public/getcontent?requestUUID=11&nodeid=${nodeId}`).pipe(

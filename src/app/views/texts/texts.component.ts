@@ -6,7 +6,7 @@ import * as L from 'leaflet';
 import { circle, tileLayer } from 'leaflet';
 import { MenuItem } from 'primeng/api';
 import { Paginator } from 'primeng/paginator';
-import { map, tap, Subject, takeUntil, BehaviorSubject, Observable, switchMap, take, filter, debounceTime, timeout, catchError, iif, throwError, of, EMPTY, shareReplay, mergeMap, flatMap, delay, forkJoin } from 'rxjs';
+import { map, tap, Subject, takeUntil, BehaviorSubject, Observable, switchMap, take, filter, debounceTime, timeout, catchError, iif, throwError, of, EMPTY, shareReplay, mergeMap, flatMap, delay, forkJoin, withLatestFrom } from 'rxjs';
 import { CenturyPipe } from 'src/app/pipes/century-pipe/century-pipe.pipe';
 import { FormElement, LexiconService } from 'src/app/services/lexicon/lexicon.service';
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
@@ -14,7 +14,7 @@ import { PopupService } from 'src/app/services/maps/popup/popup.service';
 import { AnnotationsRows, Book, BookAuthor, BookEditor, Graphic, ListAndId, TextMetadata, TextsService, TextToken, XmlAndId } from 'src/app/services/text/text.service';
 import { environment } from 'src/environments/environment';
 import { DynamicOverlayComponent } from './dynamic-overlay/dynamic-overlay.component';
-import { buildCustomInterpretative, getApparatus, getBibliography, getCommentaryXml, getFacsimile, getInscriptionType, getTeiChildren, getTranslationByXml, groupAlphabet, groupByCenturies, groupLanguages, groupLocations, groupMaterial, groupObjectTypes, groupTypes, leidenDiplomaticBuilder } from './utils';
+import { buildCustomInterpretative, getApparatus, getBibliography, getCommentaryXml, getFacsimile, getInscriptionType, getTeiChildren, getTranslationByXml, groupAlphabet, groupByCenturies, groupLanguages, groupMaterial, groupObjectTypes, groupTypes, leidenDiplomaticBuilder } from './utils';
 
 
 export interface CenturiesCounter {
@@ -109,7 +109,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
   showSpinner: boolean = true;
   isActiveInterval: boolean = false;
   first: number = 0;
-  rows: number = 6;
+  rows: number = 8;
   allowedFilters: string[] = ['date', 'location', 'type', 'search'];
   allowedOperators: string[] = ['filter', 'date', 'place', 'type', 'file'];
   searchOptions: Array<string> = ['start', 'equals', 'contains', 'ends']
@@ -125,16 +125,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
   bounds = new L.LatLngBounds(new L.LatLng(33.802052, 4.239242), new L.LatLng(50.230863, 19.812745));
 
 
-  totalRecords: Observable<number> = this.textService.texts$.pipe(
-    catchError(err =>
-      iif(
-        () => err,
-        this.thereWasAnError(), // -- true, 
-        of([])
-      )),
-    takeUntil(this.destroy$),
-    map((texts) => texts.length || 0),
-  );
+  
 
   activeTab: Observable<string | null> = this.activatedRoute.queryParams.pipe(
     takeUntil(this.destroy$),
@@ -185,8 +176,12 @@ export class TextsComponent implements OnInit, AfterViewInit {
     })
   );
 
+  totalRecords: Observable<number> = this.textService.countFiles().pipe(
+    takeUntil(this.destroy$),
+  );
 
-  paginationItems: Observable<TextMetadata[]> = this.textService.texts$.pipe(
+  paginationItems: Observable<TextMetadata[]> = this.textService.paginationItems().pipe(
+    tap(x=> this.showSpinner = true),
     catchError(err =>
       iif(
         () => err,
@@ -194,27 +189,27 @@ export class TextsComponent implements OnInit, AfterViewInit {
         of([])
       )),
     takeUntil(this.destroy$),
-    map((texts) => texts.slice(this.first, this.rows)),
     tap((x) => this.showSpinner = false)
   );
 
-  groupCenturies: Observable<CenturiesCounter[]> = this.textService.texts$.pipe(
+  groupCenturies: Observable<CenturiesCounter[]> = this.textService.getUniqueMetadata('_doc__dateOfOriginNotBefore').pipe(
     takeUntil(this.destroy$),
     map(texts => groupByCenturies(texts)),
   )
 
-  groupLocations: Observable<LocationsCounter[]> = this.textService.texts$.pipe(
-    catchError(err =>
-      iif(
-        () => err,
-        this.thereWasAnError(),
-        of([])
-      )),
+  
+  groupLocations: Observable<LocationsCounter[]> = this.textService.getUniqueMetadata('_doc__originalPlace__modernNameUrl').pipe(
     takeUntil(this.destroy$),
-    map(texts => groupLocations(texts)),
+    map(data => data.map((item : any) => {
+      const match = item.match(/(\d+)(?="?$)/);
+      return match ? match[1] : null;
+    }).filter((id : any) => id)),   // Filtra gli eventuali valori null
+    map(data => data.map((item : any) => ({ modernPlaceId: item }))),
+    tap(x => console.log(x))
   )
 
-  groupTypes: Observable<TypesCounter[]> = this.textService.texts$.pipe(
+   
+  groupTypes: Observable<any[]> = this.textService.getUniqueMetadata('_doc__inscriptionType').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -222,10 +217,11 @@ export class TextsComponent implements OnInit, AfterViewInit {
         of([])
       )),
     takeUntil(this.destroy$),
-    map(texts => groupTypes(texts)),
+    map(texts => texts.filter((text : any) => text && text.trim() !== '')), // Filtra le stringhe vuot
+    map(texts => texts.map((text : any) => ({inscriptionType : text})))
   )
 
-  groupAlphabet: Observable<AlphabetCounter[]> = this.textService.texts$.pipe(
+  groupLanguages: Observable<LanguagesCounter[]> = this.textService.getUniqueMetadata('_doc__language__ident').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -233,10 +229,12 @@ export class TextsComponent implements OnInit, AfterViewInit {
         of([])
       )),
     takeUntil(this.destroy$),
-    map(texts => groupAlphabet(texts)),
+    map(texts => texts.filter((text : any) => text && text.trim() !== '' && !text.includes('Ital-x'))),
+    map(lang => lang.map((l : any) => ({ language : l.replace(/[\"]/g,'')}))
+    ) 
   )
 
-  groupLanguages: Observable<LanguagesCounter[]> = this.textService.texts$.pipe(
+  groupAlphabet: Observable<AlphabetCounter[]> = this.textService.getUniqueMetadata('_doc__alphabet').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -244,10 +242,10 @@ export class TextsComponent implements OnInit, AfterViewInit {
         of([])
       )),
     takeUntil(this.destroy$),
-    map(texts => groupLanguages(texts)),
+    map(alphabets => alphabets.map((alpha : any) => ({alphabet : alpha}))),
   )
 
-  groupObjectTypes: Observable<ObjectTypeCounter[]> = this.textService.texts$.pipe(
+  groupObjectTypes: Observable<ObjectTypeCounter[]> = this.textService.getUniqueMetadata('_doc__support__objectType').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -255,10 +253,10 @@ export class TextsComponent implements OnInit, AfterViewInit {
         of([])
       )),
     takeUntil(this.destroy$),
-    map(texts => groupObjectTypes(texts)),
+    map(objectTypes => objectTypes.map((obj : any) => ({objectType : obj.replace(/[\"]/g,'')}))),
   )
 
-  groupMaterial: Observable<MaterialCounter[]> = this.textService.texts$.pipe(
+  groupMaterial: Observable<MaterialCounter[]> = this.textService.getUniqueMetadata('_doc__support__material').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -266,30 +264,26 @@ export class TextsComponent implements OnInit, AfterViewInit {
         of([])
       )),
     takeUntil(this.destroy$),
-    map(texts => groupMaterial(texts)),
-  )
+    map(materials => materials.map((mat : any) => ({material : mat.replace(/[\"]/g,'')}))),
+  ) 
 
 
   geoData: Observable<GlobalGeoDataModel[]> = this.groupLocations.pipe(
-    catchError(err =>
-      iif(
-        () => err,
-        this.thereWasAnError(),
-        of([])
-      )),
+    
     switchMap(locations => this.mapsService.getGeoPlaceData(locations)),
+    delay(1000),
     switchMap(geoData => {
       const searchAttestationsObservables = geoData.map(place => {
         const headers = new HttpHeaders({
           'Content-Type': 'application/x-www-form-urlencoded'
         });
-        const cqlQuery = `[_doc__originalPlace__modernNameUrl="${place.modernUri}" | _doc__originalPlace__ancientNameUrl="${place.ancientUri}"]`;
+        const cqlQuery = `[_doc__originalPlace__modernNameUrl="${place.modernUri}"]`;
         let params = new HttpParams()
           .set('query', cqlQuery)
           .set('offset', '0')
-          .set('limit', '1000');
+          .set('limit', '100');
 
-        return this.http.post<AnnotationsRows>(environment.cashUrl + "api/public/search", params.toString(), { headers: headers }).pipe(
+        return this.http.post<AnnotationsRows>(environment.cashUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
           map(attestations => ({ ...place, attestations }))
         );
       });
@@ -299,17 +293,18 @@ export class TextsComponent implements OnInit, AfterViewInit {
     tap(data => this.drawMap(data))
   )
 
-  searchLocations: Observable<LocationsCounter[]> = this.autocomplete$.pipe(
+  searchLocations: Observable<any[]> = this.autocomplete$.pipe(
     debounceTime(1000),
     filter(autoCompleteEvent => autoCompleteEvent.query != ''),
-    switchMap(autoCompleteEvent => this.textService.searchLocation(autoCompleteEvent.query)),
-    map(texts => groupLocations(texts)),
-    tap(results => this.autocompleteLocations = results)
+    withLatestFrom(this.geoData),
+    map(([query, r]) => {
+      return r.filter(item => item.modernName.includes(query.query))
+    })
   )
 
   getTextPaginationIndexReq$: BehaviorSubject<string> = new BehaviorSubject<string>('');
-  getFileIdByIndexReq$: BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
-  getFileByIndexReq$: BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
+
+  getFileByIdReq$: BehaviorSubject<string> = new BehaviorSubject<string>('');
 
   getTextContentReq$: BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
   getInterpretativeReq$: BehaviorSubject<XmlAndId> = new BehaviorSubject<XmlAndId>({} as XmlAndId);
@@ -332,7 +327,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
   loadingFacsimile: boolean = false;
   loadingCommentary: boolean = false;
   loadingApparatus: boolean = false;
-
+  loadingPagination : boolean = false;
 
   displayModal: boolean = false;
 
@@ -348,34 +343,14 @@ export class TextsComponent implements OnInit, AfterViewInit {
   @ViewChild('dynamicOverlay', { read: ViewContainerRef }) container: ViewContainerRef | undefined;
   arrayDynamicComponents: Array<FormElement> = [];
 
-  getTextPaginationIndex: Observable<number> = this.getTextPaginationIndexReq$.pipe(
-    switchMap(itAnt_ID => itAnt_ID != '' ? this.textService.getIndexOfText(itAnt_ID) : of()),
-    tap(index => {
-      if (index != -1) {
-        this.getFileByIndexReq$.next(index)
-        this.fileNotAvailable = false;
-      } else {
-        this.fileNotAvailable = true;
-      }
-    })
-  )
-
-  getFileIdByIndex: Observable<string> = this.getFileIdByIndexReq$.pipe(
-    switchMap(index => !isNaN(index) ? this.textService.getFileIdByIndex(index) : of()),
-    tap(fileID => {
-      if (fileID != '') {
-        this.route.navigate(['/texts'], { queryParams: { file: fileID } })
-      }
-    }),
-  )
 
   isBodyTextPartArray: boolean = false;
   isTraditionalIdArray: boolean = false;
   onlyTextCommentary: string[] = [];
   referencedCommentary: any[] = [];
 
-  getFileByIndex: Observable<TextMetadata> = this.getFileByIndexReq$.pipe(
-    switchMap(index => !isNaN(index) ? this.textService.getFileByIndex(index) : of()),
+  getFileById: Observable<TextMetadata> = this.getFileByIdReq$.pipe(
+    switchMap(fileId => fileId && fileId != '' ? this.textService.getFileByID(fileId) : of()),
     tap(file => {
       if (file) {
         console.log(file)
@@ -629,28 +604,27 @@ export class TextsComponent implements OnInit, AfterViewInit {
           this.fileNotAvailable = false;
           const keys = Object.keys(event);
           const values = Object.values(event);
-          /* if(keys.length == 0) {
-            this.goToDefaultUrl(); 
-            return;
-          } */
+          
 
           if (keys) {
             for (const [key, value] of Object.entries(event)) {
               if (!this.allowedOperators.includes(key) ||
                 event[key] == '' ||
                 (Array.isArray(event[key]) && Array.from(event[key]).length > 1)) {
-                // this.goToDefaultUrl(); 
                 return;
               }
             }
           }
           if (keys.length > 1) {
+            this.showSpinner = true;
+            this.textService.restoredTypeSearch();
+            this.textService.restoredLocationSearch();
             this.pagination({} as Paginator, keys[1], values[1])
           }
           if (keys[0] == 'file') {
 
             let fileId = values[0];
-            this.getTextPaginationIndexReq$.next(fileId);
+            this.getFileByIdReq$.next(fileId);
 
           } else {
             if (this.singleMap) {
@@ -743,8 +717,9 @@ export class TextsComponent implements OnInit, AfterViewInit {
     return String.fromCharCode(97 + i);
   }
 
-  buildTextQuery(formData: any) {
+  buildTextQuery(formData: any, f?: number, r? : number) {
     this.somethingWrong = false;
+    this.showSpinner = true;
     this.route.navigate(
       [],
       {
@@ -755,12 +730,14 @@ export class TextsComponent implements OnInit, AfterViewInit {
     )
     let queryParts: string[] = [];
 
+    queryParts.push(`_doc__itAnt_ID="_REGEX_.*"`)
+
     if (formData.word) {
-      queryParts.push(`word="_REGEX_.*${formData.word}.*"`);
+      queryParts.push(` word="_REGEX_.*${formData.word}.*"`);
     }
 
     if (formData.title) {
-      queryParts.push(`_doc__title="_REGEX_.*${formData.title}.*"`);
+      queryParts.push(` _doc__title="_REGEX_.*${formData.title}.*"`);
     }
 
     if (formData.id) {
@@ -780,7 +757,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
     }
 
     if (formData.ancientName) {
-      queryParts.push(`_doc__originalPlace__ancientName="${formData.ancientName}"`);
+      queryParts.push(`_doc__originalPlace__modernNameUrl="${formData.ancientName}"`);
     }
 
     if (formData.language) {
@@ -804,24 +781,26 @@ export class TextsComponent implements OnInit, AfterViewInit {
     }
 
     const query = queryParts.length > 0 ? `[${queryParts.join(' &')}]` : '';
-    console.log(query)
-    this.first = 0;
-    this.rows = 6;
-    if (query != '') {
+    console.log(query);
+    if(!r && !f){
+      this.first = 1;
+      this.rows = 8;
+    }
+    
+    if (query != '' && query != '[_doc__itAnt_ID="_REGEX_.*"]') {
 
-      this.paginationItems = this.textService.filterAttestations(query).pipe(
+      this.paginationItems = this.textService.filterAttestations(query, f ? f : this.first, r ? r : this.rows).pipe(
         catchError(error => {
           console.error('An error occurred:', error);
           if (error.status != 200) this.thereWasAnError() // Stampa l'errore sulla console
           return of([])// Ritorna un Observable con una struttura di AnnotationsRows vuota
         }),
-        map(texts => texts.slice(0, 6))
+        tap(x => this.showSpinner = false)
       );
-      this.totalRecords = this.textService.filterAttestations(query).pipe(map(texts => texts.length || 0))
+      this.totalRecords = this.textService.countFiles(query)
     } else {
       this.textService.restoreFilterAttestations();
-      this.paginationItems = this.textService.texts$.pipe(map(texts => texts.slice(0, 6)));
-      this.totalRecords = this.textService.texts$.pipe(map(texts => texts.length || 0))
+      this.getAllData(this.first, this.rows)
     }
 
 
@@ -840,8 +819,8 @@ export class TextsComponent implements OnInit, AfterViewInit {
 
     this.searchForm.markAllAsTouched();
 
-    if (evt.ancientPlaceLabel != '') {
-      this.searchForm.get('ancientName')?.setValue(evt.ancientPlaceLabel, { emitEvent: false })
+    if (evt.modernName != '') {
+      this.searchForm.get('ancientName')?.setValue(evt.modernUri, { emitEvent: false })
     }
 
     this.searchForm.updateValueAndValidity({ onlySelf: false, emitEvent: true })
@@ -855,8 +834,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
     this.searchForm.reset();
     this.first = 0;
     this.rows = 6;
-    this.paginationItems = this.textService.texts$.pipe(map(texts => texts.slice(0, 6)));
-    this.totalRecords = this.textService.texts$.pipe(map(texts => texts.length || 0))
+    this.getAllData();
   }
 
   isDragging = false;
@@ -911,13 +889,19 @@ export class TextsComponent implements OnInit, AfterViewInit {
   }
 
   getAllData(f?: number, r?: number): void {
+    this.showSpinner = true;
     let rows = 0;
     if (f && r) { this.first = f; rows = r; }
-    if (!f && !r) { this.first = 0; this.rows = 6; }
+    if (!f && !r) { this.first = 0; this.rows = 8; }
 
 
-    this.paginationItems = this.textService.texts$.pipe(map(texts => texts.slice(this.first, rows == 0 ? this.rows : rows)));
-    this.totalRecords = this.textService.texts$.pipe(map(texts => texts.length || 0))
+    this.paginationItems = this.textService.paginationItems(this.first+1, this.rows).pipe(
+      tap(x => this.showSpinner =false),
+      shareReplay(),
+    );
+
+    this.totalRecords = this.textService.countFiles();
+
   }
 
   goToDefaultUrl() {
@@ -926,43 +910,61 @@ export class TextsComponent implements OnInit, AfterViewInit {
 
   filterByDate(century: number, f?: number, r?: number): void {
     if (century) {
-      if (!f && !r) { this.first = 0; this.rows = 6; this.paginationItems = this.textService.filterByDate(century).pipe(map(text => text.slice(this.first, this.rows))) }
+      if (!f && !r) { this.first = 0; this.rows = 8; this.paginationItems = this.textService.filterByDate(century).pipe(map(text => text.slice(this.first, this.rows))) }
       if (f || r) { this.paginationItems = this.textService.filterByDate(century).pipe(map(text => text.slice(f, r))) }
 
-      this.totalRecords = this.textService.filterByDate(century).pipe(map(texts => texts.length || 0))
+      this.totalRecords = this.textService.countFiles(`[_doc__itAnt_ID="_REGEX_.*" & _doc__dateOfOriginNotBefore="${century}" & _doc__dateOfOriginNotAfter="${century+100}"]`)
+      this.showSpinner=false;
     } else {
       this.getAllData(f, r);
     }
   }
 
 
-  filterByLocation(locationId: number, f?: number, r?: number): void {
-    if (locationId) {
-      if (!f && !r) { this.first = 0; this.rows = 6; this.paginationItems = this.textService.filterByLocation(locationId).pipe(map(text => text.slice(this.first, this.rows))) }
-      if (f || r) { this.paginationItems = this.textService.filterByLocation(locationId).pipe(map(text => text.slice(f, r))) }
+  filterByLocation(locationId: string, f?: number, r?: number): void {
+    if(this.textService.getSavedSearchLocation() && this.textService.getSavedSearchLocation().length > 0){
+      if(f && r && (f>=r)){
+        r = f+r;
+      }
 
-      this.totalRecords = this.textService.filterByLocation(locationId).pipe(map(texts => texts.length || 0))
-    } else {
-      this.getAllData(f, r);
+      this.paginationItems = of(this.textService.getSavedSearchLocation().slice(f, r))
+      
+    }else{
+      if (locationId) {
+        if (!f && !r) { this.first = 0; this.rows = 8; this.paginationItems = this.textService.filterByLocation(locationId).pipe(tap(x=> this.showSpinner = false)) }
+        if (f || r) { this.paginationItems = this.textService.filterByLocation(locationId).pipe(map(text => text.slice(f, r))) }
+  
+        this.showSpinner = false;
+        this.totalRecords = this.textService.filterByLocation(locationId).pipe(map(texts => texts.length || 0))
+      } else {
+        this.getAllData(f, r);
+      }
     }
-
   }
 
+  
   filterByType(type: string, f?: number, r?: number): void {
-    if (type) {
-      if (!f && !r) { this.first = 0; this.rows = 6; this.paginationItems = this.textService.filterByType(type).pipe(map(text => text.slice(this.first, this.rows))) }
-      if (f || r) { this.paginationItems = this.textService.filterByType(type).pipe(map(text => text.slice(f, r))) }
-
-      this.totalRecords = this.textService.filterByType(type).pipe(map(texts => texts.length || 0))
-    } else {
-      this.getAllData(f, r);
+    if(this.textService.getTypeSavedSearch() && this.textService.getTypeSavedSearch().length > 0){
+      if(f && r && (f>=r)){
+        r = f+r;
+      }
+      this.showSpinner = false;
+      this.paginationItems = of(this.textService.getTypeSavedSearch().slice(f, r))
+      
+    }else{
+      if (type) {
+        if (!f && !r) { this.first = 0; this.rows = 8; this.paginationItems = this.textService.filterByType(type).pipe(tap(x=> this.showSpinner = false)) }
+        if (f || r) { this.paginationItems = this.textService.filterByType(type).pipe(map(text => text.slice(f, r))) }
+  
+        this.showSpinner = false;
+        this.totalRecords = this.textService.filterByType(type).pipe(map(texts => texts.length || 0))
+      } else {
+        this.getAllData(f, r);
+      }
     }
   }
 
-  textPagination(event: PaginatorEvent) {
-    let indexRequested = event.page;
-    this.getFileIdByIndexReq$.next(indexRequested);
-  }
+  
 
   galleryActiveIndex = 0;
   displayCustom: boolean = false;
@@ -986,31 +988,35 @@ export class TextsComponent implements OnInit, AfterViewInit {
 
 
   pagination(event: Paginator, ...args: any[]) {
+    this.showSpinner = true;
     this.getTextContentReq$.next(NaN)
     if (Object.keys(event).length != 0) { this.first = event.first; this.rows = event.rows; }
-    if (Object.keys(event).length == 0) { this.first = 0; this.rows = 6; }
+    if (Object.keys(event).length == 0) { this.first = 0; this.rows = 8; }
 
-    let rows = (this.first != this.rows) && (this.first < this.rows) ? this.rows : this.first + this.rows;
+    //let rows = (this.first != this.rows) && (this.first < this.rows) ? this.rows : this.first + this.rows;
     if (args.length > 0) { args = args.filter(query => query != null) }
     if (args.length == 0) {
-      this.getAllData(this.first, rows);
+      this.getAllData(this.first, this.rows);
     }
     if (args.length == 1) {
       if (args[0] == 'search') {
-        this.paginationItems = this.textService.sliceFilteredAttestations(this.first, rows);
+        this.buildTextQuery(this.searchForm.value, this.first, this.rows);
+      }else{
+        this.getAllData(this.first, this.rows);
       }
 
-      /* this.getAllData(this.first, rows); */
+     
     }
     if (args.length > 1) {
       let filter = args[0];
       let value = !isNaN(parseInt(args[1])) ? parseInt(args[1]) : args[1];
 
       switch (filter) {
-        case 'all': this.getAllData(this.first, rows); break;
-        case 'date': this.filterByDate(value, this.first, rows); break;
-        case 'place': this.filterByLocation(value, this.first, rows); break;
-        case 'type': this.filterByType(value, this.first, rows); break;
+        case 'all': this.getAllData(this.first, this.rows); break;
+        case 'date': this.filterByDate(value, this.first, this.rows); break;
+        case 'place': this.filterByLocation(value, this.first, this.rows); break;
+        case 'location': this.filterByLocation(value, this.first, this.rows); break;
+        case 'type': this.filterByType(value, this.first, this.rows); break;
       }
       return;
     }
@@ -1023,7 +1029,13 @@ export class TextsComponent implements OnInit, AfterViewInit {
   drawMap(geoData: GlobalGeoDataModel[]): void {
 
     geoData.forEach(geoPlaceData => {
-      let circleMarker = circle([geoPlaceData.reprPoint.latitude, geoPlaceData.reprPoint.longitude], { radius: 5000 }).on('click mouseover', event => {
+      const RADIUS = 2000;
+      const METERS_PER_ATT = 100;
+
+      const attestationsCount = geoPlaceData.attestations.files.length;
+
+      let radius = RADIUS + (attestationsCount * METERS_PER_ATT);
+      let circleMarker = circle([geoPlaceData.reprPoint.latitude, geoPlaceData.reprPoint.longitude], { radius: radius }).on('click mouseover', event => {
         console.log(event);
         let eventType = event.type;
         if (eventType == 'mouseover') {
@@ -1055,7 +1067,8 @@ export class TextsComponent implements OnInit, AfterViewInit {
 
   showHideRestorations() {
     let interpretativeDiv: Array<HTMLElement> = Array.from(this.interpretativeText.nativeElement.getElementsByClassName('gap'));
-    let diplomaticDiv: Array<HTMLElement> = Array.from(this.diplomaticText.nativeElement.getElementsByClassName('gap'));
+
+    
     interpretativeDiv.forEach(
       element => {
         if (element.style.opacity == '0') {
@@ -1068,19 +1081,24 @@ export class TextsComponent implements OnInit, AfterViewInit {
 
       }
     )
+    
+    if(this.diplomaticText && this.diplomaticText.nativeElement){
+      let diplomaticDiv: Array<HTMLElement> = Array.from(this.diplomaticText.nativeElement.getElementsByClassName('gap'));
 
-    diplomaticDiv.forEach(
-      element => {
-        if (element.style.opacity == '0') {
+      diplomaticDiv.forEach(
+        element => {
+          if (element.style.opacity == '0') {
 
-          element.setAttribute('style', 'opacity: 1');
-        } else {
-          element.setAttribute('style', 'opacity: 0');
+            element.setAttribute('style', 'opacity: 1');
+          } else {
+            element.setAttribute('style', 'opacity: 0');
+
+          }
 
         }
-
-      }
-    )
+      )
+    }
+    
   }
 
 
