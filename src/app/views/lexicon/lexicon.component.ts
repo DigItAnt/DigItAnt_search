@@ -327,19 +327,8 @@ export class LexiconComponent implements OnInit {
     
     filter(instanceName => instanceName != ''),
     takeUntil(this.destroy$),
-    switchMap(instanceName => this.textService.searchAttestations(instanceName, 100, 0)),
-    map(res => {
-      let idSet = new Set();
-      let arrayFromSet : any[] = [];
-      res.forEach(element=>{idSet.add(JSON.stringify({nodeId: element.nodeId, nodePath : element.nodePath}))})
-      idSet.forEach(
-        (element : any)=> {
-          let el = JSON.parse(element);
-          arrayFromSet.push(el.nodeId)
-        }
-      );
-      return arrayFromSet;
-    }),
+    switchMap(instanceName => this.textService.searchAttestations(instanceName)),
+    
    /*  switchMap(nodeIds => {
       return this.textService.texts$.pipe(
         map(textsArray => {
@@ -357,18 +346,6 @@ export class LexiconComponent implements OnInit {
     filter(instanceName => instanceName != ''),
     takeUntil(this.destroy$),
     switchMap(instanceName => this.textService.searchAttestationsLexEntry(instanceName, 100, 0)),
-    map(res => {
-      let idSet = new Set();
-      let arrayFromSet : any[] = [];
-      res.forEach(element=>{idSet.add(JSON.stringify({nodeId: element.nodeId, nodePath : element.nodePath}))})
-      idSet.forEach(
-        (element : any)=> {
-          let el = JSON.parse(element);
-          arrayFromSet.push(el.nodeId)
-        }
-      );
-      return arrayFromSet;
-    }),
     /* switchMap(nodeIds => {
       return this.textService.texts$.pipe(
         map(textsArray => {

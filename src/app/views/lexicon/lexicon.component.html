@@ -533,9 +533,10 @@
                                 Attested in:
                             </span>
 
+
                             <div class="flex flex-column align-items-baseline pl-3" *ngIf="lexEntryAttestations.data && lexEntryAttestations.data.length > 0">
                                 <div class="flex flex-row attestation" *ngFor="let attestation of lexEntryAttestations.data">
-                                    <a class="text-xl font-normal" [href]="'/texts?file='+attestation" routerLink="../texts" [queryParams]="{file: attestation}">{{attestation}}:</a>
+                                    <a class="text-xl font-normal" [href]="'/texts?file='+attestation.itAnt_ID" routerLink="../texts" [queryParams]="{file: attestation.itAnt_ID}">{{attestation.itAnt_ID}}</a>
                                     
                                 </div>
                             </div>
@@ -637,7 +638,7 @@
 
                             <div class="flex flex-column align-items-baseline pl-3" >
                                 <div class="flex flex-row attestation" *ngFor="let attestation of form.attestations">
-                                    <a class="text-xl font-normal" [href]="'/texts?file='+attestation" routerLink="../texts" [queryParams]="{file: attestation}">{{attestation}}:</a>
+                                    <a class="text-xl font-normal" [href]="'/texts?file='+attestation.itAnt_ID" routerLink="../texts" [queryParams]="{file: attestation.itAnt_ID}">{{attestation.itAnt_ID}}</a>
                                     
                                 </div>
                             </div>

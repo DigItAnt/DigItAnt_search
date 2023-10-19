@@ -357,15 +357,40 @@ export class TextsService {
     );
   }
 
-  searchAttestations(formId: string, limit? : number, offset? : number): Observable<Attestation[]> {
-    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?limit=300&offset=0&query="+encodeURIComponent('[attestation="'+formId+'"]'), null).pipe(
-      map(res => res.rows)
+  searchAttestations(formId: string): Observable<TextMetadata[]> {
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+
+    let params = new HttpParams()
+      .set('query', `[_doc__itAnt_ID="_REGEX_.*" & attestation="${formId}"]`)
+      .set('offset', '0')
+      .set('limit', '100');
+
+
+
+    return this.http.post<any>(this.baseUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
+      map(res => res.files),
+      map(res => this.mapData(res))
     )
   }
 
-  searchAttestationsLexEntry(lexId: string, limit? : number, offset? : number): Observable<Attestation[]> {
-    return this.http.post<AnnotationsRows>(this.baseUrl + "api/public/search?limit=300&offset=0&query="+encodeURIComponent('[attestation__lexicalEntry="'+lexId+'"]'), null).pipe(
-      map(res => res.rows)
+  searchAttestationsLexEntry(lexId: string, limit? : number, offset? : number): Observable<TextMetadata[]> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+
+    let params = new HttpParams()
+      .set('query', `[_doc__itAnt_ID="_REGEX_.*" & attestation__lexicalEntry="${lexId}"]`)
+      .set('offset', '0')
+      .set('limit', '100');
+
+
+
+    return this.http.post<any>(this.baseUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
+      map(res => res.files),
+      map(res => this.mapData(res))
     )
   }
 
@@ -721,23 +746,19 @@ export class TextsService {
   getAnnotationsByForms(forms: FormElementTree[]) {
     return forkJoin(
       forms.map(form => {
-        return this.searchAttestations(form.form, 100, 0).pipe(
+        return this.searchAttestations(form.form).pipe(
           switchMap(res => {
             if (res.length > 0) {
-              let idSet = new Set();
-              res.forEach(element => {
-                idSet.add(JSON.stringify({ nodeId: element.nodeId, nodePath: element.nodePath }));
-              });
-              let arrayFromSet: any[] = [];
-              idSet.forEach((element: any) => {
-                let el = JSON.parse(element);
-                arrayFromSet.push(el.nodeId);
-              });
-              form.idContainer = arrayFromSet;
-  
+              let nodeIds: any[] = [];
+
+              res.forEach(
+                element => {
+                  nodeIds.push(element['element-id'])
+                }
+              )
               // Usare un altro forkJoin per ottenere le attestazioni
               return forkJoin(
-                arrayFromSet.map(nodeId => {
+                nodeIds.map(nodeId => {
                   // Chiamare la funzione per ottenere l'attestazione per un nodeId specifico
                   return this.getAnnotation(nodeId).pipe(
                     map(attestations => {
