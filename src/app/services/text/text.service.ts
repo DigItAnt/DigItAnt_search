@@ -272,6 +272,7 @@ export class TextsService {
 
   private attestationsSubject = new BehaviorSubject<TextMetadata[]>([]);
   attestations$: Observable<TextMetadata[]> = this.attestationsSubject.asObservable();
+  concordances$ : Observable<TextMetadata[]> = this.bootstrapConcordances()
   somethingWrong: boolean = false;
 
   constructor(
@@ -279,6 +280,29 @@ export class TextsService {
     private lexiconService : LexiconService
   ) { }
 
+
+  bootstrapConcordances(){
+    const defaultQuery = '[_doc__itAnt_ID="_REGEX_.*"]';
+    const defaultOffset = '0';
+    const defaultLimit = '500';
+    
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+    
+    let params = new HttpParams();
+    params = params.set('query', defaultQuery);
+    params = params.set('offset', defaultOffset);
+    params = params.set('limit', defaultLimit);
+    
+
+    return this.http.post<GetFilesResponse>(this.baseUrl + "api/public/searchFiles", params.toString(), { headers: headers })
+      .pipe(
+        map(res => res.files),
+        map(texts => this.mapData(texts)),
+        shareReplay(),
+    );
+  }
 
   paginationItems(first?: number, row?: number) : Observable<TextMetadata[]> {
     const defaultQuery = '[_doc__itAnt_ID="_REGEX_.*"]';
