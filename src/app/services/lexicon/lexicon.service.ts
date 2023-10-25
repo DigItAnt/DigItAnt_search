@@ -183,7 +183,7 @@ export class LexiconService {
   private initParams: LexiconQueryFilter = {
     text: '',
     searchMode: 'contains',
-    type: '',
+    type: 'word',
     pos: '',
     formType: '',
     author: '',

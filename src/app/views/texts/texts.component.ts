@@ -783,7 +783,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
     const query = queryParts.length > 0 ? `[${queryParts.join(' &')}]` : '';
     console.log(query);
     if(!r && !f){
-      this.first = 1;
+      this.first = 0;
       this.rows = 8;
     }
     

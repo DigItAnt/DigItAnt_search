@@ -201,7 +201,7 @@ export class LexiconComponent implements OnInit {
   filterForm : FormGroup = new FormGroup({
     text: new FormControl(null),
     searchMode: new FormControl('contains'),
-    type: new FormControl(null),
+    type: new FormControl('word'),
     pos: new FormControl(null),
     formType: new FormControl(null),
     author: new FormControl(null),
@@ -546,7 +546,7 @@ export class LexiconComponent implements OnInit {
   }
 
   goToDefaultUrl() {
-    this.route.navigate(['/lexicon'], { queryParams: { filter: 'all', letter: '*' } });
+    this.route.navigate(['/lexicon'], { queryParams: { filter: 'all', letter: 'a' } });
   }
 
   pagination(event: Paginator, ...args: any[]) {

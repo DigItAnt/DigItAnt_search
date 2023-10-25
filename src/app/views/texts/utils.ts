@@ -312,6 +312,12 @@ export function getBibliography(rawXml: string): Array<any> {
             })
         }
 
+        if (citedRangeEntry.length > 0) {
+            citedRangeEntry.forEach(p => {
+                book_obj.citedRangeEntry = p.innerHTML;
+            })
+        }
+
         //console.log(book_obj);
         biblio_array.push(book_obj)
     })
@@ -507,7 +513,7 @@ export function getApparatus(rawXml: string, renderer: Renderer2): Array<string>
                 renderer.appendChild(contentSpan, renderer.createText(lemText));
             }
             if (rdgNode && rdgNode.firstChild && rdgNode.firstChild.nodeValue) {
-                const rdgText = rdgNode.firstChild.nodeValue.trim();
+                const rdgText = rdgNode.firstChild.nodeValue.trim() + "\t";
                 renderer.appendChild(contentSpan, renderer.createText(rdgText));
             }
             refNodes?.forEach((refNode, index) => {
@@ -572,7 +578,7 @@ export function getFacsimile(rawXml: string): Array<Graphic> {
         }
 
         if (url) {
-            if (url.includes('.jpg')) {
+            if (url.includes('.jpg') && index == 1) {
                 graphic_obj.isPdf = false;
             } else if (url.includes('.pdf')) {
                 graphic_obj.isPdf = true;

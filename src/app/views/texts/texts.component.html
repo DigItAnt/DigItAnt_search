@@ -499,9 +499,9 @@
                            
                             <div id="facsimile-div-panel" *ngIf="!loadingFacsimile && images.facsimile" class="flex ml-3 pt-3 justify-content-center"> 
                             
-                                <div class="flex flex-row align-items-baseline book-element pl-2" *ngFor="let img of images.facsimile">
+                                <div class="flex flex-column align-items-center book-element pl-2" *ngFor="let img of images.facsimile">
                                     <p-image *ngIf="!img.isPdf && !img.isExternalRef" [src]="img.url" alt="Image" width="250" [preview]="true"></p-image>
-                                    
+                                    <span class="p-5" *ngIf="!img.isPdf && !img.isExternalRef">{{img.description}}</span>
                                 </div>
                                 <!-- <p-galleria [visible]="displayCustom" [activeIndex]="galleryActiveIndex" [fullScreen]="true" [value]="images.facsimile" [containerStyle]="{'max-width': '40rem'}" [numVisible]="5"> 
                                     <ng-template pTemplate="item" let-item>
@@ -770,7 +770,7 @@
                                 <div class="flex flex-column col-9">
                                     <div class="flex flex-column mb-3" *ngFor="let autopsy of autopsyAuthors">
                                         <div>
-                                            <span class="font-bold text-red-800 ">{{autopsy.name}}</span>: <span class="font-normal " *ngIf="autopsy.when != null">({{autopsy.when}} <span *ngIf="autopsy.notAfter">- not after {{autopsy.notAfter}}</span> )</span>
+                                            <span class="font-bold text-red-800 ">{{autopsy.name}}</span> <span class="font-normal " *ngIf="autopsy.when != null">{{autopsy.when}} <span *ngIf="autopsy.notAfter">- not after {{autopsy.notAfter}}</span></span>
                                         </div>                        
                                     </div>
                                 </div>
@@ -784,7 +784,7 @@
                                 <div class="flex flex-column col-9">
                                     <div class="flex flex-column mb-3" *ngFor="let seen of seenAuthors">
                                         <div>
-                                            <span class="font-bold text-red-800 ">{{seen.name}}</span>: <span class="font-normal ">({{seen.when}} <span *ngIf="seen.notAfter">- not after {{seen.notAfter}}</span>)</span>
+                                            <span class="font-bold text-red-800 ">{{seen.name}}</span>: <span class="font-normal ">{{seen.when}} <span *ngIf="seen.notAfter">- not after {{seen.notAfter}}</span></span>
                                         </div>                        
                                     </div>
                                 </div>
@@ -1048,7 +1048,7 @@
 
                         <div id="text-data-div" class="flex flex-column flex-auto pt-3">
                             <div id="text-data-div-title" class="flex flex-row">
-                                <h2 class="font-medium">Origin and Preservation</h2>
+                                <h2 class="font-medium">Origin and Conservation</h2>
                                 
                             </div>
 
@@ -1094,10 +1094,10 @@
                                         <span class="font-bold text-red-800 " *ngIf="textView.file.discoveryYear.when != '' && textView.file.discoveryYear.notAfter != ''">When:</span> <span class="font-normal ">{{textView.file.discoveryYear.when}}</span>
                                     </div>
                                     <div>
-                                        <span class="font-bold text-red-800 " *ngIf="textView.file.discoveryYear.notAfter != ''">Not after:</span> <span class="font-normal ">{{textView.file.discoveryYear.notAfter}}</span>
+                                        <span class="font-bold " *ngIf="textView.file.discoveryYear.notAfter != ''">Not after:</span> <span class="font-normal ">{{textView.file.discoveryYear.notAfter}}</span>
                                     </div>
                                     <div>
-                                        <span class="font-bold text-red-800 " *ngIf="textView.file.discoveryYear.notBefore != ''">Not before:</span> <span class="font-normal ">{{textView.file.discoveryYear.notBefore}}</span>
+                                        <span class="font-bold " *ngIf="textView.file.discoveryYear.notBefore != ''">Not before:</span> <span class="font-normal ">{{textView.file.discoveryYear.notBefore}}</span>
                                     </div>
                                 </div>
                             </div>
@@ -1197,8 +1197,8 @@
                                         <span class="font-normal text-900 " *ngIf="book.issue != undefined && book.issue != ''">, issue {{book.issue}}</span>
                                         <span class="font-normal text-900 " *ngIf="book.page != undefined && book.page != ''">, pag. {{book.page}}</span>
                                         <span class="font-normal text-900 " *ngIf="book.entry != undefined && book.entry != ''">, pag. {{book.entry}}</span>
-                                        <span class="font-normal text-900 " *ngIf="book.citedRangePage != undefined && book.citedRangePage != ''">, ({{book.citedRangePage}})</span>
-                                        <span class="font-normal text-900 " *ngIf="book.citedRangeEntry != undefined && book.citedRangeEntry != ''">, ({{book.citedRangeEntry}})</span>
+                                        <span class="font-normal text-900 " *ngIf="book.citedRangePage != undefined && book.citedRangePage != ''">, {{book.citedRangePage}}</span>
+                                        <span class="font-normal text-900 " *ngIf="book.citedRangeEntry != undefined && book.citedRangeEntry != ''">, {{book.citedRangeEntry}}</span>
 
                                     </a>
 

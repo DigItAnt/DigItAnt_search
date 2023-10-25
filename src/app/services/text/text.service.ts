@@ -306,7 +306,7 @@ export class TextsService {
 
   paginationItems(first?: number, row?: number) : Observable<TextMetadata[]> {
     const defaultQuery = '[_doc__itAnt_ID="_REGEX_.*"]';
-    const defaultOffset = '1';
+    const defaultOffset = '0';
     const defaultLimit = '8';
     
     const headers = new HttpHeaders({
@@ -414,7 +414,8 @@ export class TextsService {
 
     return this.http.post<any>(this.baseUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
       map(res => res.files),
-      map(res => this.mapData(res))
+      map(res => this.mapData(res)),
+      map(res => res.sort((a, b) => a.itAnt_ID.localeCompare(b.itAnt_ID)))
     )
   }
 
