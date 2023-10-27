@@ -415,7 +415,13 @@ export class TextsService {
     return this.http.post<any>(this.baseUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
       map(res => res.files),
       map(res => this.mapData(res)),
-      map(res => res.sort((a, b) => a.itAnt_ID.localeCompare(b.itAnt_ID)))
+      map(res => res.sort((a, b) => {
+        const matchA = a.itAnt_ID.match(/\d+$/);
+        const matchB = b.itAnt_ID.match(/\d+$/);
+        const numA = matchA ? Number(matchA[0]) : 0;
+        const numB = matchB ? Number(matchB[0]) : 0;
+        return numA - numB;
+     }))
     )
   }
 
