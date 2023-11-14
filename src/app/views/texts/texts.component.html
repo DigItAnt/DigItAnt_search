@@ -830,7 +830,7 @@
                                         </div>
                                         
                                     </p-tabPanel>
-                                    <p-tabPanel header="Diplomatic" *ngIf="!isOscan">
+                                    <p-tabPanel header="Diplomatic" *ngIf="!isOscan && !isFaliscan">
                                         <div #diplomaticText id="diplomatic-text" [hidden]="loadingDiplomatic">
                                             <div class="mb-3" *ngFor="let face of leiden.diplomatic; let i = index">
                                                 <h4 class="mb-2" *ngIf="leiden.diplomatic && leiden.diplomatic.length > 1">  Face_{{getChar(i)}}

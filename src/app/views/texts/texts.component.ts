@@ -359,6 +359,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
         this.tempXml = null;
         this.isVenetic = false;
         this.isOscan = false;
+        this.isFaliscan = false;
         this.loadingCommentary = true;
         this.loadingInterpretative = true;
         this.loadingTranslation = true;
@@ -378,6 +379,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
 
   isVenetic: boolean = false;
   isOscan : boolean = false;
+  isFaliscan : boolean = false;
   getXMLContent: Observable<XmlAndId> = this.getTextContentReq$.pipe(
     tap(elementId => !isNaN(elementId) ? this.currentElementId = elementId : of()),
     switchMap(elementId => !isNaN(elementId) ? this.textService.getContent(elementId) : of()),
@@ -391,6 +393,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
         languageNodes.forEach(el => {
           if (el.getAttribute('ident') == 'xve') this.isVenetic = true
           if (el.getAttribute('ident') == 'osc') this.isOscan = true
+          if (el.getAttribute('ident') == 'xfa') this.isFaliscan = true;
         })
         this.arrayDynamicComponents = [];
         this.externalReferences = []
