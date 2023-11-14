@@ -372,7 +372,7 @@ export function getCommentaryXml(rawHTML: string, renderer: Renderer2): any {
                             }
 
                             if (isAFile) {
-                                link.setAttribute('href', biblioTargetUrl ? "/epilexo_search_test/texts?file=" + biblioTargetUrl.replace('.xml', '') : '')
+                                link.setAttribute('href', biblioTargetUrl ? "/epilexo_search_test/texts?file=" + biblioTargetUrl.replace('.xml', '').replace(/_/g, ' ') : '')
                                 link.setAttribute('target', '_blank')
                             } else {
                                 link.setAttribute('href', biblioTargetUrl ? biblioTargetUrl : '')
