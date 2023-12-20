@@ -11,7 +11,7 @@ import { CenturyPipe } from 'src/app/pipes/century-pipe/century-pipe.pipe';
 import { FormElement, LexiconService } from 'src/app/services/lexicon/lexicon.service';
 import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
 import { PopupService } from 'src/app/services/maps/popup/popup.service';
-import { AnnotationsRows, Book, BookAuthor, BookEditor, Graphic, ListAndId, TextMetadata, TextsService, TextToken, XmlAndId } from 'src/app/services/text/text.service';
+import { AnnotationsRows, BibliographicElement, BookAuthor, BookEditor, Graphic, ListAndId, TextMetadata, TextsService, TextToken, XmlAndId } from 'src/app/services/text/text.service';
 import { environment } from 'src/environments/environment';
 import { DynamicOverlayComponent } from './dynamic-overlay/dynamic-overlay.component';
 import { buildCustomInterpretative, getApparatus, getBibliography, getCommentaryXml, getFacsimile, getInscriptionType, getTeiChildren, getTranslationByXml, groupAlphabet, groupByCenturies, groupLanguages, groupMaterial, groupObjectTypes, groupTypes, leidenDiplomaticBuilder } from './utils';
@@ -234,7 +234,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
     ) 
   )
 
-  groupAlphabet: Observable<AlphabetCounter[]> = this.textService.getUniqueMetadata('_doc__alphabet').pipe(
+  groupAlphabet: Observable<AlphabetCounter[]> = this.textService.getUniqueMetadata('_doc__writingSystem').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -467,7 +467,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
     tap(res => this.loadingTranslation = false)
   );
 
-  getBibliography: Observable<Book[]> | undefined = this.getBibliographyReq$.pipe(
+  getBibliography: Observable<BibliographicElement[]> | undefined = this.getBibliographyReq$.pipe(
     filter(xml => xml != ''),
     map(xml => getBibliography(xml)),
     tap(biblio => this.loadingBibliography = false)
@@ -780,7 +780,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
     }
 
     if (formData.alphabet) {
-      queryParts.push(`_doc__alphabet="${formData.alphabet}"`);
+      queryParts.push(`_doc__writingSystem="${formData.alphabet}"`);
     }
 
     const query = queryParts.length > 0 ? `[${queryParts.join(' &')}]` : '';
@@ -898,7 +898,7 @@ export class TextsComponent implements OnInit, AfterViewInit {
     if (!f && !r) { this.first = 0; this.rows = 8; }
 
 
-    this.paginationItems = this.textService.paginationItems(this.first+1, this.rows).pipe(
+    this.paginationItems = this.textService.paginationItems(this.first, this.rows).pipe(
       tap(x => this.showSpinner =false),
       shareReplay(),
     );

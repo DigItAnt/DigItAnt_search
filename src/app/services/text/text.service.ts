@@ -226,16 +226,19 @@ export interface Annotation {
   value : string
 }
 
-export interface Book {
+export interface BibliographicElement {
   author : BookAuthor,
   date : string,
   editor : BookEditor,
   entry : string,
   issue : string,
   page : string,
+  publisher : string,
   citedRangePage: string,
   citedRangeEntry: string,
   title : string,
+  journalArticleTitle : string,
+  type : string,
   url : string,
   volume : string
 }

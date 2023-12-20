@@ -1,6 +1,6 @@
 import { Renderer2 } from "@angular/core";
 import { CenturyPipe } from "src/app/pipes/century-pipe/century-pipe.pipe";
-import { Book, BookAuthor, BookEditor, Graphic, ListAndId, TextMetadata, TextToken, XmlAndId } from "src/app/services/text/text.service";
+import { BibliographicElement, BookAuthor, BookEditor, Graphic, ListAndId, TextMetadata, TextToken, XmlAndId } from "src/app/services/text/text.service";
 import { AuthorCounter, DateCounter } from "../lexicon/lexicon.component";
 import { CenturiesCounter, LocationsCounter, TypesCounter, LanguagesCounter, ObjectTypeCounter, MaterialCounter, DuctusCounter, WordDivisionTypeCounter, AlphabetCounter } from "./texts.component";
 
@@ -215,11 +215,16 @@ export function getBibliography(rawXml: string): Array<any> {
     let nodes = Array.from(new DOMParser().parseFromString(rawXml, "text/xml").querySelectorAll('biblStruct'))
 
     nodes.forEach(element => {
-        let book_obj = {} as Book;
+        let book_obj = {} as BibliographicElement;
 
-        let title = Array.from(element.querySelectorAll('title'));
+        let type = element.getAttribute('type');
+
+
+        let title = Array.from(element.querySelectorAll('monogr title'));
+        let journalArticleTitle = Array.from(element.querySelectorAll('analytic title'))
         let author = Array.from(element.querySelectorAll('author'));
         let editor = Array.from(element.querySelectorAll('editor'));
+        let publisher = Array.from(element.querySelectorAll('publisher'))
         let url = element.attributes.getNamedItem('corresp');
         let date = Array.from(element.querySelectorAll('date'));
         let page = Array.from(element.querySelectorAll('biblScope[unit="page"]'));
@@ -231,9 +236,52 @@ export function getBibliography(rawXml: string): Array<any> {
         let citedRangePage = Array.from(element.querySelectorAll('citedRange[unit="page"]'));
         let citedRangeEntry = Array.from(element.querySelectorAll('citedRange[unit="entry"]'));
 
+        if(type){
+            book_obj.type = type
+        }
+
+        if (author.length > 0) {
+            author.forEach(aut => {
+                let name = aut.querySelector('forename');
+                let surname = aut.querySelector('surname');
+                if (name != undefined && surname != undefined) {
+                    book_obj.author = {} as BookAuthor;
+                    book_obj.author.name = name.innerHTML;
+                    book_obj.author.surname = surname.innerHTML;
+                    return true;
+                } else {
+                    return false;
+                }
+
+            })
+        }
+
+        if (editor.length > 0) {
+            editor.forEach(edit => {
+                let name = edit.querySelector('forename');
+                let surname = edit.querySelector('surname');
+                if (name != undefined && surname != undefined) {
+                    book_obj.editor = {} as BookEditor;
+                    book_obj.editor.name = name.innerHTML;
+                    book_obj.editor.surname = surname.innerHTML;
+                    return true;
+                } else {
+                    return false;
+                }
+
+            })
+        }
+
         if (title.length > 0) {
             title.forEach(t => {
                 book_obj.title = t.innerHTML;
+                return true;
+            })
+        }
+
+        if (journalArticleTitle.length > 0) {
+            journalArticleTitle.forEach(t => {
+                book_obj.journalArticleTitle = t.innerHTML;
                 return true;
             })
         }
@@ -247,6 +295,12 @@ export function getBibliography(rawXml: string): Array<any> {
         if (page.length > 0) {
             page.forEach(p => {
                 book_obj.page = p.innerHTML;
+            })
+        }
+
+        if (publisher.length > 0) {
+            publisher.forEach(p => {
+                book_obj.publisher = p.innerHTML;
             })
         }
 
@@ -563,7 +617,7 @@ export function getFacsimile(rawXml: string): Array<Graphic> {
         if (desc.length > 0) {
             desc.forEach(d => {
                 if (d.textContent != undefined || d.textContent != null) {
-                    graphic_obj.description = d.textContent.split('\n')[0]
+                    graphic_obj.description = d.textContent.replace(/\n/g, "<br>");
                 } else {
                     graphic_obj.description = 'No description'
                 }
@@ -765,7 +819,7 @@ export function groupByLexicalEntry(elements: any[]): any[] {
     }, []);
 }
 
-export function groupByDates(books: Book[]): DateCounter[] {
+export function groupByDates(books: BibliographicElement[]): DateCounter[] {
     let tmp: DateCounter[] = [];
     let count: number = 0;
     books.forEach(book => {
@@ -794,7 +848,7 @@ export function groupByDates(books: Book[]): DateCounter[] {
 }
 
 
-export function groupByAuthors(books: Book[]): any[] {
+export function groupByAuthors(books: BibliographicElement[]): any[] {
     let tmp: any[] = [];
     let count: number = 0;
     books.forEach(book => {

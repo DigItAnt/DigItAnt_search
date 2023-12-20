@@ -389,7 +389,7 @@
                                             <span class="text-base font-light text-color-secondary"
                                                 *ngIf="etyLink.etySource != ''">
 
-                                                {{etyLink.etySource.includes('PIE') ? 'PIE' : 'PIT'}}:
+                                                {{etyLink.etySourceLabel.toLowerCase().includes('pie') ? 'PIE' : 'PIT'}}:
                                             </span>
                                             <span class="text-base font-medium etyLink" routerLink="./"
                                                 [queryParams]="{word : etyLink.etySource}"
