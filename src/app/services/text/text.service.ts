@@ -285,7 +285,7 @@ export class TextsService {
 
 
   bootstrapConcordances(){
-    const defaultQuery = '[_doc__itAnt_ID="_REGEX_.*"]';
+    const defaultQuery = '[_doc/itAnt_ID=""]';
     const defaultOffset = '0';
     const defaultLimit = '500';
     
@@ -308,7 +308,7 @@ export class TextsService {
   }
 
   paginationItems(first?: number, row?: number) : Observable<TextMetadata[]> {
-    const defaultQuery = '[_doc__itAnt_ID="_REGEX_.*"]';
+    const defaultQuery = '[_doc/itAnt_ID=""]';
     const defaultOffset = '0';
     const defaultLimit = '8';
     
@@ -340,7 +340,7 @@ export class TextsService {
   }
 
   getFileByID(fileId: string) : Observable<TextMetadata> {
-    const defaultQuery = `[_doc__itAnt_ID="${fileId}"]`;
+    const defaultQuery = `[_doc/itAnt_ID=="${fileId}"]`;
    
     
     const headers = new HttpHeaders({
@@ -372,7 +372,7 @@ export class TextsService {
     let params = new HttpParams();
 
     if(!extParam){
-      query = '[_doc__itAnt_ID="_REGEX_.*"]';
+      query = '[_doc/itAnt_ID=""]';
       params = params.set('query', query);  // Important: assign the new instance to the variable
     }else{
       params = params.set('query', extParam); 
@@ -391,7 +391,7 @@ export class TextsService {
     });
 
     let params = new HttpParams()
-      .set('query', `[_doc__itAnt_ID="_REGEX_.*" & attestation="${formId}"]`)
+      .set('query', `[_doc/itAnt_ID="" & attestation=="${formId}"]`)
       .set('offset', '0')
       .set('limit', '100');
 
@@ -409,7 +409,7 @@ export class TextsService {
     });
 
     let params = new HttpParams()
-      .set('query', `[_doc__itAnt_ID="_REGEX_.*" & attestation__lexicalEntry="${lexId}"]`)
+      .set('query', `[_doc/itAnt_ID="" & attestation/lexicalEntry=="${lexId}"]`)
       .set('offset', '0')
       .set('limit', '100');
 
@@ -557,7 +557,7 @@ export class TextsService {
   }
 
   filterByDate(century : number, first? : number, row? : number): Observable<TextMetadata[]>{
-    const defaultQuery = `[_doc__itAnt_ID="_REGEX_.*" & _doc__dateOfOriginNotBefore="${century}" & _doc__dateOfOriginNotAfter="${century+100}"]`;
+    const defaultQuery = `[_doc/itAnt_ID="" & _doc/dateOfOriginNotBefore=="${century}" & _doc/dateOfOriginNotAfter=="${century+100}"]`;
     const defaultOffset = '0';
     const defaultLimit = '1000';
     
@@ -606,7 +606,7 @@ export class TextsService {
   }
 
   filterByLocation(location : string, first? : number, row? : number): Observable<TextMetadata[]>{
-    const defaultQuery = `[_doc__itAnt_ID="_REGEX_.*" & _doc__originalPlace__modernNameUrl="https://sws.geonames.org/${location}"]`;
+    const defaultQuery = `[_doc/itAnt_ID="" & _doc/originalPlace/modernNameUrl="https://sws.geonames.org/${location}"]`;
     const defaultOffset = '0';
     const defaultLimit = '1000';
     
@@ -649,7 +649,7 @@ export class TextsService {
   }
 
   filterByType(type: string, first? : number, row? : number) {
-    const defaultQuery = `[_doc__itAnt_ID="_REGEX_.*" & _doc__inscriptionType="${type}"]`;
+    const defaultQuery = `[_doc/itAnt_ID="" & _doc/inscriptionType=="${type}"]`;
     const defaultOffset = '0';
     const defaultLimit = '1000';
     
@@ -684,7 +684,7 @@ export class TextsService {
   
 
   searchLocation(query : string) : Observable<TextMetadata[]>{
-    const defaultQuery = `[_doc__itAnt_ID="_REGEX_.*" & _doc__originalPlace__modernNameUrl="_REGEX_.*${query}.*"]`;
+    const defaultQuery = `[_doc/itAnt_ID="" & _doc/originalPlace/modernNameUrl=="${query}.*"]`;
     const defaultOffset = '0';
     const defaultLimit = '1000';
     

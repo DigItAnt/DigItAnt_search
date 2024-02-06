@@ -181,12 +181,12 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
 
 
 
-  groupCenturies: Observable<CenturiesCounter[]> = this.textService.getUniqueMetadata('_doc__dateOfOriginNotBefore').pipe(
+  groupCenturies: Observable<CenturiesCounter[]> = this.textService.getUniqueMetadata('_doc/dateOfOriginNotBefore').pipe(
     takeUntil(this.destroy$),
     map(texts => groupByCenturies(texts)),
   )
 
-  groupLocations: Observable<LocationsCounter[]> = this.textService.getUniqueMetadata('_doc__originalPlace__modernNameUrl').pipe(
+  groupLocations: Observable<LocationsCounter[]> = this.textService.getUniqueMetadata('_doc/originalPlace/modernNameUrl').pipe(
     takeUntil(this.destroy$),
     map(data => data.map((item : any) => {
       const match = item.match(/(\d+)(?="?$)/);
@@ -196,7 +196,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     tap(x => console.log(x))
   )
 
-  groupTypes: Observable<any[]> = this.textService.getUniqueMetadata('_doc__inscriptionType').pipe(
+  groupTypes: Observable<any[]> = this.textService.getUniqueMetadata('_doc/inscriptionType').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -208,7 +208,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(texts => texts.map((text : any) => ({inscriptionType : text})))
   )
 
-  groupLanguages: Observable<LanguagesCounter[]> = this.textService.getUniqueMetadata('_doc__language__ident').pipe(
+  groupLanguages: Observable<LanguagesCounter[]> = this.textService.getUniqueMetadata('_doc/language/ident').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -221,7 +221,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     ) 
   )
 
-  groupAlphabet: Observable<AlphabetCounter[]> = this.textService.getUniqueMetadata('_doc__alphabet').pipe(
+  groupAlphabet: Observable<AlphabetCounter[]> = this.textService.getUniqueMetadata('_doc/alphabet').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -232,7 +232,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(alphabets => alphabets.map((alpha : any) => ({alphabet : alpha}))),
   )
 
-  groupObjectTypes: Observable<ObjectTypeCounter[]> = this.textService.getUniqueMetadata('_doc__support__objectType').pipe(
+  groupObjectTypes: Observable<ObjectTypeCounter[]> = this.textService.getUniqueMetadata('_doc/support/objectType').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -243,7 +243,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(objectTypes => objectTypes.map((obj : any) => ({objectType : obj.replace(/[\"]/g,'')}))),
   )
 
-  groupMaterial: Observable<MaterialCounter[]> = this.textService.getUniqueMetadata('_doc__support__material').pipe(
+  groupMaterial: Observable<MaterialCounter[]> = this.textService.getUniqueMetadata('_doc/support/material').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -254,7 +254,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(materials => materials.map((mat : any) => ({material : mat.replace(/[\"]/g,'')}))),
   ) 
 
-  groupDuctus : Observable<DuctusCounter[]> = this.textService.getUniqueMetadata('_doc__bodytextpart__ductus').pipe(
+  groupDuctus : Observable<DuctusCounter[]> = this.textService.getUniqueMetadata('_doc/bodytextpart/ductus').pipe(
     catchError(err => 
       iif(
         () => err,
@@ -266,7 +266,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(materials => materials.map((mat : any) => ({ductus : mat.replace(/[\"]/g,'')}))),
   )
 
-  groupWordDivisionType : Observable<WordDivisionTypeCounter[]> = this.textService.getUniqueMetadata('_doc__wordDivisionType').pipe(
+  groupWordDivisionType : Observable<WordDivisionTypeCounter[]> = this.textService.getUniqueMetadata('_doc/wordDivisionType').pipe(
     catchError(err => 
       iif(
         () => err,

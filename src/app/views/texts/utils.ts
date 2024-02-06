@@ -598,6 +598,48 @@ export function getApparatus(rawXml: string, renderer: Renderer2): Array<string>
 
 }
 
+export function getCustomFacsimile(rawXml : string) : any {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(rawXml, 'text/xml');
+
+    const graphic = xmlDoc.querySelector('facsimile graphic');
+    let htmlString = '';
+
+    if (graphic) {
+      const desc = graphic.querySelector('desc');
+      
+      if (desc) {
+        // Process the textual content
+        desc.childNodes.forEach(child => {
+            if(child.nodeName == '#text'){
+                htmlString += child.textContent
+            }
+
+            if(child.nodeName == 'tei:persName'){
+                htmlString += child.textContent;
+            }
+
+            if(child.nodeName == 'tei:ref' && (child as Element).getAttribute('target')){
+                htmlString += `<a href="${(child as Element).getAttribute('target')}" target="_blank">${child.textContent}</a>`
+            }
+
+            if(child.nodeName == 'tei:ref' && (child as Element).getAttribute('ana')){
+                htmlString += `<a href="${(child as Element).getAttribute('ana')}" target="_blank">${child.textContent}</a>`
+            }
+        })
+        // // Process any <tei:ref> elements
+        // const refs = desc.querySelectorAll('ref');
+        // refs.forEach((ref) => {
+        //   const url = ref.getAttribute('target');
+        //   const bibl = ref.querySelector('bibl')?.textContent || '';
+        //   htmlString += `<a href="${url}">${bibl}</a>`;
+        // });
+      }
+    }
+
+    return htmlString;
+}
+
 export function getFacsimile(rawXml: string): Array<Graphic> {
     let index = 0;
     let graphic_array: Array<Graphic> = [];

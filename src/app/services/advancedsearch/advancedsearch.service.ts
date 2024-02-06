@@ -85,7 +85,7 @@ export class AdvancedsearchService {
           }else if(typeof lexiconSearch == 'string'){
             const check = lexiconSearch.split('_').pop();
             if(check == 'entry'){
-              lexiconCQL.push(`attestation__lexicalEntry="${lexiconSearch}"`)
+              lexiconCQL.push(`attestation/lexicalEntry=="${lexiconSearch}"`)
             }else if(check == 'form'){
               lexiconCQL.push(`attestation="${lexiconSearch}"`)
             }
@@ -334,7 +334,7 @@ export class AdvancedsearchService {
     });
 
     if(isLexicalEntry){
-      return [`attestation__lexicalEntry="${queryParts.join('|')}"`];
+      return [`attestation/lexicalEntry=="${queryParts.join('|')}"`];
 
     }else{
       return [`attestation="${queryParts.join('|')}"`];
@@ -345,66 +345,66 @@ export class AdvancedsearchService {
   CQLInscriptionBuilder(formValues : any, advancedSearchForm : FormGroup){
     let queryParts: string[] = [];
 
-    queryParts.push(`_doc__itAnt_ID="_REGEX_.*"`)
+    queryParts.push(`_doc/itAnt_ID=""`)
     if (advancedSearchForm.get('word')?.touched && formValues.word) {
       switch(formValues.wordSearchMode){
-        case 'startsWith' : queryParts.push(` word="_REGEX_${formValues.word}.*"`); break;
-        case 'contains' : queryParts.push(` word="_REGEX_.*${formValues.word}.*"`); break;
-        case 'endsWith' : queryParts.push(` word="_REGEX_.*${formValues.word}"`); break;
-        case 'equals' : queryParts.push(` word="${formValues.word}"`); break;
+        case 'startsWith' : queryParts.push(` word="${formValues.word}"`); break;
+        case 'contains' : queryParts.push(` word="${formValues.word}"`); break;
+        case 'endsWith' : queryParts.push(` word="${formValues.word}"`); break;
+        case 'equals' : queryParts.push(` word=="${formValues.word}"`); break;
       }
     }
 
     if (advancedSearchForm.get('title')?.touched && formValues.title) {
-      queryParts.push(`_doc__title="${formValues.title}"`);
+      queryParts.push(`_doc/title=="${formValues.title}"`);
     }
 
     if (advancedSearchForm.get('id')?.touched && formValues.id) {
-      queryParts.push(`_doc__itAnt_ID="_REGEX_.*${formValues.id}.*"`);
+      queryParts.push(`_doc/itAnt_ID=="${formValues.id}.*"`);
     }
 
     if (advancedSearchForm.get('otherId')?.touched && formValues.otherId) {
-      queryParts.push(`_doc__traditionalIDs__traditionalID="${formValues.otherId}"`);
+      queryParts.push(`_doc/traditionalIDs/traditionalID=="${formValues.otherId}"`);
     }
 
     if (advancedSearchForm.get('language')?.touched && formValues.language) {
-      queryParts.push(`_doc__language__ident="${formValues.language}"`);
+      queryParts.push(`_doc/language/ident=="${formValues.language}"`);
     }
 
     if (advancedSearchForm.get('alphabet')?.touched && formValues.alphabet) {
-      queryParts.push(`_doc__alphabet="${formValues.alphabet}"`);
+      queryParts.push(`_doc/alphabet=="${formValues.alphabet}"`);
     }
 
     if (advancedSearchForm.get('dateOfOriginNotBefore')?.touched && formValues.dateOfOriginNotBefore) {
-      queryParts.push(`_doc__dateOfOriginNotBefore="${formValues.dateOfOriginNotBefore}"`);
+      queryParts.push(`_doc/dateOfOriginNotBefore=="${formValues.dateOfOriginNotBefore}"`);
     }
 
     if (advancedSearchForm.get('dateOfOriginNotAfter')?.touched && formValues.dateOfOriginNotAfter) {
-      queryParts.push(`_doc__dateOfOriginNotAfter="${formValues.dateOfOriginNotAfter}"`);
+      queryParts.push(`_doc/dateOfOriginNotAfter=="${formValues.dateOfOriginNotAfter}"`);
     }
 
     if (advancedSearchForm.get('modernName')?.touched && formValues.modernName) {
-      queryParts.push(`_doc__originalPlace__modernNameUrl="${formValues.modernName}"`);
+      queryParts.push(`_doc/originalPlace/modernNameUrl=="${formValues.modernName}"`);
     }
 
     if (advancedSearchForm.get('inscriptionType')?.touched && formValues.inscriptionType) {
-      queryParts.push(`_doc__inscriptionType="${formValues.inscriptionType}"`);
+      queryParts.push(`_doc/inscriptionType=="${formValues.inscriptionType}"`);
     }
 
     if (advancedSearchForm.get('objectType')?.touched && formValues.objectType) {
-      queryParts.push(`_doc__support__objectType="${formValues.objectType}"`);
+      queryParts.push(`_doc/support/objectType=="${formValues.objectType}"`);
     }
 
     if (advancedSearchForm.get('material')?.touched && formValues.material) {
-      queryParts.push(`_doc__support__material="${formValues.material}"`);
+      queryParts.push(`_doc/support/material=="${formValues.material}"`);
     }
 
     if (advancedSearchForm.get('ductus')?.touched && formValues.ductus) {
-      queryParts.push(`_doc__bodytextpart__ductus="${formValues.ductus}"`);
+      queryParts.push(`_doc/bodytextpart/ductus=="${formValues.ductus}"`);
     }
 
     if (advancedSearchForm.get('wordDivisionType')?.touched && formValues.wordDivisionType) {
-      queryParts.push(`_doc__wordDivisionType="${formValues.wordDivisionType}"`);
+      queryParts.push(`_doc/wordDivisionType=="${formValues.wordDivisionType}"`);
     }
 
     return queryParts;
@@ -416,7 +416,7 @@ export class AdvancedsearchService {
     bibliographyResults.forEach(element=>{
       queryParts.push(`${element.key}`);
     })
-    return [`attestation__bibliography__key="${queryParts.join('|')}"`];
+    return [`attestation/bibliography/key=="${queryParts.join('|')}"`];
   }
 
   restoreFilterAttestations(){

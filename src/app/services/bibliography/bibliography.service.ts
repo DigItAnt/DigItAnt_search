@@ -153,15 +153,15 @@ export class BibliographyService {
     let queryParts: string[] = [];
   
     if (formValues.location) {
-      queryParts.push(`_doc__originalPlace__ancientName="${formValues.location}"`);
+      queryParts.push(`_doc/originalPlace/ancientName=="${formValues.location}"`);
     }
   
     if (formValues.inscriptionId) {
-      queryParts.push(`_doc__fileID="${formValues.inscriptionId}"`);
+      queryParts.push(`_doc/fileID=="${formValues.inscriptionId}"`);
     }
   
     if (formValues.word) {
-      queryParts.push(` word="${formValues.word}"`);
+      queryParts.push(` word=="${formValues.word}"`);
     }
   
     const query = queryParts.length > 0 ? `[${queryParts.join(' &')}]` : '';
