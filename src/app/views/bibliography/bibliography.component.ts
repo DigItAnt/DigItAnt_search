@@ -1,17 +1,19 @@
-import { HttpResponseBase } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams, HttpResponseBase } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import { TreeNode } from 'primeng/api';
 import { Paginator } from 'primeng/paginator';
-import { BehaviorSubject, catchError, debounceTime, delay, EMPTY, filter, iif, map, Observable, of, Subject, Subscription, switchMap, takeUntil, tap, timeout } from 'rxjs';
+import { BehaviorSubject, catchError, debounceTime, delay, EMPTY, filter, forkJoin, iif, map, Observable, of, Subject, Subscription, switchMap, take, takeUntil, tap, timeout, withLatestFrom } from 'rxjs';
 import { BibliographyService, Book } from 'src/app/services/bibliography/bibliography.service';
 import { FormElementTree, LexicalElement, LexiconService } from 'src/app/services/lexicon/lexicon.service';
-import { TextMetadata, TextsService } from 'src/app/services/text/text.service';
+import { AnnotationsRows, TextMetadata, TextsService } from 'src/app/services/text/text.service';
 import * as data from '../../../assets/mock/words.json'
 import { AlphaCounter, AuthorCounter, DateCounter, LexiconFilter, TreeEvent } from '../lexicon/lexicon.component';
 import { AutoCompleteEvent, LocationsCounter, PaginatorEvent } from '../texts/texts.component';
 import { groupByAuthors, groupByDates } from '../texts/utils';
+import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-bibliography',
@@ -31,8 +33,12 @@ export class BibliographyComponent implements OnInit {
   treeLoading : boolean = true;
   currentBook: string = '';
 
+  isActiveSearchForm: boolean = false;
+
   allowedOperators: string[] = ['filter', 'author', 'name', 'letter', 'year', 'book'];
   allowedFilters: string[] = ['all']; /* 'argument' */ /* , 'author', 'title', 'date' */
+
+  alphabet : string[] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
 
   lexiconTree : Observable<TreeNode[]> = this.lexiconService.lexicon$.pipe(
     map(lexicon => this.mapLexicalElement(lexicon)),
@@ -40,6 +46,9 @@ export class BibliographyComponent implements OnInit {
   );
 
   selectedFile: any = undefined;
+  minDate: Date = new Date();
+  maxDate: Date = new Date();
+  showSpinner: boolean = false;
 
   mapLexicalElement(lexicon : LexicalElement[]) : TreeNode[] {
     return lexicon.map((lexEl : LexicalElement) => ({
@@ -100,7 +109,14 @@ export class BibliographyComponent implements OnInit {
     takeUntil(this.destroy$),
     filter(params => Object.keys(params).length != 0),
     map((queryParams: Params) => queryParams as LexiconFilter),
-    map((filter: LexiconFilter) => filter.filter)
+    map((filter: LexiconFilter) => filter.filter),
+    tap(x=> {
+      if(x=='search'){
+        this.isActiveSearchForm = true;
+      }else{
+        this.isActiveSearchForm = false;
+      }
+    })
   );
 
   activeLetter : Observable<string> = this.activatedRoute.queryParams.pipe(
@@ -110,12 +126,19 @@ export class BibliographyComponent implements OnInit {
     map((filter: LexiconFilter) => filter.letter)
   )
 
-  activeBook : Observable<string> = this.activatedRoute.queryParams.pipe(
+  activeBook : Observable<any> = this.activatedRoute.queryParams.pipe(
     takeUntil(this.destroy$),
     filter(params => Object.keys(params).length != 0),
     map((queryParams: Params) => queryParams as LexiconFilter),
     map((filter: LexiconFilter) => filter.book),
-    tap( book => this.currentBook = book)
+    tap( book => book ? this.currentBook = book : null),
+/*     switchMap( bookKey => this.bibliographyService.getBookDetails(bookKey)),
+ */    switchMap(bookKey => 
+      bookKey !== undefined ? 
+      this.bibliographyService.getBookDetails(bookKey) : 
+      of(null) // Restituisce null se bookKey è undefined o null
+    ),
+    tap( res => console.log(res))
   )
 
   activeAuthor : Observable<string> = this.activatedRoute.queryParams.pipe(
@@ -142,48 +165,39 @@ export class BibliographyComponent implements OnInit {
     })
   )
 
-  groupTitles : Observable<AlphaCounter[]> = this.bibliographyService.books$.pipe(
-    timeout(15000),
-    catchError(err => 
-      iif(
-        () => err,
-        this.thereWasAnError(), 
-        of([]) 
-    )),
+  getAttestations : Observable<any[]> = this.activeBook.pipe(
+    filter(book => book != undefined && book.key != ''),
     takeUntil(this.destroy$),
-    map(books=> groupTitles(books)),
+    switchMap(book => this.bibliographyService.getAttestationsByBookKey(book.key)),
+    tap(x => console.log(x))
   )
 
-  groupAuthors : Observable<AuthorCounter[]> = this.bibliographyService.books$.pipe(
-    timeout(15000),
-    catchError(err => 
-      iif(
-        () => err,
-        this.thereWasAnError(), 
-        of([]) 
-    )),
-    takeUntil(this.destroy$),
-    map(books=> groupByAuthors(books)),
+  getLexicalEntries : Observable<any> = this.getAttestations.pipe(
+    
+    switchMap(anno=> this.bibliographyService.getAnnotations(anno)),
+    map(entries => entries.filter((entry:any) => {
+      const biblio = entry.attributes.bibliography;
+      // Controlla se biblio è un array
+      if (Array.isArray(biblio)) {
+        // Scorri l'array e controlla se almeno un elemento ha la key corrispondente a currentBook
+        return biblio.some(b => b.key === this.currentBook);
+      } else if (biblio) {
+        // Se biblio è un oggetto, controlla direttamente la key
+        return biblio.key === this.currentBook;
+      }
+      // Escludi l'elemento se biblio non esiste o non soddisfa le condizioni
+      return false;
+    })),
+    tap(x=>console.log(x))
   )
 
-  groupDates : Observable<DateCounter[]> = this.bibliographyService.books$.pipe(
-    timeout(15000),
-    catchError(err => 
-      iif(
-        () => err,
-        this.thereWasAnError(), 
-        of([]) 
-    )),
-    takeUntil(this.destroy$),
-    map(books=> groupByDates(books)),
-  )
+  loadingGeoData = false;
+  geoData = this.textsService.geoData;
+  
+ 
 
- /*  groupTexts : Observable<TextMetadata[]> = this.textsService.texts$.pipe(
-    tap(x=> console.log(x))
-  ); */
-
-  paginationItems: Observable<Book[]> = this.bibliographyService.books$.pipe(
-    timeout(15000),
+  paginationItems: Observable<Book[]> = this.bibliographyService.paginationItems().pipe(
+    tap(x=> this.showSpinner = true),
     catchError(err =>
       iif(
         () => err,
@@ -191,20 +205,11 @@ export class BibliographyComponent implements OnInit {
         of([])
       )),
     takeUntil(this.destroy$),
-    map((books) => books.slice(this.first, this.rows)),
-    //tap((x) => this.showSpinner = false)
+    tap((x) => this.showSpinner = false)
   );
 
-  totalRecords: Observable<number> = this.bibliographyService.books$.pipe(
-    timeout(15000),
-    catchError(err => 
-      iif(
-        () => err,
-        this.thereWasAnError(), // -- true, 
-        of([]) 
-    )),
+  totalRecords: Observable<number> = this.bibliographyService.countTotalBooks().pipe(
     takeUntil(this.destroy$),
-    map((lexicon) => lexicon.length || 0),
   );
   
 
@@ -227,46 +232,12 @@ export class BibliographyComponent implements OnInit {
   bibliographySearchForm: FormGroup = new FormGroup({ 
     title: new FormControl(null), 
     id : new FormControl(null),
-    fromDate : new FormControl(null),
-    toDate : new FormControl(null),
+    date : new FormControl(null),
     author : new FormControl(null),
     location : new FormControl(null),
     inscriptionId : new FormControl(null),
     word : new FormControl(null)
   });
-
-  getBookPaginationIndexReq$ : BehaviorSubject<string> = new BehaviorSubject<string>('');
-  getBookByIndexReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
-  getBookIdByIndexReq$ : BehaviorSubject<number> = new BehaviorSubject<number>(NaN);
-
-  getBookPaginationIndex : Observable<number> = this.getBookPaginationIndexReq$.pipe(
-    switchMap(fileId => fileId != '' ? this.bibliographyService.getIndexOfText(fileId) : of()),
-    tap(index => this.getBookByIndexReq$.next(index))
-  )
-
-  getBookIdByIndex : Observable<string> = this.getBookIdByIndexReq$.pipe(
-    switchMap(index => !isNaN(index) ? this.bibliographyService.getBookKeyByIndex(index) : of()),
-    tap(bookId => {
-      if(bookId != ''){
-        this.route.navigate(['/bibliography'], {queryParams : {book : bookId}})
-      }
-    }),
-  )
-
-  getBookByIndex : Observable<Book> = this.getBookByIndexReq$.pipe(
-    switchMap(index => !isNaN(index) ? this.bibliographyService.getBookByIndex(index) : of()),
-    tap(book => {
-      if(book){
-        /* this.getTextContentReq$.next(file['element-id']);
-        this.isBodyTextPartArray = Array.isArray(file.bodytextpart) */
-      }
-    })
-  )
-
-  textPagination(event: PaginatorEvent){
-    let indexRequested = event.page;
-    this.getBookIdByIndexReq$.next(indexRequested);
-  }
 
   constructor(private activatedRoute: ActivatedRoute,
               private route: Router,
@@ -275,18 +246,25 @@ export class BibliographyComponent implements OnInit {
               private lexiconService : LexiconService) { }
 
   ngOnInit(): void {
-
+    this.minDate = new Date(1700, 0, 1); // 1 gennaio 1980
+    this.maxDate = new Date(); // Data odierna
+    
     this.bibliographySearchForm.valueChanges.pipe(
       takeUntil(this.destroy$),
       debounceTime(2000)).subscribe(
       data=>{
         if(this.bibliographySearchForm.touched){
-
+         
           let shouldStart = Object.values(data).some(value => value !== null && value !== '');
-          if(shouldStart){
+          let result = true; // Imposta il valore di default su true
+
+          if (Array.isArray(data.date) && data.date[1] === null) {
+            result = false;
+          }
+
+          if(shouldStart && result){
+            
             this.buildBibliographyCrossQuery(data)
-          }else{
-            this.getAllData()
           }
         }
       }
@@ -311,19 +289,17 @@ export class BibliographyComponent implements OnInit {
               }
             }
           }
-          if (keys.length > 1 && keys[0] == 'filter') {
+
+          if (keys.length > 1) {
+            this.currentBook = '';
+            
             this.pagination({} as Paginator, keys[1], values[1])
           }
 
-          if(keys.length == 1 && values[0] == 'title'){
-            this.goToDefaultUrlTitles();
-          }
-
-          if(keys[0] == 'book'){
-
-            let fileId = values[0];
-            this.getBookPaginationIndexReq$.next(fileId);
-
+          if(keys.length == 1 && values[0] == 'search'){
+            this.currentBook = '';
+            
+            this.buildBibliographyCrossQuery(this.bibliographySearchForm.value);
           }
         }
       }
@@ -341,47 +317,72 @@ export class BibliographyComponent implements OnInit {
 
   filteredResults : any;
 
-  buildBibliographyCrossQuery(formValues : FormGroup){
-    
-    this.paginationItems = of([]);
-    this.totalRecords = of(NaN)
-
-    /* this.route.navigate(
+  buildBibliographyCrossQuery(formValues : FormGroup, f?: number, r? : number){
+    this.isActiveSearchForm = true;
+    //this.paginationItems = of([]);
+    //this.totalRecords = of(NaN)
+    this.showSpinner = true;
+    this.route.navigate(
       [],
       {
         relativeTo: this.activatedRoute,
-        queryParams: {filter : 'search'}, 
-        
+        queryParams: { filter: 'search' },
       }
-    ) */
-    
-    this.paginationItems = this.bibliographyService.combineResults(formValues).pipe(
-      catchError(error => {
-        console.error('An error occurred:', error);
-        if(error.status != 200) this.thereWasAnError() // Stampa l'errore sulla console
-        return of([])// Ritorna un Observable con una struttura di AnnotationsRows vuota
-      }),
-      tap(res => this.filteredResults = of(res)),
-      tap(res=> {
-        setTimeout(() => {
-          this.totalRecords = of(res.length)
-        }, 100);
-      }),
-      map(res => res.slice(0, 6))
     )
+
+    const shouldStartQuery = Object.keys(formValues).some(key => {
+      const control = this.bibliographySearchForm.get(key);
+      return control && control.touched && control.value !== null;
+    });
+
+    if(shouldStartQuery){
+      let rows = this.first >= this.rows ? this.first + this.rows : this.rows;
+      this.paginationItems = this.bibliographyService.combineResults(formValues).pipe(
+        catchError(error => {
+          console.error('An error occurred:', error);
+          if(error.status != 200) this.thereWasAnError(); this.showSpinner = false; // Stampa l'errore sulla console
+          return of([])// Ritorna un Observable con una struttura di AnnotationsRows vuota
+        }),
+        tap(res => {
+          if(res && res.length >= 0){
+            this.totalRecords = of(res.length)
+          }else{
+            this.totalRecords = of(0)
+          }
+        }),
+        map(res => {
+          if(res && res.length>0){
+            this.showSpinner = false;
+            return res.slice(this.first, rows);
+
+          }else{
+            this.showSpinner = false;
+            return []
+          }
+        })
+      )
+
+      /* this.totalRecords = this.bibliographyService.countTotalBooks(formValues).pipe(
+        takeUntil(this.destroy$)
+      ) */
+    }else{
+
+    }
+    
     
   }
 
   resetFields(){
     this.bibliographySearchForm.reset();
-    this.first = 0;
-    this.rows = 6;
-    this.paginationItems = this.bibliographyService.books$.pipe(map(books => books.slice(0, 6)));
-    this.totalRecords = this.bibliographyService.books$.pipe(map(books=>books.length || 0))
+    this.bibliographyService.emptyCachedResults();
+    this.paginationItems = this.bibliographyService.paginationItems(this.first, this.rows);
+    this.totalRecords = this.bibliographyService.countTotalBooks().pipe(
+      takeUntil(this.destroy$),
+    );
   }
 
   clearDates(){
-    this.bibliographySearchForm.get('toDate')?.setValue(null, {emitEvent: true})
+    this.bibliographySearchForm.get('date')?.setValue(null, {emitEvent: true})
   }
 
   clearLocation(){
@@ -404,13 +405,15 @@ export class BibliographyComponent implements OnInit {
   }
 
   autocompleteLocations: Array<LocationsCounter> = [];
-  /* searchLocations : Observable<LocationsCounter[]> = this.autocomplete$.pipe(
+
+  searchLocations: Observable<any[]> = this.autocomplete$.pipe(
     debounceTime(1000),
     filter(autoCompleteEvent => autoCompleteEvent.query != ''),
-    switchMap(autoCompleteEvent=> this.textsService.searchLocation(autoCompleteEvent.query)),
-    map(texts=> groupLocations(texts, true)),
-    tap(results => this.autocompleteLocations = results)
-  ) */
+    withLatestFrom(this.textsService.geoData),
+    map(([query, r]) => {
+      return r.filter(item => item.modernName.includes(query.query))
+    })
+  )
 
   markAsTouched(){
     this.bibliographySearchForm.markAllAsTouched();
@@ -463,126 +466,48 @@ export class BibliographyComponent implements OnInit {
     this.route.navigate(['/bibliography'], { queryParams: { filter: 'all', letter : 'a'} });
   }
 
-  goToDefaultUrlTitles() {
-    this.route.navigate(['/bibliography'], { queryParams: { filter: 'title', letter : 'a'} });
-  }
-
-  
-
   pagination(event: Paginator, ...args: any[]) {
+    this.showSpinner = true;
     if (Object.keys(event).length != 0) { this.first = event.first; this.rows = event.rows; }
-    if (Object.keys(event).length == 0) { this.first = 0; this.rows = 6; }
+    if (Object.keys(event).length == 0) { this.first = 0; this.rows = 8; }
+    let rows = this.first >= this.rows ? this.first + this.rows : this.rows;
 
-    let rows = (this.first != this.rows) && (this.first < this.rows) ? this.rows : this.first + this.rows;
-    if (args.length > 0) { args = args.filter(query => query != null) }
-    if(args.length==1){
-      if(args[0] == 'all'){
-        this.getAllData(this.first, rows);
-      }else if(args[0]=='search'){
-        if(this.filteredResults != undefined){
-          this.paginationItems = this.filteredResults.pipe(
-            map((res:any)=> {
-              if(res.length >0){
-                res.slice(this.first, rows)
-              }else{
-                this.getAllData(this.first, rows);
-              }
-            })
-          );
-        }else{
-          this.getAllData(this.first, rows)
-        }
-        
+    if (args.length == 2 && args[1]==null) {
+
+      const shouldStartQuery = Object.keys(this.bibliographySearchForm.value).some(key => {
+        const control = this.bibliographySearchForm.get(key);
+        return control && control.touched && control.value !== null;
+      });
+
+      if (this.bibliographyService.getCachedResults() && this.bibliographyService.getCachedResults().length > 0) {
+        this.paginationItems = of(this.bibliographyService.getCachedResults().slice(this.first, rows))
+        this.showSpinner = false;
+      }else{
+        this.paginationItems = this.bibliographyService.paginationItems(this.first, this.rows);
+        this.showSpinner = false;
       }
-      
-      return;
+
+     
     }
     if (args.length > 1) {
       let filter = args[0];
       let value = !isNaN(parseInt(args[1])) ? parseInt(args[1]) : args[1];
 
       switch (filter) {
-        /* case 'name': this.filterByAuthor(this.first, rows, value); break; */
-        case 'letter' : this.filterByLetterZotero(this.startIndex, value); break;
-        /* case 'year' : this.filterByYear(this.first, rows, value); break; */
-       
+        case 'letter': this.filterByLetter(value); break;
       }
       return;
     }
-  }
-
-  filterByAuthor(f?: number, r?: number, authorName?: string): void {
-    let rows = 0;
-    if (f && r) { this.first = f; rows = r; }
-    if (!f && !r) { this.first = 0; this.rows = 6; }
-
-    this.paginationItems = this.bibliographyService.filterByAuthor((authorName)||'').pipe(map(book=>book.slice(f, r)))
-    this.totalRecords = this.bibliographyService.filterByAuthor((authorName)||'').pipe(map(books=>books.length || 0))
-    
-  }
-
-  filterByYear(f?: number, r?: number, date?: string): void {
-    let rows = 0;
-    if (f && r) { this.first = f; rows = r; }
-    if (!f && !r) { this.first = 0; this.rows = 6; }
-
-    this.paginationItems = this.bibliographyService.filterByYear((date)||'').pipe(map(book=>book.slice(f, r)))
-    this.totalRecords = this.bibliographyService.filterByYear((date)||'').pipe(map(books=>books.length || 0))
     
   }
 
 
-  filterByLetterZotero(startIndex : number, letter : string) : void {
-    this.paginationItems = this.bibliographyService.filterByLetterZotero(startIndex, letter).pipe(
-      tap(x => console.log(x))
+  filterByLetter(letter : string) : void {
+    this.showSpinner = true;
+    this.paginationItems = this.bibliographyService.filterByLetter(letter).pipe(
+      tap(x => this.totalRecords = of(x.length)),
+      tap(x => this.showSpinner = false)
     )
   }
-
-  getAllData(f? : number, r? : number): void {
-    let rows = 0;
-    if(f && r){this.first = f; rows = r; }
-    if(!f && !r){this.first = 0; this.rows = 6;}
-    
-   
-    this.paginationItems = this.bibliographyService.books$.pipe(map(books => books.slice(this.first, rows == 0 ? this.rows : rows)));
-    this.totalRecords = this.bibliographyService.books$.pipe(map(books=>books.length || 0))
-  }
-
-  
-
 }
 
-
-function groupTitles(books: Book[]): AlphaCounter[] {
-  let tmp: AlphaCounter[] = [];
-  let count: number = 0;
-  books.forEach(lexEl => {
-    // Normalize title by removing non-alphabetic characters
-    const normalizedTitle = lexEl.title.toLowerCase().replace(/[^a-z]/gi, '');
-
-    count = books.reduce((acc, cur) => {
-      const normalizedCurTitle = cur.title.toLowerCase().replace(/[^a-z]/gi, '');
-      return normalizedCurTitle[0].toLowerCase() == normalizedTitle[0].toLowerCase() ? ++acc : acc;
-    }, 0);
-
-    if(count > 0) {
-      tmp.push({ letter: normalizedTitle[0].toLowerCase(), count: count });
-    }
-  });
-
-  tmp = Object.values(
-    tmp.reduce((acc, object) => ({ ...acc, [object.letter]: object }), {})
-  );
-
-  tmp.sort((a, b) => {
-    if (a.letter < b.letter) {
-      return -1;
-    }
-    if (a.letter > b.letter) {
-      return 1;
-    }
-    return 0;
-  });
-  
-  return tmp;
-}

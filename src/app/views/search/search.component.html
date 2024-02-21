@@ -3,7 +3,7 @@
     activeLocation : activeLocation | async,
     activeFile : activeFile | async, 
     groupCenturies : groupCenturies | async,
-    groupLocations : groupLocations | async,
+   
     groupType : groupTypes | async,
     groupLanguage : groupLanguages | async,
     groupMaterial : groupMaterial | async,
@@ -21,7 +21,7 @@
    <!--  , 
      
     groupAuthors : groupAuthors | async,
-    
+     groupLocations : groupLocations | async,
     groupDates : groupDates | async,
      -->
     <div id="left-bar" class="flex flex-column normal-tabview">
@@ -103,11 +103,13 @@
                     <div class="flex pt-3">
                         <p-checkbox [(ngModel)]="isActiveInscriptionInterval" (onChange)="setInscriptionDateInterval()" [binary]="true" label="Interval" [ngModelOptions]="{standalone: true}"></p-checkbox>
                     </div>
-    
+
+                    <!-- TODO: fix date  -->
+
                     <div class="flex align-items-center pt-3" *ngIf="!isActiveInscriptionInterval">
                         <!-- {{mapInscriptionSingle}} -->
                         {{start}}
-                        <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="start" [range]="false" [min]="-200" [max]="300" class="w-full mx-5" (onChange)="onChangeSlider($event)"></p-slider>
+                        <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="start" [range]="false" [min]="-600" [max]="100" class="w-full mx-5" (onChange)="onChangeSlider($event)"></p-slider>
                     </div>
     
                     <div class="flex align-items-center pt-3" *ngIf="isActiveInscriptionInterval">

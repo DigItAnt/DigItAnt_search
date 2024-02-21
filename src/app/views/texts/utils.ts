@@ -357,6 +357,7 @@ export function getBibliography(rawXml: string): Array<any> {
         if (url) {
             if (url.nodeValue != undefined) {
                 book_obj.url = url.nodeValue;
+                book_obj.key = url.nodeValue.split('/')[url.nodeValue.split('/').length - 1]
             }
         }
 

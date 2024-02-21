@@ -35,12 +35,12 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     return this.startBiblio;  // Direttamente ritornare il valore attuale perché già mappato nel range [1500, 2023]
   }
 
-  start : number = -200;
+  start : number = -600;
   startBiblio : number = 1500;
 
   get mappingInscriptionRange(): number[] {
-    let min = -200;
-    let max = 300;
+    let min = -600;
+    let max = 100;
     let minSlider = 0;
     let maxSlider = 100;
     return this.allowedInscriptionInterval.map(value => (value - minSlider) * (max - min) / (maxSlider - minSlider) + min);
@@ -181,12 +181,12 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
 
 
 
-  groupCenturies: Observable<CenturiesCounter[]> = this.textService.getUniqueMetadata('_doc/dateOfOriginNotBefore').pipe(
+  groupCenturies: Observable<CenturiesCounter[]> = this.textService.getUniqueMetadata('_doc__dateOfOriginNotBefore').pipe(
     takeUntil(this.destroy$),
     map(texts => groupByCenturies(texts)),
   )
 
-  groupLocations: Observable<LocationsCounter[]> = this.textService.getUniqueMetadata('_doc/originalPlace/modernNameUrl').pipe(
+  /* groupLocations: Observable<LocationsCounter[]> = this.textService.getUniqueMetadata('_doc__originalPlace__modernNameUrl').pipe(
     takeUntil(this.destroy$),
     map(data => data.map((item : any) => {
       const match = item.match(/(\d+)(?="?$)/);
@@ -195,8 +195,8 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(data => data.map((item : any) => ({ modernPlaceId: item }))),
     tap(x => console.log(x))
   )
-
-  groupTypes: Observable<any[]> = this.textService.getUniqueMetadata('_doc/inscriptionType').pipe(
+ */
+  groupTypes: Observable<any[]> = this.textService.getUniqueMetadata('_doc__inscriptionType').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -208,7 +208,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(texts => texts.map((text : any) => ({inscriptionType : text})))
   )
 
-  groupLanguages: Observable<LanguagesCounter[]> = this.textService.getUniqueMetadata('_doc/language/ident').pipe(
+  groupLanguages: Observable<LanguagesCounter[]> = this.textService.getUniqueMetadata('_doc__language__ident').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -221,7 +221,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     ) 
   )
 
-  groupAlphabet: Observable<AlphabetCounter[]> = this.textService.getUniqueMetadata('_doc/alphabet').pipe(
+  groupAlphabet: Observable<AlphabetCounter[]> = this.textService.getUniqueMetadata('_doc__alphabet').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -232,7 +232,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(alphabets => alphabets.map((alpha : any) => ({alphabet : alpha}))),
   )
 
-  groupObjectTypes: Observable<ObjectTypeCounter[]> = this.textService.getUniqueMetadata('_doc/support/objectType').pipe(
+  groupObjectTypes: Observable<ObjectTypeCounter[]> = this.textService.getUniqueMetadata('_doc__support__objectType').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -243,7 +243,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(objectTypes => objectTypes.map((obj : any) => ({objectType : obj.replace(/[\"]/g,'')}))),
   )
 
-  groupMaterial: Observable<MaterialCounter[]> = this.textService.getUniqueMetadata('_doc/support/material').pipe(
+  groupMaterial: Observable<MaterialCounter[]> = this.textService.getUniqueMetadata('_doc__support__material').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -254,7 +254,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(materials => materials.map((mat : any) => ({material : mat.replace(/[\"]/g,'')}))),
   ) 
 
-  groupDuctus : Observable<DuctusCounter[]> = this.textService.getUniqueMetadata('_doc/bodytextpart/ductus').pipe(
+  groupDuctus : Observable<DuctusCounter[]> = this.textService.getUniqueMetadata('_doc__bodytextpart__ductus').pipe(
     catchError(err => 
       iif(
         () => err,
@@ -266,7 +266,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(materials => materials.map((mat : any) => ({ductus : mat.replace(/[\"]/g,'')}))),
   )
 
-  groupWordDivisionType : Observable<WordDivisionTypeCounter[]> = this.textService.getUniqueMetadata('_doc/wordDivisionType').pipe(
+  groupWordDivisionType : Observable<WordDivisionTypeCounter[]> = this.textService.getUniqueMetadata('_doc__wordDivisionType').pipe(
     catchError(err => 
       iif(
         () => err,
@@ -277,43 +277,10 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     map(materials => materials.map((mat : any) => ({type : mat.replace(/[\"]/g,'')}))),
   )
 
-  
-  geoData : Observable<GlobalGeoDataModel[]> = this.groupLocations.pipe(
-    catchError(err => 
-      iif(
-        () => err,
-        this.thereWasAnError(), 
-        of([]) 
-    )),
-    switchMap(locations => this.mapsService.getGeoPlaceData(locations)),
-    
+  geoData = this.textService.geoData.pipe(
+    /* switchMap(locations => this.mapsService.getGeoPlaceData(locations)), */
   )
-
   
-
-  /*
-  groupDates : Observable<DateCounter[]> = this.bibliographyService.books$.pipe(
-    catchError(err => 
-      iif(
-        () => err,
-        this.thereWasAnError(), 
-        of([]) 
-    )),
-    takeUntil(this.destroy$),
-    map(books=> groupByDates(books)),
-  )
-
-  groupAuthors : Observable<AuthorCounter[]> = this.bibliographyService.books$.pipe(
-    catchError(err => 
-      iif(
-        () => err,
-        this.thereWasAnError(), 
-        of([]) 
-    )),
-    takeUntil(this.destroy$),
-    map(books=> groupByAuthors(books)),
-  ) */
-
   
   
   searchLocations: Observable<any[]> = this.autocompleteLocationReq$.pipe(
@@ -409,16 +376,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
       }
     );
 
-    /* this.advancedSearchForm.valueChanges.pipe(
-      takeUntil(this.destroy$),
-      delay(100),
-      debounceTime(1000)).subscribe(
-      data=>{
-        if(this.advancedSearchForm.touched){
-          this.buildTextQuery()
-        }
-      }
-    ) */
+  
   }
 
   buildTextQuery(){
@@ -560,6 +518,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     }
 
     this.advancedSearchForm.updateValueAndValidity({ onlySelf: false, emitEvent: true })
+    this.buildTextQuery();
   }
 
   handleAutocompleteFilter(evt: any){

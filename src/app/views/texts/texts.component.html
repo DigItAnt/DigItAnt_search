@@ -1,7 +1,6 @@
 <div class="flex flex-1 flex-row" *ngIf="{activeTab : activeTab | async, 
         totalRecords: totalRecords | async, 
         groupCenturies : groupCenturies | async,
-        groupLocations : groupLocations | async,
         groupType : groupTypes | async,
         groupLanguage : groupLanguages | async,
         groupAlphabet : groupAlphabet | async,
@@ -92,6 +91,7 @@
                             <div class="flex pt-3">
                                 <p-checkbox [(ngModel)]="isActiveInterval" [binary]="true" label="Interval" [ngModelOptions]="{standalone: true}"></p-checkbox>
                             </div>
+
                             <div class="flex pt-3">
                                 <p-dropdown (onClear)="clearDates()" appendTo="body" [showClear]="true" class="flex-auto" [options]="(text.groupCenturies) || []" formControlName="dateOfOriginNotBefore"
                                     optionValue="century" optionLabel="label" placeholder="Eg: 6th century BC">
@@ -1164,7 +1164,7 @@
 
                                     <i class="fa-solid fa-circle fa-2xs"></i>
 
-                                    <a class="ml-3 no-underline" [href]="book.url" target="_blank">
+                                    <a class="ml-3 no-underline" routerLink="/bibliography" [href]="'/bibliography?book='+book.key"  [queryParams]="{book: book.key}">
                                         <!-- <span>{{book.type}}</span> -->
 
                                         <span *ngIf="book.type == 'book'">

@@ -826,6 +826,13 @@ app-file {
     } */
     display: flex !important;
     flex: 1 1 auto !important;
+
+    .p-calendar {
+        display: flex !important;
+        span {
+            width: 100% !important;
+        }
+    }
     //position: relative !important;
 }
 

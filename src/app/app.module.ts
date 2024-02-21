@@ -36,6 +36,7 @@ import {DialogModule} from 'primeng/dialog';
 import {SliderModule} from 'primeng/slider';
 import {SplitButtonModule} from 'primeng/splitbutton';
 import {GalleriaModule} from 'primeng/galleria';
+import { CalendarModule } from 'primeng/calendar';
 
 
 
@@ -129,7 +130,8 @@ import { LabelMappingPipe } from './pipes/language-pipe/language-pipe.pipe';
     DialogModule,
     SliderModule,
     SplitButtonModule,
-    GalleriaModule
+    GalleriaModule,
+    CalendarModule
   ],
   providers: [
     {

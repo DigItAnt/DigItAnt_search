@@ -327,18 +327,7 @@ export class LexiconComponent implements OnInit {
     
     filter(instanceName => instanceName != ''),
     takeUntil(this.destroy$),
-    switchMap(instanceName => this.textService.searchAttestations(instanceName)),
-    
-   /*  switchMap(nodeIds => {
-      return this.textService.texts$.pipe(
-        map(textsArray => {
-          return textsArray.filter(text => nodeIds.includes(text['element-id']));
-        })
-      );
-    }),
-   
-    map(res => res.map(el=> el.itAnt_ID)),
-     */
+    switchMap(instanceName => this.textService.searchAttestations(instanceName))
   )
 
   getAttestationsLexEntry : Observable<any> | undefined = this.getAttestationsLexEntryReq$.pipe(

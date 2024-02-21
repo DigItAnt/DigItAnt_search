@@ -1,12 +1,11 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, concat, concatAll, concatMap, EMPTY, expand, filter, flatMap, forkJoin, map, Observable, of, shareReplay, switchMap, tap, throwError, toArray } from 'rxjs';
+import { catchError, concat, concatAll, concatMap, EMPTY, expand, filter, flatMap, forkJoin, map, Observable, of, shareReplay, single, switchMap, tap, throwError, toArray } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Annotation, AnnotationsRows, Attestation, TextMetadata, TextsService } from '../text/text.service';
+import { Annotation, AnnotationsRows, Attestation, GetCountFiles, GetFilesResponse, TextMetadata, TextsService } from '../text/text.service';
 
 export interface Book {
-  [key: string]: any;
-  author : string,
+  author : Array<string>,
   date : string,
   key : string,
   references : number,
@@ -22,274 +21,473 @@ export class BibliographyService {
   private cashUrl = environment.cashUrl;
   private zoteroUrl = environment.zoteroUrl;
 
-  books$ : Observable<any> = this.getAllBooks().pipe(
-    map((books:any[]) => books.map(book => ({
-      author: book.author,
-      date: book.date,
-      key: book.publisher,  
-      references: book.references,
-      title: book.title
-    }))),
-    shareReplay()
-  )
 
   constructor( private http: HttpClient, private textService : TextsService) { }
 
-  getAllBooks(): any {
-    return this.http.get<Book[]>(this.lexoUrl + "lexicon/data/bibliography").pipe(
-      map(res => res),
-    )
-  }
+  
 
-  getIndexOfText(keyBook : string) : Observable<number> {
-    return this.books$.pipe(
-      map(texts => texts.findIndex((book: Book) => book.key == keyBook))
-    )
-  }
-
-  getBookByIndex(index : number) : Observable<Book> {
-    return this.books$.pipe(
-      map(texts => texts[index])
-    )
-  }
-
-  getBookKeyByIndex(index : number) : Observable<string> {
-    return this.books$.pipe(
-      map(book => book[index].key)
-    )
-  }
-
-  filterByAuthor(authorName: string): Observable<Book[]> {
-    return this.books$.pipe(
-      map(books => books.filter((text : Book) => {
-        return text.author == authorName;
-      }))
-    );
-  }
-
-  filterByLetter(letter: string): Observable<Book[]> {
-    return this.books$.pipe(
-      map(books => books.filter((book: Book) => {
-        // Normalize label by removing non-alphabetic characters
-        const normalizedLabel = book.title.toLowerCase().replace(/[^a-z]/gi, '');
-        return normalizedLabel[0].toLowerCase() == letter;
-      }))
-    );
-  }
-
-  filterByLetterZotero(startIndex : number, letter : string) : Observable<any[]> {
-    const params = new HttpParams()
-      .set('start', startIndex.toString())
-      .set('limit', '50')
-      .set('q', letter)
-      .set('qmode', 'titleCreatorYear')
-      .set('direction', 'asc')
-      .set('v', '3');
-
-    return this.http.get<any[]>(this.zoteroUrl, { params }).pipe(
-      map(items => items.map(item => {
-        let author = '';
-        if (item.data.creators && item.data.creators.length > 0) {
-          const firstAuthor = item.data.creators[0]
-          if (firstAuthor) {
-            author = `${firstAuthor.lastName} ${firstAuthor.firstName}`;
-          }
+  
+  filterByLetter(letter: string): Observable<any[]> {
+    let body = {
+      "requestUUID": "11",
+      "filters": [
+        {
+          "key": "author",
+          "value": `^${letter}`,
+          "op": "re"
         }
-        return {
-          isbn: item.data.ISBN || '',
-          author: author,
-          title: item.data.title || '',
-          date: item.data.date || '',
-          key: item.data.key || '',
-          place: item.data.place || '',
-          publisher: item.data.publisher || '',
-          pages: item.data.pages || '',
-          series: item.data.series || '',
-          seriesNumber: item.data.seriesNumber || '',
-          volume: item.data.volume || ''
-        };
-      }))
-    );
-  }
-
-
-  filterByYear(year: string): Observable<Book[]> {
-    return this.books$.pipe(
-      map(books => books.filter((book: Book) => {
-        // Normalize date by extracting year and removing square brackets
-        const yearRegex = /\d{4}/;
-        const match = book.date.match(yearRegex);
-        const normalizedDate = match ? match[0] : '';
-        return normalizedDate == year;
-      }))
-    );
-  }
-
-  filterBooks(formValues: any): Observable<Book[]> {
-    if (!formValues.author && !formValues.fromDate && !formValues.toDate && !formValues.title && !formValues.id) {
-      return of([]);
+      ],
+      "user-id": "11"
     }
-  
-    return this.books$.pipe(
-      map(books => books.filter((book : Book) => {
-        let valid = true;
-  
-        if (formValues.title) valid = valid && book.title.toLowerCase().includes(formValues.title);
-        if (formValues.id) valid = valid && book.key.includes(formValues.id);
-        if (formValues.author) valid = valid && book.author.includes(formValues.author);
-        // Conversione dei valori di date in Date per il confronto
-        if (formValues.fromDate) valid = valid && book.date >= formValues.fromDate;
-        if (formValues.toDate) valid = valid && book.date <= formValues.toDate;
-        
-        return valid;
-      }))
-    );
+
+    const defaultOffset = '0';
+    const defaultLimit = '500';
+
+    let params = new HttpParams();  
+    params = params.set('offset', defaultOffset);
+    params = params.set('limit', defaultLimit);
+
+    const options = {
+      params: params
+    };
+    
+    return this.http.post<any>(this.cashUrl + "api/public/searchbiblio", body, options).pipe(
+      map(res => res.results),
+      map((books:any[]) => books.map(book => ({
+        abstractNote : book.params['Abstract Note']?.join('; ') || '',
+        author: book.params['Author']?.join('; ') || '',
+        editor : book.params['Editor']?.join('; ') || '',
+        isbn: book.params['ISBN']?.join('; ') || '',
+        itemType: book.params['Item Type']?.join('; ') || '',
+        key: book.params['Key']?.join('; ') || '',  
+        pages: book.params['Pages']?.join('; ') || '',
+        place: book.params['Place']?.join('; ') || '',
+        publicationYear : book.params['Publication Year']?.join('; ') || '',
+        publisher : book.params['Publisher']?.join('; ') || '',
+        title: book.params['Title']?.join('; ') || '',
+        url : book.params['Url']?.join('; ') || ''
+      }))),
+      map(books => books.sort((a, b) => a.author[0].localeCompare(b.author[0]))),
+    )
   }
 
-  filterAttestations(formValues : any): Observable<any> {
+
+  paginationItems(first?: number, row?: number) : Observable<any[]> {
+    let body = {};
+    let defaultOffset = 0;
+    let defaultLimit = 0;
+    body = {
+      "requestUUID": "11",
+      "filters": [
+        {
+          "key": "key",
+          "value": `.*`,
+          "op": "re"
+        }
+      ],
+      "user-id": "11"
+    }
+    
+    if((first && row) || (first == 0 && row)){
+      defaultOffset = first;
+      defaultLimit = row;
+    }else{
+      defaultOffset = 0;
+      defaultLimit = 8;
+    }
+    let params = new HttpParams();  
+    params = params.set('offset', defaultOffset);
+    params = params.set('limit', defaultLimit);
+
+    const options = {
+      params: params
+    };
+    
+    return this.http.post<any>(this.cashUrl + "api/public/searchbiblio", body, options).pipe(
+      map(res => res.results),
+      map((books:any[]) => books.map(book => ({
+        abstractNote : book.params['Abstract Note']?.join('; ') || '',
+        author: book.params['Author']?.join('; ') || '',
+        date: book.params['Date']?.join('; ') || '',
+        editor : book.params['Editor']?.join('; ') || '',
+        isbn: book.params['ISBN']?.join('; ') || '',
+        itemType: book.params['Item Type']?.join('; ') || '',
+        key: book.params['Key']?.join('; ') || '',  
+        pages: book.params['Pages']?.join('; ') || '',
+        place: book.params['Place']?.join('; ') || '',
+        publicationYear : book.params['Publication Year']?.join('; ') || '',
+        publisher : book.params['Publisher']?.join('; ') || '',
+        title: book.params['Title']?.join('; ') || '',
+        url : book.params['Url']?.join('; ') || '',
+        volume: book.params['Volume']?.join('; ') || '',
+      }))),
+    )
+  }
+
+  countTotalBooks(extParam? : any) : Observable<number> {
+    let body = {};
+    let defaultOffset = '';
+    let defaultLimit = '';
+
+    if(!extParam){
+      body = {
+        "requestUUID": "11",
+        "filters": [
+          {
+            "key": "key",
+            "value": `.*`,
+            "op": "re"
+          }
+        ],
+        "user-id": "11"
+      }
+
+      defaultOffset = '0';
+      defaultLimit = '5000';
+    }else{
+      defaultOffset = '0';
+      defaultLimit = '500';
+      
+    }
+
+    let params = new HttpParams();  
+    params = params.set('offset', defaultOffset);
+    params = params.set('limit', defaultLimit);
+
+    const options = {
+      params: params
+    };
+    
+    return this.http.post<any>(this.cashUrl + "api/public/searchbiblio", body, options).pipe(
+      map(res => res.results.length),
+    )
+  }
+
+  filterAttestations(formValues : any, f?: number, r?:number) {
     // Creazione della query
-   
+    
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
 
     let queryParts: string[] = [];
   
     if (formValues.location) {
-      queryParts.push(`_doc/originalPlace/ancientName=="${formValues.location}"`);
+      queryParts.push(`_doc.originalPlace.ancientName=="${formValues.location}"`);
     }
   
     if (formValues.inscriptionId) {
-      queryParts.push(`_doc/fileID=="${formValues.inscriptionId}"`);
+      queryParts.push(`_doc.fileID=".*${formValues.inscriptionId}.*"`);
     }
   
     if (formValues.word) {
-      queryParts.push(` word=="${formValues.word}"`);
+      queryParts.push(` word=".*${formValues.word}.*"`);
     }
   
     const query = queryParts.length > 0 ? `[${queryParts.join(' &')}]` : '';
+
+    let params = new HttpParams()
+            .set('query', query)
+            .set('offset','0')
+            .set('limit', '1000');
+
     if(query != ''){
-      return this.http.post<AnnotationsRows>(this.cashUrl + "api/public/search?query="+encodeURIComponent(query), null).pipe(
-        map(res => Array.from(res.rows.reduce((map, obj) => map.set(obj.nodeId, obj), new Map()).values())),
-        switchMap(attestations => {
-          // Converti l'array di attestazioni in un array di Observable
-          const attestationInfoObservables = attestations.map((attestation : any) => {
-            // Restituisci un Observable che ottiene ulteriori informazioni per questa attestazione
-            return this.textService.getAnnotation(attestation.nodeId).pipe(
-              map(info => info.filter(att=>att.attributes.bibliography != undefined)) // Aggiunto filtro qui
-            );
+      
+      return this.http.post<GetFilesResponse>(this.cashUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
+        map(res => res.files),
+        map(texts => this.textService.mapData(texts)),
+        tap(res=> console.log(res)),
+        map(res => res.map(item => item.bibliography)
+                     .filter(bib => bib !== null && bib !== undefined) // Rimuove null e undefined
+                     .reduce((acc, cur) => acc.concat(cur), [])),
+        map(bibliographies => {
+        const uniqueBibliographies: Record<string, any> = {}; // Specifica un tipo più esplicito
+          bibliographies.forEach((bib:any) => {
+            if(bib && bib.corresp && !uniqueBibliographies[bib.corresp]) {
+              uniqueBibliographies[bib.corresp] = bib;
+            }
           });
-    
-          // Aspetta che tutti gli Observable abbiano completato e combina i risultati
-          return forkJoin(attestationInfoObservables);
+          return Object.values(uniqueBibliographies);
         }),
-        concatAll(),
-        shareReplay()
-      )
+        map((books:any[]) => books.map(book => ({
+          abstractNote : book['monogrNoteText'] || '',
+          author: Array.isArray(book.monogrAuthors) ? 
+            book.monogrAuthors.map((a:any) => `${a.forename} ${a.surname}`.trim()).join('; ') : 
+            `${book.monogrAuthors.forename} ${book.monogrAuthors.surname}`.trim(),
+          date: book['monogrDate'],
+          editor : book['Editor'],
+          isbn: book['monogrIdno'],
+          itemType: book['type'],
+          key: book['corresp'].split('/')[book['corresp'].split('/').length -1],  
+          pages: book['citedRangeText'],
+          place: book['Place'],
+          publicationYear : book['Publication Year'] || '',
+          publisher : book['monogrPublisher'],
+          title: book['analyticTitleText'],
+          url : book['corresp'],
+          volume: book['Volume'] || '',
+        }))), 
+      );
     }else{
       return of([])
     }
-    
   }
 
-  // Funzione helper per mappare un attestazione a un libro
-  mapAttestationToBook(attestation : any) : Book {
-    let author = "";
-    if (attestation.attributes.bibliography) {
+  filterBooks(formValues: any, f?:number, r?:number): Observable<any[]> {
+    if (!formValues.author && !formValues.date && !formValues.title && !formValues.id) {
+      return of([]);
+    }
+    let filters = [];
 
-      let bibliography = attestation.attributes.bibliography;
-      bibliography.creators.forEach((creator: any) => {
-          if (creator.creatorType === "author") {
-              author = creator.lastName;
-              return; // Cambia 'creatorValue' con il vero nome del campo
-          }
+    if (formValues.author) {
+      filters.push({
+        "key": "author",
+        "value": `.*${formValues.author}.*`,
+        "op": "re"
       });
     }
-
-    let bookEquivalent : Book = {
-        author: author,
-        date: attestation.attributes.bibliography.date || "",
-        key: attestation.attributes.bibliography.key || "",
-        references: NaN,
-        title: attestation.attributes.bibliography.title || ""
-    };
-
-    return bookEquivalent;
-  }
-
-  combineResults(formValues: any): Observable<(Book)[]> {
-
-    let findInternalObservable : boolean = false; 
-    let findCASH : boolean = false;
-
-    if (!formValues.author && !formValues.fromDate && !formValues.toDate && !formValues.title && !formValues.id) {
-      findInternalObservable = false;
-      findCASH = true;
-    }else if(!formValues.word && !formValues.location && !formValues.inscriptionId){
-      findCASH = false;
-      findInternalObservable = true;
-    }else{
-      findCASH = true;
-      findInternalObservable = true;
-    }
-
-
-    const booksSearch = this.filterBooks(formValues);
-    const attestationsSearch = this.filterAttestations(formValues);
   
-    return forkJoin([booksSearch, attestationsSearch]).pipe(
-      map(([booksResult, attestationsResult]) => {
-        
-        // Mappiamo prima attestationsResult a Book
-        let mappedAttestationsResult : Book[] = [];
-        attestationsResult.forEach((attestation : any) => {
-            let bookEquivalent = this.mapAttestationToBook(attestation);
-            mappedAttestationsResult.push(bookEquivalent);
+    if (formValues.date) {
+      
+      let start, end;
+      let singleDate;
+      //è un range
+      if(Array.isArray(formValues.date)){
+        start = formValues.date[0].getFullYear().toString();
+        end = formValues.date[1].getFullYear().toString();
+
+        filters.push({
+          "key": "date",
+          "value": `${start}`,
+          "op": "gt"
+        });
+
+        filters.push({
+          "key": "date",
+          "value": `${end}`,
+          "op": "lt"
         });
 
 
+      }else{
+        singleDate = formValues.date.getFullYear().toString();
+
+        filters.push({
+          "key": "date",
+          "value": `${singleDate}`,
+          "op": "gt"
+        });
+      }
+
+      
+    }
+  
+    if (formValues.title) {
+      filters.push({
+        "key": "title",
+        "value": `.*${formValues.title}.*`,
+        "op": "re"
+      });
+    }
+  
+    if (formValues.id) {
+      filters.push({
+        "key": "id",
+        "value": `.*${formValues.id}.*`,
+        "op": "re"
+      });
+    }
+  
+    let body = {
+      "requestUUID": "11",
+      "filters": filters,
+      "user-id": "11"
+    };
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+
+    let defaultOffset = '';
+    let defaultLimit = '';
+    defaultOffset = '0';
+    defaultLimit = '5000';
+    let params = new HttpParams();  
+    params = params.set('offset', defaultOffset);
+    params = params.set('limit', defaultLimit);
+
+    const options = {
+      params: params
+    };
+    
+    return this.http.post<any>(this.cashUrl + "api/public/searchbiblio", body, options).pipe(
+      map(res => res.results),
+      map((books:any[]) => books.map(book => ({
+        abstractNote : book.params['Abstract Note']?.join('; ') || '',
+        author: book.params['Author']?.join('; ') || '',
+        date: book.params['Date']?.join('; ') || '',
+        editor : book.params['Editor']?.join('; ') || '',
+        isbn: book.params['ISBN']?.join('; ') || '',
+        itemType: book.params['Item Type']?.join('; ') || '',
+        key: book.params['Key']?.join('; ') || '',  
+        pages: book.params['Pages']?.join('; ') || '',
+        place: book.params['Place']?.join('; ') || '',
+        publicationYear : book.params['Publication Year']?.join('; ') || '',
+        publisher : book.params['Publisher']?.join('; ') || '',
+        title: book.params['Title']?.join('; ') || '',
+        url : book.params['Url']?.join('; ') || '',
+        volume: book.params['Volume']?.join('; ') || '',
+      }))),
+    )
+  }
+
+  cachedResults : any[] = [];
+
+  combineResults(formValues: any, f?:number, r?:number): Observable<(any)> {
+
+    let startBook : boolean = false; 
+    let startAttestation : boolean = false;
+    this.cachedResults = [];
+
+    if (!formValues.author && !formValues.date && !formValues.title && !formValues.id) {
+      startBook = false;
+      startAttestation = true;
+    }else if(!formValues.word && !formValues.location && !formValues.inscriptionId){
+      startAttestation = false;
+      startBook = true;
+    }else{
+      startAttestation = true;
+      startBook = true;
+    }
+
+    
+
+    //const booksSearch = this.filterBooks(formValues);
+    const booksSearch = this.filterBooks(formValues);
+    const attestationsSearch = this.filterAttestations(formValues);
+    /* return of([]) */
+    return forkJoin([booksSearch, attestationsSearch]).pipe(
+      map(([booksResult, attestationsResult]) => {
+        
+        
         // Se findInternalObservable è true, restituisci solo bookResult
-        if(findInternalObservable && !findCASH) {
+        if(startBook && !startAttestation) {
+          this.cachedResults = booksResult;
           return booksResult;
         }
     
-        // Se findCash è true, mappa gli elementi di attestationsResult come Book
-        if(findCASH && !findInternalObservable) {
-
-          return mappedAttestationsResult
+        // Se startAttestation è true, mappa gli elementi di attestationsResult come Book
+        if(startAttestation && !startBook) {
+          this.cachedResults = attestationsResult;
+          return attestationsResult;
         }
     
         // Se entrambe le variabili sono true, combina i risultati
-        if(findInternalObservable && findCASH) {
+        if(startBook && startAttestation) {
           // Filtriamo i risultati delle attestazioni
-          const filteredAttestationsResults = mappedAttestationsResult.filter((attestation:any) => {
-            // Cerchiamo corrispondenze nell'array dei libri
-            return booksResult.some(book => {
-              // Per ogni filtro attivo in formValues...
-              for(let filter in book) {
-                // ...se il filtro è attivo (non null)...
-                if(attestation[filter] !== null && !isNaN(attestation[filter])) {
-                  // ...controlla se il corrispondente campo in book e attestation corrispondono
-                  // Nota: sto assumendo che i campi di book e attestation abbiano lo stesso nome dei filtri
-                  // Se non è così, dovrai adattare questo codice
-                  if(book[filter].includes(attestation[filter])) {
-                    // Se un campo non corrisponde, allora questo libro non corrisponde all'attestation
-                    return false;
-                  }
-                }
-              }
-            
-              // Se siamo arrivati fin qui, significa che tutti i campi corrispondono, quindi c'è una corrispondenza
-              return true;
-            });
-          })
-          
-        
-          // Restituisci i risultati filtrati
-          return filteredAttestationsResults
+          const shorterArrayIndex = new Map();
+          const [firstArray, secondArray] = booksResult.length < attestationsResult.length ? [booksResult, attestationsResult] : [attestationsResult, booksResult];
+
+          firstArray.forEach(item => shorterArrayIndex.set(item.key, item));
+
+          // Ora filtra l'array più lungo usando l'indice
+          const commonElements = secondArray.filter(item => shorterArrayIndex.has(item.key));
+
+          this.cachedResults = commonElements;
+          return commonElements;
         }
     
         // Se nessuna delle condizioni sopra è verificata, restituisci un array vuoto
         return [];
       }),
-      shareReplay()
+      
     );
+  }
+
+  getCachedResults(){
+    return this.cachedResults;
+  }
+
+  emptyCachedResults(){
+    this.cachedResults = [];
+  }
+
+  getBookDetails(key:string) : Observable<any>{
+    let body = {
+      "requestUUID": "11",
+      "filters": [
+        {
+          "key": "key",
+          "value": `${key}`,
+          "op": "eq"
+        }
+      ],
+      "user-id": "11"
+    }
+
+    let defaultOffset = 0;
+    let defaultLimit = 8;
+
+    let params = new HttpParams();  
+    params = params.set('offset', defaultOffset);
+    params = params.set('limit', defaultLimit);
+
+    const options = {
+      params: params
+    };
+    
+    return this.http.post<any>(this.cashUrl + "api/public/searchbiblio", body, options).pipe(
+      map(res => res.results),
+      map((books: any[]) => books.length > 0 ? ({
+        abstractNote: books[0].params['Abstract Note']?.join('; ') || '',
+        author: books[0].params['Author']?.join('; ') || '',
+        date: books[0].params['Date']?.join('; ') || '',
+        editor: books[0].params['Editor']?.join('; ') || '',
+        isbn: books[0].params['ISBN']?.join('; ') || '',
+        itemType: books[0].params['Item Type']?.join('; ') || '',
+        key: books[0].params['Key']?.join('; ') || '',  
+        pages: books[0].params['Pages']?.join('; ') || '',
+        place: books[0].params['Place']?.join('; ') || '',
+        publicationYear: books[0].params['Publication Year']?.join('; ') || '',
+        publisher: books[0].params['Publisher']?.join('; ') || '',
+        title: books[0].params['Title']?.join('; ') || '',
+        url: books[0].params['Url']?.join('; ') || '',
+        volume: books[0].params['Volume']?.join('; ') || '',
+      }) : null), // Restituisce il primo elemento se esiste, altrimenti null
+    );
+  }
+
+  getAttestationsByBookKey(bookKey: string): Observable<any> {
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+
+    let params = new HttpParams()
+      .set('query', `[_doc.itAnt_ID=".*" & attestation.bibliography.key=="${bookKey}"]`)
+      .set('offset', '0')
+      .set('limit', '500');
+
+
+
+    return this.http.post<any>(this.cashUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
+      map(res => res.files),
+      map(res => this.textService.mapData(res))
+    )
+  }
+
+  getAnnotations(anno: any){
+    
+    return forkJoin(
+      anno.map(
+        (el : any) => {
+
+          return this.textService.getAnnotation(el['element-id'])
+        }
+      )
+    ).pipe(
+      map((arrays : any) => [].concat(...arrays)),
+      tap(res => res),
+      shareReplay()
+    )
   }
 }
