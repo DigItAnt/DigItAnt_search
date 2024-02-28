@@ -94,14 +94,15 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     lexicalElementIRI : new FormControl(null),
     bibliographyTitle : new FormControl(null),
     bibliographyID : new FormControl(null),
-    bibliographyFromDate : new FormControl(1500),
-    bibliographyToDate : new FormControl(null),
+    bibliographyDate: new FormControl(null),
     bibliographyAuthor : new FormControl(null),
   });
 
   first: number = 0;
   rows: number = 8;
-  
+  isActiveInterval : boolean = false;
+  minDate = new Date(1700, 0, 1); // 1 gennaio 1980
+  maxDate = new Date(); // Data odierna
 
   autocompleteLocationReq$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
   autocompleteLexiconReq$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});

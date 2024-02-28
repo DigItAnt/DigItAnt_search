@@ -129,12 +129,12 @@ export class AdvancedsearchService {
             .set('limit', '5000');
 
 
-            return this.http.post<GetFilesResponse>(this.cashUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
-              map(res => res.files),
-              map(texts => this.inscriptionService.mapData(texts)),
-              tap(res => this.filteredResults = res),
-              shareReplay(),
-            );
+          return this.http.post<GetFilesResponse>(this.cashUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
+            map(res => res.files),
+            map(texts => this.inscriptionService.mapData(texts)),
+            tap(res => this.filteredResults = res),
+            shareReplay(),
+          );
         }else{
           return of(inscriptionSearch);
         }
@@ -262,57 +262,112 @@ export class AdvancedsearchService {
   filterBibliography(formValues : any, advancedSearchForm : FormGroup){
     // Verifica se dovresti fare la chiamata
   const shouldCallZotero = bibliographyFields.some(field => 
-    formValues[field] !== null && advancedSearchForm.get(field)?.touched
+    formValues[field] !== null && formValues[field] !== '' && advancedSearchForm.get(field)?.touched
   );
 
   if (shouldCallZotero) {
-    // Costruisce la query
-    const queryParts: string[] = [];
-    for (const field of bibliographyFields) {
-      const value = formValues[field];
-      const control = advancedSearchForm.get(field);
+    let filters = [];
 
-      if ((value !== null && value !== '') && (control && control.touched)) {
-        queryParts.push(`${value}`);
-      }
+    if (formValues.bibliographyAuthor) {
+      filters.push({
+        "key": "author",
+        "value": `.*${formValues.bibliographyAuthor}.*`,
+        "op": "re"
+      });
     }
+  
+    if (formValues.bibliographyDate) {
+      
+      let start, end;
+      let singleDate;
+      //è un range
+      if(Array.isArray(formValues.bibliographyDate)){
+        start = formValues.bibliographyDate[0].getFullYear().toString();
+        end = formValues.bibliographyDate[1].getFullYear().toString();
 
-    const query = queryParts.join(' ');  // Unisce tutte le parti con uno spazio
+        filters.push({
+          "key": "date",
+          "value": `${start}`,
+          "op": "gt"
+        });
 
-    // Costruisce i parametri HTTP
-    const params = new HttpParams()
-      .set('start', '0')  // Puoi anche utilizzare startIndex.toString() se hai questa variabile
-      .set('limit', '100')
-      .set('q', query)  // Aggancia la query qui
-      .set('qmode', 'titleCreatorYear')
-      .set('direction', 'asc')
-      .set('v', '3');
+        filters.push({
+          "key": "date",
+          "value": `${end}`,
+          "op": "lt"
+        });
 
-    // Fai la chiamata HTTP qui con i parametri costruiti
-    return this.http.get<any[]>(this.zoteroUrl, { params }).pipe(
-      map(items => items.map(item => {
-        let author = '';
-        if (item.data.creators && item.data.creators.length > 0) {
-          const firstAuthor = item.data.creators[0]
-          if (firstAuthor) {
-            author = `${firstAuthor.lastName} ${firstAuthor.firstName}`;
-          }
-        }
-        return {
-          isbn: item.data.ISBN || '',
-          author: author,
-          title: item.data.title || '',
-          date: item.data.date || '',
-          key: item.data.key || '',
-          place: item.data.place || '',
-          publisher: item.data.publisher || '',
-          pages: item.data.pages || '',
-          series: item.data.series || '',
-          seriesNumber: item.data.seriesNumber || '',
-          volume: item.data.volume || ''
-        };
-      }))
-    );
+
+      }else{
+        singleDate = formValues.date.getFullYear().toString();
+
+        filters.push({
+          "key": "date",
+          "value": `${singleDate}`,
+          "op": "gt"
+        });
+      }
+
+      
+    }
+  
+    if (formValues.bibliographyTitle) {
+      filters.push({
+        "key": "title",
+        "value": `.*${formValues.bibliographyTitle}.*`,
+        "op": "re"
+      });
+    }
+  
+    if (formValues.bibliographyID) {
+      filters.push({
+        "key": "id",
+        "value": `.*${formValues.bibliographyID}.*`,
+        "op": "re"
+      });
+    }
+  
+    let body = {
+      "requestUUID": "11",
+      "filters": filters,
+      "user-id": "11"
+    };
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+
+    let defaultOffset = '';
+    let defaultLimit = '';
+    defaultOffset = '0';
+    defaultLimit = '5000';
+    let params = new HttpParams();  
+    params = params.set('offset', defaultOffset);
+    params = params.set('limit', defaultLimit);
+
+    const options = {
+      params: params
+    };
+    
+    return this.http.post<any>(this.cashUrl + "api/public/searchbiblio", body, options).pipe(
+      map(res => res.results),
+      map((books:any[]) => books.map(book => ({
+        abstractNote : book.params['Abstract Note']?.join('; ') || '',
+        author: book.params['Author']?.join('; ') || '',
+        date: book.params['Date']?.join('; ') || '',
+        editor : book.params['Editor']?.join('; ') || '',
+        isbn: book.params['ISBN']?.join('; ') || '',
+        itemType: book.params['Item Type']?.join('; ') || '',
+        key: book.params['Key']?.join('; ') || '',  
+        pages: book.params['Pages']?.join('; ') || '',
+        place: book.params['Place']?.join('; ') || '',
+        publicationYear : book.params['Publication Year']?.join('; ') || '',
+        publisher : book.params['Publisher']?.join('; ') || '',
+        title: book.params['Title']?.join('; ') || '',
+        url : book.params['Url']?.join('; ') || '',
+        volume: book.params['Volume']?.join('; ') || '',
+      }))),
+    )
+  
   } else {
     return of([]);
   }

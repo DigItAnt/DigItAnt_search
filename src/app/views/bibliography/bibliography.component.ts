@@ -25,7 +25,7 @@ export class BibliographyComponent implements OnInit {
   destroy$: Subject<boolean> = new Subject<boolean>();
   autocomplete$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
   first: number = 0;
-  rows: number = 6;
+  rows: number = 8;
 
   startIndex : number = 0;
 
@@ -173,7 +173,9 @@ export class BibliographyComponent implements OnInit {
   )
 
   getLexicalEntries : Observable<any> = this.getAttestations.pipe(
-    
+    //TODO: CHECK
+    filter(anno => anno != undefined && Array.isArray(anno) && anno.length > 0),
+    takeUntil(this.destroy$),
     switchMap(anno=> this.bibliographyService.getAnnotations(anno)),
     map(entries => entries.filter((entry:any) => {
       const biblio = entry.attributes.bibliography;
