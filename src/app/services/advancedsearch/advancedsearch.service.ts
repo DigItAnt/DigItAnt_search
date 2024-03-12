@@ -128,12 +128,12 @@ export class AdvancedsearchService {
             .set('limit', '5000');
 
 
-            return this.http.post<GetFilesResponse>(this.cashUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
-              map(res => res.files),
-              map(texts => this.inscriptionService.mapData(texts)),
-              tap(res => this.filteredResults = res),
-              shareReplay(),
-            );
+          return this.http.post<GetFilesResponse>(this.cashUrl + "api/public/searchFiles", params.toString(), { headers: headers }).pipe(
+            map(res => res.files),
+            map(texts => this.inscriptionService.mapData(texts)),
+            tap(res => this.filteredResults = res),
+            shareReplay(),
+          );
         }else{
           return of(inscriptionSearch);
         }
@@ -260,9 +260,9 @@ export class AdvancedsearchService {
 
   filterBibliography(formValues : any, advancedSearchForm : FormGroup){
     // Verifica se dovresti fare la chiamata
-    const shouldCallZotero = bibliographyFields.some(field => 
-      formValues[field] !== null && advancedSearchForm.get(field)?.touched
-    );
+  const shouldCallZotero = bibliographyFields.some(field => 
+    formValues[field] !== null && formValues[field] !== '' && advancedSearchForm.get(field)?.touched
+  );
 
     if (shouldCallZotero) {
       // Costruisce la query

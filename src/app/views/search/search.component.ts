@@ -100,7 +100,9 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
 
   first: number = 0;
   rows: number = 8;
-  
+  isActiveInterval : boolean = false;
+  minDate = new Date(1700, 0, 1); // 1 gennaio 1980
+  maxDate = new Date(); // Data odierna
 
   autocompleteLocationReq$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
   autocompleteLexiconReq$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
@@ -289,9 +291,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
       return r.filter(item => item.modernName.includes(query.query))
     }),
   )
-  isActiveInterval : boolean = false;
-  minDate: Date = new Date();
-  maxDate: Date = new Date();
+
   searchLexicon : Observable<LexicalElement[]> = this.autocompleteLexiconReq$.pipe(
     debounceTime(1000),
     filter(autoCompleteEvent => autoCompleteEvent.query != ''),

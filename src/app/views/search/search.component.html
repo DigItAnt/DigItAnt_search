@@ -18,12 +18,7 @@
     languages : languagesList | async,
     status : statusList | async,
     totalRecords: totalRecords | async} as advancedSearch">
-   <!--  , 
-     
-    groupAuthors : groupAuthors | async,
-     groupLocations : groupLocations | async,
-    groupDates : groupDates | async,
-     -->
+   
     <div id="left-bar" class="flex flex-column normal-tabview">
 
 
@@ -431,14 +426,6 @@
                         
                     </div>
                 </div>
-                
-
-                
-
-                
-
-                
-
             </p-panel>
 
             <p-panel class="bibliography-panel-header cursor-pointer" [toggleable]="true" [collapsed]="true" [toggler]="'header'">
@@ -475,6 +462,10 @@
                             [ngModelOptions]="{standalone: true}"></p-checkbox>
                     </div>
 
+                    <div class="flex pt-3" *ngIf="!isActiveInterval">
+                        <p-calendar [appendTo]="'body'" class="flex-auto" formControlName="bibliographyDate" [selectionMode]="'single'" [minDate]="minDate" [maxDate]="maxDate"></p-calendar>
+
+                    </div>
                     <div class="flex pt-3" *ngIf="!isActiveInterval">
                         <p-calendar [appendTo]="'body'" class="flex-auto" formControlName="bibliographyDate" [selectionMode]="'single'" [minDate]="minDate" [maxDate]="maxDate"></p-calendar>
 
