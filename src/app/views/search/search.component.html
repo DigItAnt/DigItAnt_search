@@ -104,7 +104,6 @@
                         <p-checkbox [(ngModel)]="isActiveInscriptionInterval" (onChange)="setInscriptionDateInterval()" [binary]="true" label="Interval" [ngModelOptions]="{standalone: true}"></p-checkbox>
                     </div>
 
-                    <!-- TODO: fix date  -->
 
                     <div class="flex align-items-center pt-3" *ngIf="!isActiveInscriptionInterval">
                         <!-- {{mapInscriptionSingle}} -->
@@ -469,63 +468,28 @@
 
                 <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">Date:</span>
-                    <!-- <div class="flex pt-3">
-                        <p-checkbox [(ngModel)]="isActiveInterval" [binary]="true" label="Interval"
+                    
+
+                    <div class="flex pt-3">
+                        <p-checkbox (onChange)="clearBiblioDate()" [(ngModel)]="isActiveInterval" [binary]="true" label="Interval"
                             [ngModelOptions]="{standalone: true}"></p-checkbox>
                     </div>
-                    <div class="flex pt-3">
-                        <p-dropdown (onClear)="clearDates()" appendTo="body" [showClear]="true" class="flex-auto"
-                            [options]="(advancedSearch.groupDates) || []" formControlName="bibliographyFromDate"
-                            optionValue="date" optionLabel="date" placeholder="Eg: 6th century BC">
-                            <ng-template let-date pTemplate="item">
-                                <div class="century-item">
-                                    <span class="counter">{{date.date}}</span>
-                                </div>
-                            </ng-template>
-                        </p-dropdown>
+
+                    <div class="flex pt-3" *ngIf="!isActiveInterval">
+                        <p-calendar [appendTo]="'body'" class="flex-auto" formControlName="bibliographyDate" [selectionMode]="'single'" [minDate]="minDate" [maxDate]="maxDate"></p-calendar>
+
                     </div>
 
                     <div class="flex pt-3" *ngIf="isActiveInterval">
-                        <p-dropdown [disabled]="advancedSearchForm.get('fromDate')?.value == null"
-                            appendTo="body" [showClear]="true" class="flex-auto"
-                            [options]="(advancedSearch.groupDates) || []" formControlName="bibliographyToDate" optionValue="date"
-                            optionLabel="date" placeholder="Eg: 6th century BC">
-                            <ng-template let-date pTemplate="item">
-                                <div class="century-item">
-                                    <span class="counter">{{date.date}}</span>
-                                </div>
-                            </ng-template>
-                        </p-dropdown>
-                    </div> -->
+                        <p-calendar [appendTo]="'body'" class="flex-auto" formControlName="bibliographyDate" [selectionMode]="'range'" [readonlyInput]="true" [minDate]="minDate" [maxDate]="maxDate"></p-calendar>
 
-                    <div class="flex pt-3">
-                        <p-checkbox [(ngModel)]="isActiveBibliographyInterval" (onChange)="setBibliographyDateInterval()" [binary]="true" label="Interval" [ngModelOptions]="{standalone: true}"></p-checkbox>
-                    </div>
-    
-                    <div class="flex align-items-center pt-3" *ngIf="!isActiveBibliographyInterval">
-                        {{mapBibliographySingle}}
-                        <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="startBiblio" [range]="false" [min]="1500" [max]="2023" class="w-full mx-5" (onChange)="onChangeBibliographySlider($event)"></p-slider>
-                    </div>
-                    
-                    <div class="flex align-items-center pt-3" *ngIf="isActiveBibliographyInterval">
-                        {{mappingBibliograpgyRange[0]}}
-                        <p-slider [ngModelOptions]="{standalone: true}" [(ngModel)]="allowedBibliographyInterval"  [range]="true" [min]="1500" [max]="2023" class="w-full mx-5" (onChange)="onChangeBibliographySlider($event)"></p-slider>
-                        {{mappingBibliograpgyRange[1]}}
                     </div>
                 </div>
 
                 <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">Author:</span>
                     <div class="flex pt-3">
-                        <!-- <p-dropdown appendTo="body" [showClear]="true" class="flex-auto"
-                            [options]="(advancedSearch.groupAuthors) || []" formControlName="bibliographyAuthor"
-                            optionValue="name" optionLabel="name" placeholder="Select author...">
-                            <ng-template let-item pTemplate="item">
-                                <div class="language-item">
-                                    <span class="counter">{{item.name}}</span>
-                                </div>
-                            </ng-template>
-                        </p-dropdown> -->
+                        <input id="float-input" type="text" class="w-full" placeholder="Type something..." name="author" formControlName="bibliographyAuthor" pInputText />
                     </div>
                 </div>
             </p-panel>

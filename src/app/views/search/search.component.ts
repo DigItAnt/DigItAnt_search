@@ -94,8 +94,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     lexicalElementIRI : new FormControl(null),
     bibliographyTitle : new FormControl(null),
     bibliographyID : new FormControl(null),
-    bibliographyFromDate : new FormControl(1500),
-    bibliographyToDate : new FormControl(null),
+    bibliographyDate : new FormControl(null),
     bibliographyAuthor : new FormControl(null),
   });
 
@@ -290,7 +289,9 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
       return r.filter(item => item.modernName.includes(query.query))
     }),
   )
-
+  isActiveInterval : boolean = false;
+  minDate: Date = new Date();
+  maxDate: Date = new Date();
   searchLexicon : Observable<LexicalElement[]> = this.autocompleteLexiconReq$.pipe(
     debounceTime(1000),
     filter(autoCompleteEvent => autoCompleteEvent.query != ''),
@@ -329,8 +330,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     lexicalElementIRI: null,
     bibliographyTitle: null,
     bibliographyID: null,
-    bibliographyFromDate: null,
-    bibliographyToDate: null,
+    bibliographyDate: null,
     bibliographyAuthor: null
   };;
 
@@ -344,7 +344,8 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
 
 
-
+    this.minDate = new Date(1700, 0, 1); // 1 gennaio 1980
+    this.maxDate = new Date(); // Data odierna
     this.activatedRoute.queryParams.pipe(takeUntil(this.destroy$)).subscribe(
       (event)=>{
         if(event){
@@ -387,7 +388,13 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
       return control && control.touched && control.value !== null;
     });
 
-    if (!shouldStartQuery) {
+    let result = true; // Imposta il valore di default su true
+
+    if (Array.isArray(formValues.bibliographyDate) && formValues.bibliographyDate[1] === null) {
+      result = false;
+    }
+
+    if (!shouldStartQuery && !result) {
       console.log("Nessun controllo è stato toccato e modificato. Interrompendo la query.");
       return;
     }
@@ -466,6 +473,10 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
 
   clearDates(){
     this.advancedSearchForm.get('dateOfOriginNotAfter')?.setValue(null, {emitEvent: true})
+  }
+
+  clearBiblioDate(){
+    this.advancedSearchForm.get('bibliographyDate')?.setValue(null, {emitEvent: true})
   }
 
   clearLocation(){

@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders, HttpParams, HttpResponseBase } from '@angular/common/http';
+import { HttpResponseBase } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { Router, ActivatedRoute, Params } from '@angular/router';
@@ -7,13 +7,9 @@ import { Paginator } from 'primeng/paginator';
 import { BehaviorSubject, catchError, debounceTime, delay, EMPTY, filter, forkJoin, iif, map, Observable, of, Subject, Subscription, switchMap, take, takeUntil, tap, timeout, withLatestFrom } from 'rxjs';
 import { BibliographyService, Book } from 'src/app/services/bibliography/bibliography.service';
 import { FormElementTree, LexicalElement, LexiconService } from 'src/app/services/lexicon/lexicon.service';
-import { AnnotationsRows, TextMetadata, TextsService } from 'src/app/services/text/text.service';
-import * as data from '../../../assets/mock/words.json'
+import { TextsService } from 'src/app/services/text/text.service';
 import { AlphaCounter, AuthorCounter, DateCounter, LexiconFilter, TreeEvent } from '../lexicon/lexicon.component';
 import { AutoCompleteEvent, LocationsCounter, PaginatorEvent } from '../texts/texts.component';
-import { groupByAuthors, groupByDates } from '../texts/utils';
-import { GlobalGeoDataModel, MapsService } from 'src/app/services/maps/maps.service';
-import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-bibliography',
@@ -25,7 +21,7 @@ export class BibliographyComponent implements OnInit {
   destroy$: Subject<boolean> = new Subject<boolean>();
   autocomplete$ : BehaviorSubject<AutoCompleteEvent> = new BehaviorSubject<AutoCompleteEvent>({originalEvent: {}, query: ''});
   first: number = 0;
-  rows: number = 6;
+  rows: number = 8;
 
   startIndex : number = 0;
 
@@ -320,7 +316,9 @@ export class BibliographyComponent implements OnInit {
   buildBibliographyCrossQuery(formValues : FormGroup, f?: number, r? : number){
     this.isActiveSearchForm = true;
     //this.paginationItems = of([]);
-    //this.totalRecords = of(NaN)
+    //this.totalRecords = of(NaN);
+    this.first = 0;
+    this.rows = 8;
     this.showSpinner = true;
     this.route.navigate(
       [],

@@ -6,6 +6,7 @@ import { Annotation, AnnotationsRows, Attestation, GetCountFiles, GetFilesRespon
 
 export interface Book {
   author : Array<string>,
+  editor : string,
   date : string,
   key : string,
   references : number,
@@ -209,27 +210,104 @@ export class BibliographyService {
           });
           return Object.values(uniqueBibliographies);
         }),
-        map((books:any[]) => books.map(book => ({
-          abstractNote : book['monogrNoteText'] || '',
-          author: Array.isArray(book.monogrAuthors) ? 
-            book.monogrAuthors.map((a:any) => `${a.forename} ${a.surname}`.trim()).join('; ') : 
-            `${book.monogrAuthors.forename} ${book.monogrAuthors.surname}`.trim(),
-          date: book['monogrDate'],
-          editor : book['Editor'],
-          isbn: book['monogrIdno'],
-          itemType: book['type'],
-          key: book['corresp'].split('/')[book['corresp'].split('/').length -1],  
-          pages: book['citedRangeText'],
-          place: book['Place'],
-          publicationYear : book['Publication Year'] || '',
-          publisher : book['monogrPublisher'],
-          title: book['analyticTitleText'],
-          url : book['corresp'],
-          volume: book['Volume'] || '',
-        }))), 
+       
+        map((books:any[]) => books.map(book => (this.mapBookByType(book)))), 
+        tap(x => console.log(x)),
       );
     }else{
       return of([])
+    }
+  }
+
+  mapBookByType(book : any){
+    switch(book['type']){
+      case 'journalArticle' : return this.mapJournalArticle(book);
+      case 'book' : return this.mapBook(book);
+      case 'bookSection' : return this.mapBookSection(book);
+      default : return this.mapBook(book);
+    }
+  }
+
+  mapJournalArticle(book : any){
+    return {
+      abstractNote : book['monogrNoteText'] || '',
+      author: Array.isArray(book.monogrAuthors) && book.monogrAuthors.length > 0 ? 
+        book.monogrAuthors.map((a:any) => `${a.forename} ${a.surname}`.trim()).join('; ') : 
+        book.monogrAuthors && book.monogrAuthors.forename ? 
+        `${book.monogrAuthors.forename} ${book.monogrAuthors.surname}`.trim() :
+
+        book.analyticAuthors && (book.analyticAuthors.forename!= '' || book.analyticAuthors.surname != '')? 
+        `${book.analyticAuthors.forename} ${book.analyticAuthors.surname}`.trim() : `${book.analyticAuthors.name} `,
+      date: book['monogrDate'],
+      editor : Array.isArray(book.monogrEditors) ? 
+        book.monogrEditors.map((a:any) => `${a.forename} ${a.surname}`.trim()).join('; ') : 
+        `${book.monogrEditors.forename} ${book.monogrEditors.surname}`.trim(),
+      id: book['id'],
+      isbn: book['monogrIdno'],
+      itemType: book['type'],
+      key: book['corresp'].split('/')[book['corresp'].split('/').length -1],  
+      notes: book['notes'] || '',
+      pages: book['citedRangeText'] || '',
+      place: book['Place'],
+      publicationYear : book['Publication Year'] || '',
+      publisher : book['monogrPublisher'],
+      title: book['monogrTitle']['text'],
+      url : book['corresp'],
+      volume: book['Volume'] || '',
+    }
+  }
+
+  mapBook(book : any){
+    return {
+      abstractNote : book['monogrNoteText'] || '',
+      author: Array.isArray(book.monogrAuthors) && book.monogrAuthors.length > 0 ? 
+        book.monogrAuthors.map((a:any) => `${a.forename} ${a.surname}`.trim()).join('; ') : 
+        book.monogrAuthors && book.monogrAuthors.forename /* ? 
+        `${book.monogrAuthors.forename} ${book.monogrAuthors.surname}`.trim() :
+        `${book.analyticAuthors.forename} ${book.analyticAuthors.surname}`.trim(), */,
+      date: book['monogrDate'],
+      editor : Array.isArray(book.monogrEditors) ? 
+        book.monogrEditors.map((a:any) => `${a.forename} ${a.surname}`.trim()).join('; ') : 
+        `${book.monogrEditors.forename} ${book.monogrEditors.surname}`.trim(),
+      id: book['id'],
+      isbn: book['monogrIdno'],
+      itemType: book['type'],
+      key: book['corresp'].split('/')[book['corresp'].split('/').length -1],  
+      notes: book['notes'] || '',
+      pages: book['citedRangeText'] || '',
+      place: book['monogrPlace'],
+      publicationYear : book['Publication Year'] || '',
+      publisher : book['monogrPublisher'],
+      title: book['monogrTitle']['text'],
+      url : book['corresp'],
+      volume: book['biblScope'] || '',
+    }
+  }
+
+  mapBookSection(book : any){
+    return {
+      abstractNote : book['monogrNoteText'] || '',
+      author: Array.isArray(book.monogrAuthors) && book.monogrAuthors.length > 0 ? 
+        book.monogrAuthors.map((a:any) => `${a.forename} ${a.surname}`.trim()).join('; ') : 
+        book.monogrAuthors && book.monogrAuthors.forename ? 
+        `${book.monogrAuthors.forename} ${book.monogrAuthors.surname}`.trim() :
+        `${book.analyticAuthors.forename} ${book.analyticAuthors.surname}`.trim(),
+      date: book['monogrDate'],
+      editor : Array.isArray(book.monogrEditors) ? 
+        book.monogrEditors.map((a:any) => `${a.forename} ${a.surname}`.trim()).join('; ') : 
+        `${book.monogrEditors.forename} ${book.monogrEditors.surname}`.trim(),
+      id: book['id'],
+      isbn: book['monogrIdno'],
+      itemType: book['type'],
+      key: book['corresp'].split('/')[book['corresp'].split('/').length -1],  
+      notes: book['notes'] || '',
+      pages: book['citedRangeText'] || '',
+      place: book['monogrPubPlace'],
+      publicationYear : book['monogrDate'] || '',
+      publisher : book['monogrPublisher'],
+      title: book['monogrTitle']['text'],
+      url : book['corresp'],
+      volume: book['biblScope'] || '',
     }
   }
 
