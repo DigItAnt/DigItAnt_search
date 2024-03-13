@@ -5,7 +5,7 @@ import { environment } from 'src/environments/environment';
 import { Annotation, AnnotationsRows, Attestation, GetCountFiles, GetFilesResponse, TextMetadata, TextsService } from '../text/text.service';
 
 export interface Book {
-  author : Array<string>,
+  author : string,
   editor : string,
   date : string,
   key : string,
@@ -68,7 +68,22 @@ export class BibliographyService {
         title: book.params['Title']?.join('; ') || '',
         url : book.params['Url']?.join('; ') || ''
       }))),
-      map(books => books.sort((a, b) => a.author[0].localeCompare(b.author[0]))),
+      map(books => {
+        books.sort((a, b) => {
+          const getRelevantAuthorName = (author: string) => {
+            return author.split('; ')
+                         .map(name => name.trim())
+                         .find(name => name.startsWith(letter)) || author;
+          };
+          
+          const authorA = getRelevantAuthorName(a.author);
+          const authorB = getRelevantAuthorName(b.author);
+          
+          return authorA.localeCompare(authorB);
+        });
+    
+        return books; // Assicurati di ritornare 'books' qui
+      })
     )
   }
 

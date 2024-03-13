@@ -197,13 +197,13 @@
                 
                 <div class="flex flex-row">
                     <div class="flex text-item-id p-2" style="word-break: break-word;">
-                        {{item.author ? item.author : item.editor ? item.editor : 'No info'}}
+                        {{item.author ? (item.author | truncate) : item.editor ? (item.editor | truncate) : 'No info'}}
                     </div>
 
                     <div class="flex flex-column text-item-preview p-2">
 
                         <div class="text-item-preview-top">
-                            {{item.title}}
+                            {{item.title | truncate}}
                         </div>
 
                         <div class="text-item-preview-bottom flex flex-column mt-3">
@@ -364,6 +364,23 @@
                             <div class="flex flex-column">
                                 <a class="font-bold text-red-800 " [href]="bibliography.activeBook.url" target="_blank">{{bibliography.activeBook.url}}</a>
 
+                            </div>
+                            
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="flex grid data-list pt-3" *ngIf="bibliography.activeBook.key != undefined && bibliography.activeBook.key != ''">
+                    <div class="flex col-2 justify-content-end">
+                        <span class="font-bold text-right">Link to Zotero:</span>
+                    </div>
+                    <div class="flex flex-row col-10">
+
+                        <div class="flex flex-column" >
+
+                            <div class="flex flex-column">
+                                <a class="font-bold text-red-800 " [href]="'https://www.zotero.org/groups/2552746/itant_project/items/'+bibliography.activeBook.key+'/library'" target="_blank">{{'https://www.zotero.org/groups/2552746/itant_project/items/'+bibliography.activeBook.key+'/library'}}</a>
                             </div>
                             
                         </div>

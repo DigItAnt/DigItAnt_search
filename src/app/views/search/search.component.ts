@@ -222,7 +222,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     ) 
   )
 
-  groupAlphabet: Observable<AlphabetCounter[]> = this.textService.getUniqueMetadata('_doc__alphabet').pipe(
+  groupAlphabet: Observable<AlphabetCounter[]> = this.textService.getUniqueMetadata('_doc__writingSystem').pipe(
     catchError(err =>
       iif(
         () => err,
@@ -394,6 +394,8 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
       result = false;
     }
 
+    
+
     if (!shouldStartQuery && !result) {
       console.log("Nessun controllo è stato toccato e modificato. Interrompendo la query.");
       return;
@@ -417,7 +419,6 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
       }),
       map(texts => texts.slice(this.first, this.rows))
     )
-    console.log(this.advancedSearchForm.value)
     
   }
 
@@ -480,7 +481,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   }
 
   clearLocation(){
-    this.advancedSearchForm.get('ancientName')?.setValue(null, {emitEvent: true})
+    this.advancedSearchForm.get('modernName')?.setValue(null, {emitEvent: true})
   }
 
   clearLexicalEntry(){
@@ -512,7 +513,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     this.advancedSearchForm.patchValue(this.initialFormValues);
     this.first = 0;
     this.rows = 8;
-    this.paginationItems = this.textService.paginationItems(this.first+1, this.rows).pipe(
+    this.paginationItems = this.textService.paginationItems(this.first, this.rows).pipe(
       tap(x => this.showSpinner =false),
       shareReplay(),
     );

@@ -69,6 +69,7 @@ import { NoSanitizePipe } from './pipes/no-sanitize/no-sanitize.pipe';
 import { HighlightModule, HIGHLIGHT_OPTIONS } from 'ngx-highlightjs';
 import { IsArrayPipe } from './views/concordances/isArrayPipe/is-array.pipe';
 import { LabelMappingPipe } from './pipes/language-pipe/language-pipe.pipe';
+import { TruncatePipe } from './pipes/truncate/truncate.pipe';
 
 
 @NgModule({
@@ -93,7 +94,8 @@ import { LabelMappingPipe } from './pipes/language-pipe/language-pipe.pipe';
     NoSanitizePipe,
     DynamicOverlayComponent,
     IsArrayPipe,
-    LabelMappingPipe
+    LabelMappingPipe,
+    TruncatePipe
   ],
   imports: [
     BrowserModule,
