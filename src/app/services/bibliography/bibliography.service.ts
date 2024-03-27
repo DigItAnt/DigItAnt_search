@@ -107,24 +107,27 @@ export class BibliographyService {
           }))
         ),
         // Ordina i libri in base all'autore rilevante
+        //TODO: filtra in base al primo autore
         map((books) => {
           books.sort((a, b) => {
-            const getRelevantAuthorName = (author: string) => {
-              return (
-                author
-                  .split('; ')
-                  .map((name) => name.trim())
-                  .find((name) => name.startsWith(letter)) || author
-              );
+            // Funzione per estrarre il cognome del primo autore e verificarne l'inizio con una lettera specificata
+            const getFirstRelevantAuthorSurname = (author: string, letter: string) => {
+              // Estrae il cognome del primo autore dell'elenco
+              const firstAuthorSurname = author.split(';')[0].trim().split(',')[0].trim().toLowerCase();
+        
+              // Se il cognome inizia per la lettera specificata, lo restituisce;
+              // altrimenti, restituisce un carattere che lo posizionerà alla fine dell'ordinamento
+              return firstAuthorSurname.startsWith(letter) ? firstAuthorSurname : '\uffff';
             };
-
-            const authorA = getRelevantAuthorName(a.author);
-            const authorB = getRelevantAuthorName(b.author);
-
+        
+            
+            const authorA = getFirstRelevantAuthorSurname(a.author, letter);
+            const authorB = getFirstRelevantAuthorSurname(b.author, letter);
+        
             return authorA.localeCompare(authorB);
           });
-
-          return books; // Assicurati di ritornare 'books' qui
+        
+          return books; // Ritorna la lista di libri ordinata
         })
       );
   }

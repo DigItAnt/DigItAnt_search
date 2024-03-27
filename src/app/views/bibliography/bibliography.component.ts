@@ -258,8 +258,8 @@ export class BibliographyComponent implements OnInit {
     takeUntil(this.destroy$),
     map((queryParams: Params) => queryParams as LexiconFilter),
     map((filter: LexiconFilter) => {
-      if (filter.letter) return 'lettera';
-      if (filter.book) return 'libro';
+      if (filter.letter) return 'letter';
+      if (filter.book) return 'book';
       return '';
     })
   );
@@ -276,7 +276,6 @@ export class BibliographyComponent implements OnInit {
 
   // Observable per ottenere le voci lessicali basate sulle attestazioni ottenute.
   getLexicalEntries: Observable<any> = this.getAttestations.pipe(
-    // TODO: CHECK
     filter(
       (anno) => anno != undefined && Array.isArray(anno) && anno.length > 0
     ), // Filtra le attestazioni valide

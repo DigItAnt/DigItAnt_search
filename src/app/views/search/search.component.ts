@@ -304,7 +304,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
         )
       ), // Filtra le lingue.
       map(
-        (lang) => lang.map((l: any) => ({ language: l.replace(/[\"]/g, '') })) // Mappa le lingue.
+        (lang) => lang.map((l: any) => ({ language: l.replace(/[\"\[\]]/g, '') })) // Mappa le lingue.
       )
     );
 
@@ -334,7 +334,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
       // Mappa i tipi di oggetti in un formato specifico per il conteggio
       map((objectTypes) =>
         objectTypes.map((obj: any) => ({
-          objectType: obj.replace(/[\"]/g, ''),
+          objectType: obj.replace(/[\"\[\]]/g, ''),
         }))
       )
     );
@@ -347,7 +347,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$),
       // Mappa i materiali in un formato specifico per il conteggio
       map((materials) =>
-        materials.map((mat: any) => ({ material: mat.replace(/[\"]/g, '') }))
+        materials.map((mat: any) => ({ material: mat.replace(/[\"\[\]]/g, '') }))
       )
     );
 
@@ -360,7 +360,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
       // Filtra i testi vuoti e mappa il ductus in un formato specifico per il conteggio
       map((texts) => texts.filter((text: any) => text && text.trim() !== '')),
       map((materials) =>
-        materials.map((mat: any) => ({ ductus: mat.replace(/[\"]/g, '') }))
+        materials.map((mat: any) => ({ ductus: mat.replace(/[\"\[\]]/g, '') }))
       )
     );
 
@@ -369,6 +369,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
     this.textService.getUniqueMetadata('_doc__wordDivisionType').pipe(
       catchError((err) => iif(() => err, this.thereWasAnError(), of([]))),
       takeUntil(this.destroy$),
+      map((materials) => materials.filter((mat:any) => mat && mat.replace(/[\"]/g, '') !== "")),
       // Mappa il tipo di divisione delle parole in un formato specifico per il conteggio
       map((materials) =>
         materials.map((mat: any) => ({ type: mat.replace(/[\"]/g, '') }))

@@ -171,7 +171,7 @@
                 <h2 class="flex-1 loading" *ngIf="!bibliography.totalRecords && !somethingWrong && bibliography.totalRecords != 0">Loading <span>.</span><span>.</span><span>.</span>
                 </h2>
                 <h2 class="flex-1" *ngIf="somethingWrong">Ops!</h2>
-                <h2 class="flex-1" *ngIf="bibliography.totalRecords && bibliography.totalRecords != 0 && !somethingWrong"><span class="red">{{bibliography.totalRecords}} </span>books found
+                <h2 class="flex-1" *ngIf="bibliography.totalRecords && bibliography.totalRecords != 0 && !somethingWrong && !bibliography.activeBook"><span class="red">{{bibliography.totalRecords}} </span>books found
                 </h2>
             </div>
     
@@ -180,7 +180,7 @@
 
         <!-- BIBLIO LIST -->
         <div class="flex flex-row flex-wrap flex-auto bibliography-item-container ml-2 p-3"
-            *ngIf="(bibliography.bookOrLetter == '' || bibliography.bookOrLetter != 'book')">
+            *ngIf="!bibliography.activeBook">
             
             <div class="flex flex-row m-2 w-full" *ngIf="showSpinner"> <!--  -->
                 <p-progressSpinner class="flex flex-1"></p-progressSpinner>

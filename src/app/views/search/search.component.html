@@ -167,7 +167,7 @@
                 <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">Object Type:</span>
                     <div class="flex pt-3">
-                        <p-dropdown [appendTo]="'body'" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupObjectTypes) || []" formControlName="objectType"
+                        <p-dropdown [filter]="true" filterBy="objectType" [appendTo]="'body'" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupObjectTypes) || []" formControlName="objectType"
                             optionValue="objectType" optionLabel="objectType" placeholder="Select object type...">
                             <ng-template let-objectType pTemplate="item">
                                 <div class="language-item">
@@ -181,7 +181,7 @@
                 <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">Inscription Type:</span>
                     <div class="flex pt-3">
-                        <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupType) || []" formControlName="inscriptionType"
+                        <p-dropdown [filter]="true" filterBy="inscriptionType" appendTo="body" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupType) || []" formControlName="inscriptionType"
                             optionValue="inscriptionType" optionLabel="inscriptionType" placeholder="Select inscription type...">
                             <ng-template let-inscriptionType pTemplate="item">
                                 <div class="language-item">
@@ -193,23 +193,9 @@
                 </div>
 
                 <div class="pt-3 flex flex-column">
-                    <span class="text-sm font-medium">Object Type:</span>
-                    <div class="flex pt-3">
-                        <p-dropdown [appendTo]="'body'" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupObjectTypes) || []" formControlName="objectType"
-                            optionValue="objectType" optionLabel="objectType" placeholder="Select object type...">
-                            <ng-template let-objectType pTemplate="item">
-                                <div class="language-item">
-                                    <span class="counter">{{objectType.objectType}} </span>
-                                </div>
-                            </ng-template>
-                        </p-dropdown>
-                    </div>
-                </div>
-
-                <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">Material:</span>
                     <div class="flex pt-3">
-                        <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupMaterial) || []" formControlName="material"
+                        <p-dropdown  [filter]="true" filterBy="material" appendTo="body" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupMaterial) || []" formControlName="material"
                             optionValue="material" optionLabel="material" placeholder="Select material...">
                             <ng-template let-materials pTemplate="item">
                                 <div class="language-item">
@@ -237,7 +223,7 @@
                 <div class="pt-3 flex flex-column">
                     <span class="text-sm font-medium">Word division type:</span>
                     <div class="flex pt-3">
-                        <p-dropdown appendTo="body" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupWordDivisionType) || []" formControlName="wordDivisionType"
+                        <p-dropdown [filter]="true" filterBy="type" appendTo="body" [showClear]="true" class="flex-auto" [options]="(advancedSearch.groupWordDivisionType) || []" formControlName="wordDivisionType"
                             optionValue="type" optionLabel="type" placeholder="Select word division type...">
                             <ng-template let-item pTemplate="item">
                                 <div class="word-type-item">
