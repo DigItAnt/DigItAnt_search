@@ -12,13 +12,6 @@
         activeFile : activeFile | async,
         geoData: geoData | async } as text">
 
-       <!--  
-        ,
-        
-        
-        ,
-         -->
-
         <div id="left-bar" class="flex flex-column">
             <p-tabView *ngIf="!text.activeFile" class="normal-tabview"(onChange)="onChangeTabView($event)" >
         
@@ -481,7 +474,7 @@
                                 <i class="fas fa-spinner fa-pulse"></i>
                             </div>
                             <div class="flex flex-column align-items-center" *ngIf="textView.file">
-                                <h2 class="font-bold">{{textView.file?.itAnt_ID}}</h2>
+                                <h2 class="font-bold">{{textView.file.itAnt_ID}}</h2>
                                 <h3 class="font-italic font-normal">{{textView.file.inscriptionTitle != '' ? textView.file.inscriptionTitle : textView.file.title}}</h3>
                             </div>
                         </div>
@@ -628,8 +621,9 @@
                                 <div class="flex col-3 justify-content-end">
                                     <span class="font-bold text-right">Inscription type:</span>
                                 </div>
-                                <div class="flex flex-row col-9">
-                                    <a class="font-bold text-red-800 " [href]="textView.inscriptionType.url" target="_blank">{{textView.inscriptionType.term}}</a>
+                                <div class="flex flex-column col-9">
+                                    <a *ngFor="let item of textView.inscriptionType" class="font-bold text-red-800 " [href]="item.url" target="_blank">{{item.term}}</a>
+                                    
                                     <!-- <span class="font-normal" *ngIf="textView.inscriptionType">{{textView.inscriptionType}}</span> -->
                                     
                                 </div>
@@ -1169,60 +1163,62 @@
 
                                         <span *ngIf="book.type == 'book'">
                                             
-                                            <span class="font-normal text-red-800 text-900 " *ngIf="book.author != undefined">{{book.author.surname}} {{book.author.name}},</span>
-                                            <span class="font-normal text-900 text-red-800 " *ngIf="book.editor != undefined && book.author == undefined">{{book.editor.surname}} {{book.editor.name}},</span>
+                                            <span class="font-normal text-red-800 text-900 " *ngIf="book.author != undefined">{{book.author.surname}} {{book.author.name}}, </span>
+                                            <span class="font-normal text-900 text-red-800 " *ngIf="book.editor != undefined && book.author == undefined">{{book.editor.surname}} {{book.editor.name}}, </span>
                                             
-                                            <span class="font-italic text-900" *ngIf="book.title != undefined && book.title != ''">{{book.title}},</span>
-                                            <span class="font-normal text-900 " *ngIf="book.publisher != undefined && book.publisher != ''">{{book.publisher}},</span>
-                                            <span class="font-normal text-900 " *ngIf="book.date != undefined && book.date != ''">{{book.date}},</span>
-                                            <span class="font-normal text-900 " *ngIf="book.citedRangeEntry != undefined && book.citedRangeEntry != ''">{{book.citedRangeEntry}},</span>
+                                            <span class="font-italic text-900" *ngIf="book.title != undefined && book.title != ''">{{book.title}}, </span>
+                                            <span class="font-normal text-900 " *ngIf="book.place != undefined && book.place != ''">{{book.place}}, </span>
+                                            <span class="font-normal text-900 " *ngIf="book.publisher != undefined && book.publisher != ''">{{book.publisher}}, </span>
+                                            <span class="font-normal text-900 " *ngIf="book.date != undefined && book.date != ''">{{book.date}}, </span>
+                                            <span class="font-normal text-900 " *ngIf="book.citedRangeEntry != undefined && book.citedRangeEntry != ''">no. {{book.citedRangeEntry}}, </span>
 
                                         </span>
 
                                         <span *ngIf="book.type == 'bookSection'">
                                             
-                                            <span class="font-normal text-red-800 text-900 " *ngIf="book.author != undefined">{{book.author.surname}} {{book.author.name}},</span>                                            
-                                            <span class="font-italic text-900" *ngIf="book.title != undefined && book.title != ''">{{book.title}},</span>
-                                            <span class="font-normal text-900 text-red-800 " *ngIf="book.editor != undefined">edited by {{book.editor.name}} {{book.editor.surname}},</span>
-                                            <span class="font-normal text-900 " *ngIf="book.page != undefined && book.page != ''">pag. {{book.page}},</span>
+                                            <span class="font-normal text-red-800 text-900 " *ngIf="book.author != undefined">{{book.author.surname}} {{book.author.name}}, </span>                                            
+                                            <span class="font-italic text-900" *ngIf="book.title != undefined && book.title != ''">{{book.title}}, </span>
+                                            <span class="font-normal text-900 text-red-800 " *ngIf="book.editor != undefined">edited by {{book.editor.name}} {{book.editor.surname}}, </span>
+                                            <span class="font-normal text-900 " *ngIf="book.page != undefined && book.page != ''">pag. {{book.page}}, </span>
 
-                                            <span class="font-normal text-900 " *ngIf="book.publisher != undefined && book.publisher != ''">{{book.publisher}},</span>
-                                            <span class="font-normal text-900 " *ngIf="book.date != undefined && book.date != ''">{{book.date}},</span>
-                                            <span class="font-normal text-900 " *ngIf="book.citedRangeEntry != undefined && book.citedRangeEntry != ''">{{book.citedRangeEntry}}</span>
+                                            <span class="font-normal text-900 " *ngIf="book.publisher != undefined && book.publisher != ''">{{book.publisher}}, </span>
+                                            <span class="font-normal text-900 " *ngIf="book.date != undefined && book.date != ''">{{book.date}}, </span>
+                                            <span class="font-normal text-900 " *ngIf="book.citedRangeEntry != undefined && book.citedRangeEntry != ''">no. {{book.citedRangeEntry}} </span>
 
                                         </span>
 
                                         <span *ngIf="book.type == 'journalArticle'">
                                             
-                                            <span class="font-normal text-red-800 text-900 " *ngIf="book.author != undefined">{{book.author.surname}} {{book.author.name}},</span>
-                                            <span class="font-normal text-900" *ngIf="book.journalArticleTitle != undefined && book.journalArticleTitle != ''">"{{book.journalArticleTitle}}",</span>
+                                            <span class="font-normal text-red-800 text-900 " *ngIf="book.author != undefined">{{book.author.surname}} {{book.author.name}}, </span>
+                                            <span class="font-normal text-900" *ngIf="book.journalArticleTitle != undefined && book.journalArticleTitle != ''">"{{book.journalArticleTitle}}", </span>
 
-                                            <span class="font-normal text-900" *ngIf="book.title != undefined && book.title != ''">{{book.title}},</span>
-                                            
-                                            <span class="font-normal text-900 text-red-800 " *ngIf="book.editor != undefined">edited by {{book.editor.name}} {{book.editor.surname}},</span>
-                                            <span class="font-normal text-900 " *ngIf="book.page != undefined && book.page != ''">pag. {{book.page}},</span>
+                                            <span class="font-italic text-900" *ngIf="book.title != undefined && book.title != ''">{{book.title}}, </span>
+                                            <span class="font-normal text-900" *ngIf="book.volume != undefined && book.volume != ''">{{book.volume}}, </span>
+                                            <span class="font-normal text-900" *ngIf="book.issue != undefined && book.issue != ''">no. {{book.issue}} </span>
+                                            <span class="font-normal text-900 text-red-800 " *ngIf="book.editor != undefined">edited by {{book.editor.name}} {{book.editor.surname}}, </span>
+                                            <span class="font-normal text-900 " *ngIf="book.page != undefined && book.page != ''">: {{book.page}}, </span>
 
                                             
-                                            <span class="font-normal text-900 " *ngIf="book.date != undefined && book.date != ''">{{book.date}},</span>
-                                            <span class="font-normal text-900 " *ngIf="book.citedRangePage != undefined && book.citedRangePage != ''">{{book.citedRangePage}},</span>
+                                            <span class="font-normal text-900 " *ngIf="book.date != undefined && book.date != ''">{{book.date}}, </span>
+                                            <span class="font-normal text-900 " *ngIf="book.citedRangePage != undefined && book.citedRangePage != ''">p. {{book.citedRangePage}} </span>
 
                                         </span>
 
                                         <span *ngIf="book.type == 'article'">
                                             
-                                            <span class="font-normal text-red-800 text-900 " *ngIf="book.author != undefined">{{book.author.surname}} {{book.author.name}},</span>
-                                            <span class="font-normal text-900" *ngIf="book.journalArticleTitle != undefined && book.journalArticleTitle != ''">"{{book.journalArticleTitle}}",</span>
+                                            <span class="font-normal text-red-800 text-900 " *ngIf="book.author != undefined">{{book.author.surname}} {{book.author.name}}, </span>
+                                            <span class="font-normal text-900" *ngIf="book.journalArticleTitle != undefined && book.journalArticleTitle != ''">"{{book.journalArticleTitle}}", </span>
 
-                                            <span class="font-normal text-900" *ngIf="book.title != undefined && book.title != ''">{{book.title}},</span>
+                                            <span class="font-normal text-900" *ngIf="book.title != undefined && book.title != ''">{{book.title}}, </span>
                                             
                                             <!-- <span class="font-normal text-900 text-red-800 " *ngIf="book.editor != undefined">edited by {{book.editor.name}} {{book.editor.surname}},</span> -->
-                                            <span class="font-normal text-900 " *ngIf="book.issue != undefined && book.issue != ''">issue {{book.issue}},</span>
-                                            <span class="font-normal text-900 " *ngIf="book.date != undefined && book.date != ''">({{book.date}}),</span>
+                                            <span class="font-normal text-900 " *ngIf="book.issue != undefined && book.issue != ''">issue {{book.issue}}, </span>
+                                            <span class="font-normal text-900 " *ngIf="book.date != undefined && book.date != ''">({{book.date}}), </span>
 
-                                            <span class="font-normal text-900 " *ngIf="book.page != undefined && book.page != ''">pag. {{book.page}}</span>
+                                            <span class="font-normal text-900 " *ngIf="book.page != undefined && book.page != ''">pag. {{book.page}}, </span>
                                             
-                                            <span class="font-normal text-900 " *ngIf="book.citedRangeEntry != undefined && book.citedRangeEntry != ''">{{book.citedRangeEntry}},</span>
-                                            <span class="font-normal text-900 " *ngIf="book.citedRangePage != undefined && book.citedRangePage != ''">{{book.citedRangePage}},</span>
+                                            <span class="font-normal text-900 " *ngIf="book.citedRangeEntry != undefined && book.citedRangeEntry != ''">no. {{book.citedRangeEntry}}, </span>
+                                            <span class="font-normal text-900 " *ngIf="book.citedRangePage != undefined && book.citedRangePage != ''">p. {{book.citedRangePage}}, </span>
 
                                         </span>
 

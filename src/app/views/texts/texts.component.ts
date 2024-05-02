@@ -250,7 +250,8 @@ export class TextsComponent implements OnInit {
       // Ritorna il file dal filtro, se presente, altrimenti una stringa vuota
       if (filter.file) return filter.file;
       return '';
-    })
+    }),
+    tap(x=> console.log(x))
   );
 
   // Definisce un Observable per tenere traccia del numero totale di record
@@ -260,7 +261,7 @@ export class TextsComponent implements OnInit {
 
   // Definisce un Observable per gli elementi di paginazione
   paginationItems: Observable<TextMetadata[]> = this.textService
-    .paginationItems()
+    .texts$
     .pipe(
       tap((x) => (this.showSpinner = true)), // Mostra lo spinner di caricamento
       catchError((err) =>
@@ -317,7 +318,7 @@ export class TextsComponent implements OnInit {
         )
       ), // Esclude le lingue 'Ital-x'
       map(
-        (lang) => lang.map((l: any) => ({ language: l.replace(/[\"]/g, '') })) // Rimuove le virgolette dalle stringhe
+        (lang) => lang.map((l: any) => ({ language: l.replace(/[\"\[\]]/g, '') })) // Rimuove le virgolette dalle stringhe
       )
     );
 
@@ -333,7 +334,7 @@ export class TextsComponent implements OnInit {
         )
       ),
       takeUntil(this.destroy$), // Completa l'Observable quando destroy$ emette un valore
-      map((alphabets) => alphabets.map((alpha: any) => ({ alphabet: alpha }))) // Mappa gli alfabeti
+      map((alphabets) => alphabets.map((alpha: any) => ({ alphabet: alpha }))),
     );
 
   // Observable che raggruppa i tipi di oggetti
@@ -350,7 +351,7 @@ export class TextsComponent implements OnInit {
       takeUntil(this.destroy$), // Completa l'Observable quando destroy$ emette un valore
       map((objectTypes) =>
         objectTypes.map((obj: any) => ({
-          objectType: obj.replace(/[\"]/g, ''),
+          objectType: obj.replace(/[\"\[\]]/g, ''),
         }))
       ) // Rimuove le virgolette dalle stringhe
     );
@@ -368,7 +369,7 @@ export class TextsComponent implements OnInit {
       ),
       takeUntil(this.destroy$), // Completa l'Observable quando destroy$ emette un valore
       map((materials) =>
-        materials.map((mat: any) => ({ material: mat.replace(/[\"]/g, '') }))
+        materials.map((mat: any) => ({ material: mat.replace(/[\"\[\]]/g, '') }))
       ) // Rimuove le virgolette dalle stringhe
     );
 
@@ -1402,7 +1403,7 @@ export class TextsComponent implements OnInit {
     geoData.forEach((geoPlaceData) => {
       // Imposta il raggio di base e i metri per attestazione.
       const RADIUS = 2000;
-      const METERS_PER_ATT = 100;
+      const METERS_PER_ATT = 10;
 
       // Calcola il numero totale di attestazioni per la località geografica corrente.
       const attestationsCount = geoPlaceData.attestations.files.length;

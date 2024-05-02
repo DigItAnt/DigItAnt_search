@@ -224,6 +224,7 @@ export function getBibliography(rawXml: string): Array<any> {
         let journalArticleTitle = Array.from(element.querySelectorAll('analytic title'))
         let author = Array.from(element.querySelectorAll('author'));
         let editor = Array.from(element.querySelectorAll('editor'));
+        let place = Array.from(element.querySelectorAll('pubPlace'))
         let publisher = Array.from(element.querySelectorAll('publisher'))
         let url = element.attributes.getNamedItem('corresp');
         let date = Array.from(element.querySelectorAll('date'));
@@ -295,6 +296,12 @@ export function getBibliography(rawXml: string): Array<any> {
         if (page.length > 0) {
             page.forEach(p => {
                 book_obj.page = p.innerHTML;
+            })
+        }
+
+        if (place.length > 0) {
+            place.forEach(p => {
+                book_obj.place = p.innerHTML;
             })
         }
 
@@ -515,20 +522,32 @@ export function getCommentaryXml(rawHTML: string, renderer: Renderer2): any {
 export function getInscriptionType(xml : string) : any {
     if (Array.from(new DOMParser().parseFromString(xml, "text/xml").querySelectorAll('textClass')).length != 0) {
         let inscriptionType = new DOMParser().parseFromString(xml, "text/xml").querySelectorAll('textClass')[0];
-        const termNode = inscriptionType.querySelector('term');
+        const termNodes = inscriptionType.querySelectorAll('term');
         
+        let termsArray : any[] = [];
+        /* TODO: fix here */
+        if (termNodes.length > 0) {
+            termNodes.forEach(termNode => {
+                const term = termNode.textContent;
+                const url = termNode.getAttribute('ref');
 
-        if (termNode) {
-            const term = termNode.textContent;
-            const url = termNode.getAttribute('ref');
+                let obj = {
+                    term: term,
+                    url: url
+                }
+
+                termsArray.push(obj)
+            })
+            
 
             // Costruisce e ritorna l'oggetto JSON
-            if (term && url) {
+            /* if (term && url) {
                 return {
                     term: term,
                     url: url
                 };
-            }
+            } */
+            return termsArray;
         }
 
         // Ritorna null se non può estrare il termine e l'URL

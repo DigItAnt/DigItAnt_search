@@ -266,6 +266,7 @@ export interface BibliographicElement {
   issue: string;
   key: string;
   page: string;
+  place: string;
   publisher: string;
   citedRangePage: string;
   citedRangeEntry: string;
@@ -305,6 +306,12 @@ export class TextsService {
     this.attestationsSubject.asObservable();
   concordances$: Observable<TextMetadata[]> = this.bootstrapConcordances();
   somethingWrong: boolean = false;
+
+
+  texts$: Observable<TextMetadata[]> = this.paginationItems().pipe(
+    map((texts) => texts),
+    shareReplay()
+  );
 
   constructor(
     private http: HttpClient,
@@ -579,7 +586,7 @@ export class TextsService {
         const headers = new HttpHeaders({
           'Content-Type': 'application/x-www-form-urlencoded',
         });
-        const cqlQuery = `[_doc__originalPlace__modernNameUrl="${place.modernUri}"]`;
+        const cqlQuery = `[_doc.originalPlace.modernNameUrl="${place.modernUri}"]`;
         let params = new HttpParams()
           .set('query', cqlQuery)
           .set('offset', '0')
