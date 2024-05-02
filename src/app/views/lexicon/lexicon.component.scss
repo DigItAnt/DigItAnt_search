@@ -9,3 +9,13 @@
 .attestation:hover {
     text-decoration: underline;
 }
+
+.fill-space{
+    flex: 1 1 auto;
+    overflow: auto;
+    height: 100px;
+}
+
+.hide {
+    display: none !important;
+}

@@ -30,6 +30,7 @@ import {
 } from 'rxjs';
 import {
   CognateElement,
+  ConceptElement,
   EtymologyElement,
   EtymologyTreeElement,
   FormElement,
@@ -99,6 +100,11 @@ export class LexiconComponent implements OnInit {
   //RXJS
   destroy$: Subject<boolean> = new Subject<boolean>();
   loadNode$: BehaviorSubject<TreeEvent> = new BehaviorSubject<TreeEvent>({
+    node: {},
+    originalEvent: new PointerEvent(''),
+  });
+
+  loadSkosNode$: BehaviorSubject<TreeEvent> = new BehaviorSubject<TreeEvent>({
     node: {},
     originalEvent: new PointerEvent(''),
   });
@@ -177,8 +183,8 @@ export class LexiconComponent implements OnInit {
     takeUntil(this.destroy$),
     map((queryParams: Params) => queryParams as LexiconFilter),
     map((filter: LexiconFilter) => {
-      if (filter.letter) return 'lettera';
-      if (filter.word) return 'parola';
+      if (filter.letter) return 'letter';
+      if (filter.word) return 'word';
       return '';
     })
   );
@@ -229,6 +235,11 @@ export class LexiconComponent implements OnInit {
     tap((x) => (this.treeLoading = false))
   );
 
+  skosTree: Observable<TreeNode[]> = this.lexiconService.concepts$.pipe(
+    map((concepts) => this.mapSkosElement(concepts)),
+    tap((x) => (this.treeLoading = false))
+  );
+
   // Ottieni i figli di un nodo dell'albero lessicale
   getChildren: Observable<TreeNode[]> = this.loadNode$.pipe(
     filter((event) => Object.keys(event.node).length > 0),
@@ -240,11 +251,21 @@ export class LexiconComponent implements OnInit {
     )
   );
 
+  getSkosChildren: Observable<TreeNode[]> = this.loadSkosNode$.pipe(
+    filter((event) => Object.keys(event.node).length > 0),
+    switchMap((event) =>
+      this.lexiconService.getNarrowers(event.node.data.lexicalConcept).pipe(
+        map((forms) => this.mapSkosElement(forms)),
+        map((formsNodes) => (event.node.children = formsNodes))
+      )
+    )
+  )
+
   // Form per il filtraggio della lista lessicale
   filterForm: FormGroup = new FormGroup({
     text: new FormControl(null),
-    searchMode: new FormControl('contiene'),
-    type: new FormControl('parola'),
+    searchMode: new FormControl('contains'),
+    type: new FormControl('word'),
     pos: new FormControl(null),
     formType: new FormControl(null),
     author: new FormControl(null),
@@ -254,12 +275,16 @@ export class LexiconComponent implements OnInit {
     limit: new FormControl(500),
   });
 
+  skosForm: FormGroup = new FormGroup({
+    text : new FormControl(null)
+  })
+
   // Opzioni di modalità di ricerca
   searchModeOptions: Array<object> = [
-    { label: 'Uguale', value: 'uguale' },
-    { label: 'Inizia con', value: 'iniziaCon' },
-    { label: 'Contiene', value: 'contiene' },
-    { label: 'Finisce con', value: 'finisceCon' },
+    { label: 'Equal', value: 'equals' },
+    { label: 'Starts with', value: 'startsWith' },
+    { label: 'Contains', value: 'contains' },
+    { label: 'End with', value: 'endsWith' },
   ];
 
   // Opzioni di tipo di modulo
@@ -477,6 +502,11 @@ export class LexiconComponent implements OnInit {
     tap((results) => console.log(results))
   );
 
+  treeViewOpt : any[] = [{name : 'lexicalEntry'}, {name: 'lexicalConcept'}];
+  treeViewSelected: any = {name: 'lexicalEntry'}
+
+  tabViewIndex : number = 1;
+
   constructor(
     private route: Router,
     private activatedRoute: ActivatedRoute,
@@ -562,9 +592,10 @@ export class LexiconComponent implements OnInit {
       });
   }
 
+
+
   // Funzione che gestisce la selezione di un nodo nell'albero
   nodeSelect(event: TreeEvent) {
-    console.log(event);
 
     let node: TreeNode = event.node; // Otteniamo il nodo selezionato dall'evento
     let lexicalInstanceName: string = ''; // Nome dell'istanza lessicale
@@ -589,6 +620,14 @@ export class LexiconComponent implements OnInit {
         queryParams: { word: lexicalInstanceName, form: form },
       });
     }
+
+    if(node.data.lexicalConcept !== undefined){
+      lexicalInstanceName = node.data.lexicalConcept;
+      
+      this.route.navigate(['/lexicon'], {
+        queryParams: { filter: 'concept'}
+      })
+    }
   }
 
   // Funzione per mappare gli elementi lessicali in nodi dell'albero
@@ -598,6 +637,17 @@ export class LexiconComponent implements OnInit {
       data: lexEl, // Dati associati al nodo
       children: [], // Lista dei figli del nodo (vuota perché non è ancora stata popolata)
       leaf: !lexEl.hasChildren, // Indica se il nodo è una foglia (non ha figli)
+      draggable: false, // Indica se il nodo può essere trascinato
+      droppable: false, // Indica se il nodo può essere usato come destinazione per il trascinamento di altri nodi
+    }));
+  }
+
+  mapSkosElement(concept : ConceptElement[]) : TreeNode[] {
+    return concept.map((lexEl: ConceptElement) => ({
+      label: lexEl.defaultLabel, // Etichetta del nodo
+      data: lexEl, // Dati associati al nodo
+      children: [], // Lista dei figli del nodo (vuota perché non è ancora stata popolata)
+      leaf: lexEl.children == 0, // Indica se il nodo è una foglia (non ha figli)
       draggable: false, // Indica se il nodo può essere trascinato
       droppable: false, // Indica se il nodo può essere usato come destinazione per il trascinamento di altri nodi
     }));

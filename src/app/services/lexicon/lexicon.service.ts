@@ -29,6 +29,11 @@ export interface LexicalElement {
   type: Array<string>;
 }
 
+export interface ConceptElement {
+  defaultLabel:string;
+  children:number;
+}
+
 export interface FormElementTree {
   confidence: number;
   creator: string;
@@ -154,6 +159,11 @@ export interface LexiconList {
   totalHits: number;
 }
 
+export interface ConceptList {
+  list: ConceptElement[];
+  totalHits: number;
+}
+
 export interface LexiconQueryFilter {
   text: string;
   searchMode: string;
@@ -192,6 +202,11 @@ export class LexiconService {
     shareReplay()
   );
 
+  concepts$: Observable<ConceptElement[]> = this.getRootConcepts().pipe(
+    map((concepts) => concepts),
+    shareReplay()
+  )
+
   types$: Observable<StatisticsCounter[]> = this.getTypes().pipe(
     map((types) => types),
     shareReplay()
@@ -225,6 +240,14 @@ export class LexiconService {
   ): Observable<LexicalElement[]> {
     return this.http
       .post<LexiconList>(this.baseUrl + 'lexicon/data/lexicalEntries', params)
+      .pipe(
+        map((res) => res.list),
+        shareReplay()
+      );
+  }
+
+  getRootConcepts(): Observable<ConceptElement[]> {
+    return this.http.get<ConceptList>(this.baseUrl + 'lexicon/data/lexicalConcepts?id=root')
       .pipe(
         map((res) => res.list),
         shareReplay()
@@ -301,6 +324,20 @@ export class LexiconService {
       )
       .pipe(
         map((res) => res),
+        shareReplay()
+      );
+  }
+
+
+  getNarrowers(instanceName : string) : Observable<ConceptElement[]>{
+    return this.http
+      .get<ConceptList>(
+        `${this.baseUrl}lexicon/data/lexicalConcepts?id=${encodeURIComponent(
+          instanceName
+        )}`
+      )
+      .pipe(
+        map((res) => res.list),
         shareReplay()
       );
   }
