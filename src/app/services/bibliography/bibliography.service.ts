@@ -94,6 +94,7 @@ export class BibliographyService {
           books.map((book) => ({
             abstractNote: book.params['Abstract Note']?.join('; ') || '',
             author: book.params['Author']?.join('; ') || '',
+            date: book.params['Date']?.join('; ') || '',
             editor: book.params['Editor']?.join('; ') || '',
             isbn: book.params['ISBN']?.join('; ') || '',
             itemType: book.params['Item Type']?.join('; ') || '',

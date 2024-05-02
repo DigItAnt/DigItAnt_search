@@ -175,3 +175,37 @@
         color: $blue;
     }
 }
+
+.biblio-item{
+    padding: 0 1rem;
+    border: 5px solid transparent;
+   /*  background: $light-gray; */
+    cursor: pointer;
+    flex: 0 0 2rem;
+    /* font-size: 0.85rem; */
+    word-break: break-all;
+}
+
+.itant-color{
+
+    color: #324760 !important
+}
+
+.biblio-item:hover{
+    border: 5px solid;
+    border-color: $blue;
+}
+
+.shrink-0{
+    flex-shrink: 0;
+}
+
+.shrink-max {
+    flex-shrink: 50;
+}
+
+.filter-text{
+    position: sticky;
+    top: -1px;
+    background: white;
+}

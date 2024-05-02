@@ -7,6 +7,7 @@ import { Paginator } from 'primeng/paginator';
 import {
   BehaviorSubject,
   catchError,
+  combineLatest,
   debounceTime,
   delay,
   EMPTY,
@@ -14,6 +15,7 @@ import {
   forkJoin,
   iif,
   map,
+  merge,
   Observable,
   of,
   Subject,
@@ -109,10 +111,10 @@ export class BibliographyComponent implements OnInit {
     'z',
   ];
 
-  lexiconTree: Observable<TreeNode[]> = this.lexiconService.lexicon$.pipe(
+  /* lexiconTree: Observable<TreeNode[]> = this.lexiconService.lexicon$.pipe(
     map((lexicon) => this.mapLexicalElement(lexicon)),
     tap((x) => (this.treeLoading = false))
-  );
+  ); */
 
   selectedFile: any = undefined;
   minDate: Date = new Date();
@@ -120,17 +122,16 @@ export class BibliographyComponent implements OnInit {
   showSpinner: boolean = false;
 
   // Questa funzione mappa gli elementi lessicali in nodi dell'albero
-  mapLexicalElement(lexicon: LexicalElement[]): TreeNode[] {
+  /* mapLexicalElement(lexicon: LexicalElement[]): TreeNode[] {
     return lexicon.map((lexEl: LexicalElement) => ({
       label: lexEl.label,
       data: lexEl,
       children: [],
-      // Un nodo foglia se non ha figli
       leaf: !lexEl.hasChildren,
       draggable: false,
       droppable: false,
     }));
-  }
+  } */
 
   // Resetta le scelte lessicali
   resetLexicalChoices() {
@@ -353,6 +354,10 @@ export class BibliographyComponent implements OnInit {
     inscriptionId: new FormControl(null),
     word: new FormControl(null),
   });
+
+
+  filterText : string = '';
+  filterResults$ : BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -682,11 +687,48 @@ export class BibliographyComponent implements OnInit {
   }
 
   // Filtra gli elementi in base alla lettera specificata
-  filterByLetter(letter: string): void {
+  /* filterByLetter(letter: string): void {
     this.showSpinner = true;
     this.paginationItems = this.bibliographyService.filterByLetter(letter).pipe(
       tap((x) => (this.totalRecords = of(x.length))),
       tap((x) => (this.showSpinner = false))
+    );
+  } */
+  filterByLetter(letter: string): void {
+    this.showSpinner = true;
+    this.filterResults$.next(null);
+    this.filterText = '';
+    const filterByLetter$ = this.bibliographyService.filterByLetter(letter).pipe(
+      tap((x) => (this.totalRecords = of(x.length))),
+      tap((x) => (this.showSpinner = false))
+    );
+  
+    // Combinazione dei due Observable utilizzando merge
+    this.paginationItems = merge(
+      filterByLetter$,
+      this.filterAndSearchItems(letter)
+    );
+  }
+
+  filterAndSearchItems(letter:string): Observable<any> {
+    return combineLatest([
+      this.filterResults$,
+      this.bibliographyService.filterByLetter(letter) // Assicurati che paginationItems() restituisca un Observable<any[]>
+    ]).pipe(
+      debounceTime(1000),
+      map(([searchQuery, data]) => {
+        if (!searchQuery) {
+          return data;
+        } else {
+          const searchValue = searchQuery.target.value.toLowerCase();
+          return data.filter(item => {
+            const titleMatch = item.title.toLowerCase().includes(searchValue);
+            const authorMatch = item.author.toLowerCase().includes(searchValue);
+            const dateMatch = item.date.toLowerCase().includes(searchValue);
+            return titleMatch || authorMatch || dateMatch;
+          });
+        }
+      })
     );
   }
 }
