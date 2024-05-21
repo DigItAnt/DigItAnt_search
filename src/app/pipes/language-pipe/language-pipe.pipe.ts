@@ -8,6 +8,8 @@ export class LabelMappingPipe implements PipeTransform {
   private labelMappings: { [label: string]: string } = {
     osc: 'Oscan', // 'osc' viene mappato a 'Oscan'
     xfa: 'Faliscan', // 'xfa' viene mappato a 'Faliscan'
+    'grc-Grek': 'Greek',
+    lat: 'Latin'
   };
 
   // Funzione che trasforma un'etichetta abbreviata nella sua forma completa, se presente nella mappatura.

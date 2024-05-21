@@ -96,7 +96,7 @@ export interface TextMetadata {
   traditionalIDs: Array<TraditionalIDs> & TraditionalIDs;
   trismegistos: Trismegistos;
   wordDivisionType: string;
-  writingSystem: string;
+  writingSystem: any;
 }
 
 export interface ObjectDimension {
@@ -259,7 +259,7 @@ export interface Annotation {
 }
 
 export interface BibliographicElement {
-  author: BookAuthor;
+  author: BookAuthor[];
   date: string;
   editor: BookEditor;
   entry: string;
@@ -608,8 +608,8 @@ export class TextsService {
       return forkJoin(searchAttestationsObservables);
     }),
     // Condivisione dei risultati per evitare di ricalcolarli
-    shareReplay()
-    /* tap(data => this.drawMap(data)) */
+    shareReplay(),
+    tap(data => console.log(data))
   );
 
   // Metodo per ottenere i valori unici dei metadati tramite una richiesta HTTP.

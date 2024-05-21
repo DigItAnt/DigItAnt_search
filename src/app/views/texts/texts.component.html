@@ -427,9 +427,9 @@
                         </div>
         
                         <div class="flex flex-column text-item-preview p-2">
-        
+                            
                             <div class="text-item-preview-top">
-                                {{item.itAnt_ID}}
+                                {{item.inscriptionTitle != '' ? item.inscriptionTitle : item.itAnt_ID}}
                             </div>
         
                             <div class="text-item-preview-bottom flex flex-column mt-3">
@@ -589,7 +589,7 @@
                                     <div class="flex flex-column" *ngIf="textView.file.writingSystem != undefined">
 
                                         <div class="flex flex-column">
-                                            <a class="font-bold text-red-800 " [href]="textView.file.alphabet_url" target="_blank">{{textView.file.writingSystem}}</a>
+                                            <a class="font-bold text-red-800 " [href]="textView.file.writingSystem.alphabet_url" target="_blank">{{textView.file.writingSystem.type}}</a>
 
                                         </div>
                                         
@@ -1162,10 +1162,11 @@
                                         <!-- <span>{{book.type}}</span> -->
 
                                         <span *ngIf="book.type == 'book'">
-                                            
-                                            <span class="font-normal text-red-800 text-900 " *ngIf="book.author != undefined">{{book.author.surname}} {{book.author.name}}, </span>
-                                            <span class="font-normal text-900 text-red-800 " *ngIf="book.editor != undefined && book.author == undefined">{{book.editor.surname}} {{book.editor.name}}, </span>
-                                            
+
+                                            <span *ngIf="book.author != undefined && book.author.length > 0">
+                                                <span class="font-normal text-red-800 text-900 " *ngFor="let auth of book.author">{{auth.surname}} {{auth.name}}, </span>
+                                            </span> 
+                                            <span class="font-normal text-900 text-red-800 " *ngIf="book.editor != undefined && book.author.length == 0">{{book.editor.surname}} {{book.editor.name}}, </span>
                                             <span class="font-italic text-900" *ngIf="book.title != undefined && book.title != ''">{{book.title}}, </span>
                                             <span class="font-normal text-900 " *ngIf="book.place != undefined && book.place != ''">{{book.place}}, </span>
                                             <span class="font-normal text-900 " *ngIf="book.publisher != undefined && book.publisher != ''">{{book.publisher}}, </span>
@@ -1175,8 +1176,10 @@
                                         </span>
 
                                         <span *ngIf="book.type == 'bookSection'">
-                                            
-                                            <span class="font-normal text-red-800 text-900 " *ngIf="book.author != undefined">{{book.author.surname}} {{book.author.name}}, </span>                                            
+                                            <span *ngIf="book.author != undefined && book.author.length > 0">
+                                                <span class="font-normal text-red-800 text-900 " *ngFor="let auth of book.author">{{auth.surname}} {{auth.name}}, </span>
+                                            </span>                       
+                                            <span class="font-normal text-900 ">"{{book.journalArticleTitle}}", </span>                     
                                             <span class="font-italic text-900" *ngIf="book.title != undefined && book.title != ''">{{book.title}}, </span>
                                             <span class="font-normal text-900 text-red-800 " *ngIf="book.editor != undefined">edited by {{book.editor.name}} {{book.editor.surname}}, </span>
                                             <span class="font-normal text-900 " *ngIf="book.page != undefined && book.page != ''">pag. {{book.page}}, </span>
@@ -1189,7 +1192,9 @@
 
                                         <span *ngIf="book.type == 'journalArticle'">
                                             
-                                            <span class="font-normal text-red-800 text-900 " *ngIf="book.author != undefined">{{book.author.surname}} {{book.author.name}}, </span>
+                                            <span *ngIf="book.author != undefined && book.author.length > 0">
+                                                <span class="font-normal text-red-800 text-900 " *ngFor="let auth of book.author">{{auth.surname}} {{auth.name}}, </span>
+                                            </span>                                             
                                             <span class="font-normal text-900" *ngIf="book.journalArticleTitle != undefined && book.journalArticleTitle != ''">"{{book.journalArticleTitle}}", </span>
 
                                             <span class="font-italic text-900" *ngIf="book.title != undefined && book.title != ''">{{book.title}}, </span>
@@ -1206,7 +1211,9 @@
 
                                         <span *ngIf="book.type == 'article'">
                                             
-                                            <span class="font-normal text-red-800 text-900 " *ngIf="book.author != undefined">{{book.author.surname}} {{book.author.name}}, </span>
+                                            <span *ngIf="book.author != undefined && book.author.length > 0">
+                                                <span class="font-normal text-red-800 text-900 " *ngFor="let auth of book.author">{{auth.surname}} {{auth.name}}, </span>
+                                            </span>                                             
                                             <span class="font-normal text-900" *ngIf="book.journalArticleTitle != undefined && book.journalArticleTitle != ''">"{{book.journalArticleTitle}}", </span>
 
                                             <span class="font-normal text-900" *ngIf="book.title != undefined && book.title != ''">{{book.title}}, </span>

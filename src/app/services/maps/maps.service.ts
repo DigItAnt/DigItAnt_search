@@ -291,13 +291,13 @@ export class MapsService {
         (results: (GlobalGeoDataModel | null)[]) =>
           results.filter((element) => element !== null) as GlobalGeoDataModel[]
       ),
-      map((results: GlobalGeoDataModel[]) =>
+      /* map((results: GlobalGeoDataModel[]) =>
         results.filter(
           (element) =>
             !isNaN(element.modernBbox.north) &&
             !isNaN(element.reprPoint.latitude)
         )
-      )
+      ) */
     );
   }
 }

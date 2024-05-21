@@ -108,7 +108,6 @@ export class BibliographyService {
           }))
         ),
         // Ordina i libri in base all'autore rilevante
-        //TODO: filtra in base al primo autore
         map((books) => {
           books.sort((a, b) => {
             // Funzione per estrarre il cognome del primo autore e verificarne l'inizio con una lettera specificata

@@ -334,7 +334,10 @@ export class TextsComponent implements OnInit {
         )
       ),
       takeUntil(this.destroy$), // Completa l'Observable quando destroy$ emette un valore
-      map((alphabets) => alphabets.map((alpha: any) => ({ alphabet: alpha }))),
+      map((alphabets) => alphabets.map(
+        (alpha: any) => ({ 
+          alphabet: JSON.parse(alpha)['type'][0]
+        }))),
     );
 
   // Observable che raggruppa i tipi di oggetti
@@ -981,7 +984,7 @@ export class TextsComponent implements OnInit {
     }
 
     if (formData.title) {
-      queryParts.push(` _doc.title="${formData.title}.*"`);
+      queryParts.push(` _doc.inscriptionTitle="${formData.title}.*"`);
     }
 
     if (formData.id) {
@@ -990,7 +993,7 @@ export class TextsComponent implements OnInit {
 
     if (formData.otherId) {
       queryParts.push(
-        `_doc.traditionalIDs.traditionalID="${formData.otherId}.*"  |  _doc.trismegistos.trismegistosID="${formData.otherId}.*"`
+        ` (_doc.traditionalIDs.traditionalID=".*${formData.otherId}.*"  |  _doc.trismegistos.trismegistosID=".*${formData.otherId}.*")`
       );
     }
 
@@ -1029,7 +1032,7 @@ export class TextsComponent implements OnInit {
     }
 
     if (formData.alphabet) {
-      queryParts.push(`_doc.writingSystem=="${formData.alphabet}"`);
+      queryParts.push(`_doc.writingSystem.type=="${formData.alphabet}"`);
     }
 
     // Combina tutti i componenti della query in una stringa unica

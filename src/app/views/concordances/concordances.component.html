@@ -50,7 +50,9 @@
                 </ng-template>
                 <ng-template pTemplate="body" let-product>
                     <tr>
-                        <td style="max-width:200px">{{product.itAnt_ID}}</td>
+                        <td style="max-width:200px">                        
+                            <a class="flex no-underline text-item m-2" [href]="'/texts?file='+product.itAnt_ID" target="_blank" routerLink="/texts" [queryParams]="{file: product.itAnt_ID}">{{product.itAnt_ID}}</a>
+                        </td>
                         <td style="min-width:200px">{{product.inscriptionTitle != '' ? product.inscriptionTitle : product.title}}</td>
                         <td style="min-width:200px"> 
                             <a [href]="'//'+product.trismegistos.trismegistosID_url" target="_blank">{{product.trismegistos.trismegistosID}}</a>

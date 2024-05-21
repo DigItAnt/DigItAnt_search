@@ -237,18 +237,21 @@ export function getBibliography(rawXml: string): Array<any> {
         let citedRangePage = Array.from(element.querySelectorAll('citedRange[unit="page"]'));
         let citedRangeEntry = Array.from(element.querySelectorAll('citedRange[unit="entry"]'));
 
+
         if(type){
             book_obj.type = type
         }
-
+        book_obj.author = [];
         if (author.length > 0) {
             author.forEach(aut => {
                 let name = aut.querySelector('forename');
                 let surname = aut.querySelector('surname');
                 if (name != undefined && surname != undefined) {
-                    book_obj.author = {} as BookAuthor;
-                    book_obj.author.name = name.innerHTML;
-                    book_obj.author.surname = surname.innerHTML;
+                    let author = {} as BookAuthor;
+                    author.name = name.innerHTML;
+                    author.surname = surname.innerHTML;
+                    
+                    book_obj.author.push(author)
                     return true;
                 } else {
                     return false;
@@ -278,6 +281,13 @@ export function getBibliography(rawXml: string): Array<any> {
                 book_obj.title = t.innerHTML;
                 return true;
             })
+
+            /* if(type=='bookSection'){
+                journalArticleTitle.forEach(t => {
+                    book_obj.title += ' '+t.innerHTML;
+                    return true
+                })
+            } */
         }
 
         if (journalArticleTitle.length > 0) {
@@ -329,7 +339,7 @@ export function getBibliography(rawXml: string): Array<any> {
             })
         }
 
-        if (author.length > 0) {
+        /* if (author.length > 0) {
             author.forEach(aut => {
                 let name = aut.querySelector('forename');
                 let surname = aut.querySelector('surname');
@@ -359,7 +369,7 @@ export function getBibliography(rawXml: string): Array<any> {
                 }
 
             })
-        }
+        } */
 
         if (url) {
             if (url.nodeValue != undefined) {
@@ -525,7 +535,7 @@ export function getInscriptionType(xml : string) : any {
         const termNodes = inscriptionType.querySelectorAll('term');
         
         let termsArray : any[] = [];
-        /* TODO: fix here */
+        
         if (termNodes.length > 0) {
             termNodes.forEach(termNode => {
                 const term = termNode.textContent;
@@ -538,15 +548,7 @@ export function getInscriptionType(xml : string) : any {
 
                 termsArray.push(obj)
             })
-            
 
-            // Costruisce e ritorna l'oggetto JSON
-            /* if (term && url) {
-                return {
-                    term: term,
-                    url: url
-                };
-            } */
             return termsArray;
         }
 
