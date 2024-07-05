@@ -728,6 +728,12 @@ p-tabview.normal-tabview {
     }
 }
 
+#biblio-search{
+    .p-tabview-panel {
+        height: 100% !important;
+    }
+}
+
 .normal-tabview{
     .search-button-div button {
         background: $blue;
