@@ -322,7 +322,10 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
       ),
       takeUntil(this.destroy$), // Unisciti alla distruzione dell'observable
       // Mappa gli alfabeti in un formato specifico per il conteggio
-      map((alphabets) => alphabets.map((alpha: any) => ({ alphabet: alpha })))
+      map((alphabets) => alphabets.map(
+        (alpha: any) => ({ 
+          alphabet: JSON.parse(alpha)['type'][0]
+        }))),
     );
 
   // Observable per raggruppare i contatori dei tipi di oggetti

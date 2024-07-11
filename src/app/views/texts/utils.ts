@@ -259,7 +259,7 @@ export function getBibliography(rawXml: string): Array<any> {
 
             })
         }
-
+        book_obj.editor = {name: '', surname: ''};
         if (editor.length > 0) {
             editor.forEach(edit => {
                 let name = edit.querySelector('forename');
@@ -393,10 +393,24 @@ export function getBibliography(rawXml: string): Array<any> {
         //console.log(book_obj);
         biblio_array.push(book_obj)
     })
-    return biblio_array;
+    let ordered_biblio = sortBooks(biblio_array);
+    return ordered_biblio;
 }
 
-
+export function sortBooks(books: any[]): any[] {
+    return books.sort((a, b) => {
+      const surnameA = a.author.length ? a.author[0].surname : a.editor.surname;
+      const surnameB = b.author.length ? b.author[0].surname : b.editor.surname;
+      
+      if (surnameA < surnameB) {
+        return -1;
+      }
+      if (surnameA > surnameB) {
+        return 1;
+      }
+      return 0;
+    });
+}
 
 export function getCommentaryXml(rawHTML: string, renderer: Renderer2): any {
 
