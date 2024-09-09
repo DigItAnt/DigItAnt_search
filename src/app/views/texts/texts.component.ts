@@ -1205,13 +1205,12 @@ export class TextsComponent implements OnInit {
       }
       if (f || r) {
         this.paginationItems = this.textService
-          .filterByDate(century)
-          .pipe(map((text) => text.slice(f, r)));
+          .filterByDate(century, f, r)
       }
 
       // Calcola il numero totale di record filtrati per secolo
       this.totalRecords = this.textService.countFiles(
-        `[_doc.itAnt_ID=".*" & _doc.dateOfOriginNotBefore=="${century}" & _doc.dateOfOriginNotAfter=="${
+        `[_doc.itAnt_ID=".*" & _doc.dateOfOriginNotBefore>="${century}" & _doc.dateOfOriginNotAfter<="${
           century + 100
         }"]`
       );

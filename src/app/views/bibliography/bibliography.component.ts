@@ -194,19 +194,26 @@ export class BibliographyComponent implements OnInit {
     }));
   }
 
+  activeTabIndex : number | undefined;
   // Observable per la scheda attiva
   activeTab: Observable<string> = this.activatedRoute.queryParams.pipe(
     takeUntil(this.destroy$),
     // Filtra solo i parametri validi
     filter((params) => Object.keys(params).length != 0),
     map((queryParams: Params) => queryParams as LexiconFilter),
-    map((filter: LexiconFilter) => filter.filter),
+    map((filter: LexiconFilter) => filter.filter ? filter.filter : filter.book),
     tap((x) => {
       // Imposta isActiveSearchForm in base alla scheda attiva
       if (x == 'search') {
         this.isActiveSearchForm = true;
       } else {
         this.isActiveSearchForm = false;
+      }
+
+      if(x == 'all'){
+        this.activeTabIndex = 0;
+      }else{
+        this.activeTabIndex = 1;
       }
     })
   );
@@ -551,10 +558,10 @@ export class BibliographyComponent implements OnInit {
   handleAutocompleteFilter(evt: any) {
     this.bibliographySearchForm.markAllAsTouched(); // Segna tutti i campi del form come "touched"
 
-    if (evt.ancientPlaceId != '') {
+    if (evt.modernUri != '') {
       this.bibliographySearchForm
         .get('location')
-        ?.setValue(evt.ancientPlaceLabel); // Imposta il valore della località nel form
+        ?.setValue(evt.modernUri); // Imposta il valore della località nel form
     }
 
     this.bibliographySearchForm.updateValueAndValidity({
@@ -699,7 +706,7 @@ export class BibliographyComponent implements OnInit {
     this.filterResults$.next(null);
     this.filterText = '';
     const filterByLetter$ = this.bibliographyService.filterByLetter(letter).pipe(
-      tap((x) => (this.totalRecords = of(x.length))),
+      /* tap((x) => (this.totalRecords = of(x.length))), */
       tap((x) => (this.showSpinner = false))
     );
   

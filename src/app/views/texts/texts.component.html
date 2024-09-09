@@ -338,7 +338,7 @@
                             (click)="filterByDate(item.century)"
                             class="my-2 mr-2 align-items-center border-round-2xl century-list-element" routerLink="./"
                             [queryParams]="{filter: 'date', date: item.century}">
-                            <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge>
+                            <p-badge class="p-2 pr-0" value="{{item.count}}" *ngIf="item.count > 0"></p-badge>
                             <a class="no-underline font-bold">{{item.century | centuryPipe}}</a>
                         </li>
         
@@ -398,10 +398,10 @@
         
                     <ul class="flex-wrap align-items-center" *ngIf="text.groupType">
         
-                        <li *ngFor="let item of text.groupType" [class.active]="text.activeType == item"
+                        <li *ngFor="let item of text.groupType" [class.active]="text.activeType == item.inscriptionType"
                             (click)="filterByType(item)"
                             class="my-2 mr-2 align-items-center border-round-2xl type-list-element" routerLink="./"
-                            [queryParams]="{filter: 'type', type: item | urlDecoder}">
+                            [queryParams]="{filter: 'type', type: item.inscriptionType | urlDecoder}">
                             <!-- <p-badge class="p-2 pr-0" value="{{item.count}}"></p-badge> -->
                             <a class="no-underline font-bold">{{item.inscriptionType}}</a>
                         </li>
@@ -597,7 +597,7 @@
                                         
                                     </div>
 
-                                    <div class="flex flex-column" *ngIf="textView.file.alphabet == undefined">
+                                    <div class="flex flex-column" *ngIf="textView.file.writingSystem == undefined">
 
                                         <div class="flex flex-column">
                                             <span class="font-italic " >No info</span>

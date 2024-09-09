@@ -36,7 +36,7 @@ export function groupByCenturies(texts: string[]): CenturiesCounter[] {
         if (centuryMap.hasOwnProperty(century)) {
             result.push({
                 century: century == '0' ? 100 : parseInt(century, 10),
-                count: centuryMap[century],
+                count: 0,
                 label: CenturyPipe.prototype.transform(parseInt(century, 10))
             });
         }
@@ -458,7 +458,7 @@ export function getCommentaryXml(rawHTML: string, renderer: Renderer2): any {
                             }
 
                             if (isAFile) {
-                                link.setAttribute('href', biblioTargetUrl ? "/epilexo_search_test/texts?file=" + biblioTargetUrl.replace('.xml', '').replace(/_/g, ' ') : '')
+                                link.setAttribute('href', biblioTargetUrl ? "/texts?file=" + encodeURI(biblioTargetUrl.replace('.xml', '').replace(/_/g, ' ')) : '')
                                 link.setAttribute('target', '_blank')
                             } else {
                                 link.setAttribute('href', biblioTargetUrl ? biblioTargetUrl : '')

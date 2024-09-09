@@ -7,17 +7,18 @@
     bookOrLetter : bookOrLetter | async,
     totalRecords : totalRecords | async} as bibliography">
 
+    
     <div id="left-bar" class="flex flex-column">
         <p-tabView  [ngClass]="{'noZIndex': displayModal}" class="normal-tabview">
 
-            <p-tabPanel header="Categories" [selected]="bibliography.activeTab != 'search'">
+            <p-tabPanel header="Categories" [selected]="activeTabIndex == 0">
 
                 <ul class="home-menu">
                     <a  (click)="filterByLetter('a')" href="'/bibliography?filter=all&letter=a" class="categories no-underline" routerLink="./"
                         [queryParams]="{filter : 'all', letter : 'a'}" [ngClass]="{'active': bibliography.activeTab === 'all'}">
                         <li class="pl-4 flex align-items-center">
                             <span class="icon"></span>
-                            <span class="route flex-1">{{'all' | titlecase}}</span>
+                            <span class="route flex-1">{{'alphabet' | titlecase}}</span>
                         </li>
                     </a>
 
@@ -25,7 +26,7 @@
             </p-tabPanel>
 
             <p-tabPanel header="Simple search" id="biblio-search" class="flex flex-column flex-1"
-                [selected]="bibliography.activeTab == 'search'">
+                [selected]="activeTabIndex == 1">
                 <form id="search-form" class="flex flex-column flex-auto h-full" [formGroup]="bibliographySearchForm">
 
 
@@ -128,7 +129,7 @@
                     </p-panel>
 
                     <div class="flex pt-3 mb-0 mt-auto search-button-div sticky bottom-0">
-                        <button pButton (click)="resetFields()" type="button" label="Reset fields"
+                        <button pButton (click)="resetFields()" type="button" label="Clear"
                             class="p-button-danger border-noround flex-1" icon="fa-solid fa-times" iconPos="left">
                         </button>
 
@@ -144,12 +145,11 @@
 
 
     <div id="bibliography-container" class="flex flex-column flex-1">
-
         <!-- FILTER -->
         <div id="filter-letter-container" class="flex flex-column text-container-top"
             *ngIf="bibliography.bookOrLetter != 'book' && !isActiveSearchForm">
             <div class="flex flex-row align-items-center horizontal-list m-3 text-center">
-                <h2 class="flex-1 loading" *ngIf="!bibliography.totalRecords && !somethingWrong">Loading
+                <h2 class="flex-1 loading" *ngIf="(!bibliography.totalRecords || bibliography.totalRecords == 0) && !somethingWrong">Loading
                     <span>.</span><span>.</span><span>.</span>
                 </h2>
                 <h2 class="flex-1" *ngIf="somethingWrong">Ops!</h2>
@@ -166,57 +166,19 @@
             </div>
         </div>
      
-        <div id="filter-texts-container" class="flex flex-column text-container-top" *ngIf="(bibliography.activeTab == null || bibliography.activeTab == 'search') && !bibliography.activeBook">
+        <div id="filter-texts-container" class="flex flex-column text-container-top" *ngIf="(bibliography.activeTab == null || bibliography.activeTab == 'search') && !bibliography.activeBook &&  bibliography.totalRecords != 0 && !showSpinner">
             <div class="flex flex-row align-items-center horizontal-list m-3 text-center">
                 <h2 class="flex-1 loading" *ngIf="!bibliography.totalRecords && !somethingWrong && bibliography.totalRecords != 0">Loading <span>.</span><span>.</span><span>.</span>
                 </h2>
                 <h2 class="flex-1" *ngIf="somethingWrong">Ops!</h2>
-                <h2 class="flex-1" *ngIf="bibliography.totalRecords && bibliography.totalRecords != 0 && !somethingWrong && !bibliography.activeBook"><span class="red">{{bibliography.totalRecords}} </span>books found
+                <h2 class="flex-1" *ngIf="bibliography.totalRecords && bibliography.totalRecords != 0 && !somethingWrong && !bibliography.activeBook && !showSpinner"><span class="red">{{bibliography.totalRecords}} </span>books found
                 </h2>
             </div>
     
     
         </div>
 
-        <!-- BIBLIO LIST -->
-        <!-- <div class="flex flex-row flex-wrap flex-auto bibliography-item-container ml-2 p-3"
-            *ngIf="!bibliography.activeBook">
-            
-            <div class="flex flex-row m-2 w-full" *ngIf="showSpinner"> 
-                <p-progressSpinner class="flex flex-1"></p-progressSpinner>
-
-            </div>
-            <div class="flex flex-row flex-wrap flex-auto text-item-container p-3"
-                *ngIf="bibliography.totalRecords == 0 && !somethingWrong && bibliography.bookOrLetter != 'word'">
-                no entries
-            </div>
-
-            <a class="flex no-underline lexicon-item m-2" *ngFor="let item of paginationItems | async" routerLink="./"
-                [href]="'/lexicon?book='+item.key" [queryParams]="{book : item.key}">
-
-                
-                <div class="flex flex-row">
-                    <div class="flex text-item-id p-2" style="word-break: break-word;">
-                        {{item.author ? (item.author | truncate) : item.editor ? (item.editor | truncate) : 'No info'}}
-                    </div>
-
-                    <div class="flex flex-column text-item-preview p-2">
-
-                        <div class="text-item-preview-top">
-                            {{item.title | truncate}}
-                        </div>
-
-                        <div class="text-item-preview-bottom flex flex-column mt-3">
-                            <div class="flex flex-row align-items-baseline">
-                                <i class="far fa-calendar-alt"></i>
-                                <span class="ml-2">{{item.date}}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </a>
-
-        </div> -->
+        
        
         <div class="flex flex-column flex-auto bibliography-item-container ml-3"
             *ngIf="!bibliography.activeBook">
@@ -226,12 +188,12 @@
 
             </div>
             <div class="flex flex-row flex-wrap flex-auto text-item-container p-3"
-                *ngIf="bibliography.totalRecords == 0 && !somethingWrong && bibliography.bookOrLetter != 'word'">
+                *ngIf="bibliography.totalRecords == 0 && !somethingWrong && bibliography.bookOrLetter != 'word' && !showSpinner">
                 no entries
             </div>
 
             <div class="flex flex-row p-3 filter-text">
-                <input type="text" [(ngModel)]="filterText" (keyup)="filterResults$.next($event)" pInputText *ngIf="!showSpinner && !isActiveSearchForm"/>
+                <input type="text" [(ngModel)]="filterText" (keyup)="filterResults$.next($event)" pInputText *ngIf="!showSpinner && !isActiveSearchForm && bibliography.bookOrLetter != 'book'"/>
             </div>
 
 

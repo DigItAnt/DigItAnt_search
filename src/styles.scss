@@ -434,6 +434,7 @@ p-autocomplete{
         align-content: baseline;
         overflow-y: auto;
         height: 100px;
+        word-break: break-all;
 
         #interpretative-text,
         #diplomatic-text,

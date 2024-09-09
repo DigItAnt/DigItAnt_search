@@ -259,7 +259,7 @@ export class BibliographyService {
 
     if (formValues.location) {
       queryParts.push(
-        `_doc.originalPlace.ancientName=="${formValues.location}"`
+        `_doc.originalPlace.modernNameUrl=="${formValues.location}"`
       ); // Aggiunge una parte della query per la posizione
     }
 
