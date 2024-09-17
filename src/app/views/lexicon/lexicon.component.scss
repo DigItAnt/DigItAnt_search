@@ -19,3 +19,8 @@
 .hide {
     display: none !important;
 }
+
+.semantic-field:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}

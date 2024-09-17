@@ -9,6 +9,7 @@ import {
   distinctUntilChanged,
   EMPTY,
   filter,
+  from,
   iif,
   map,
   mergeMap,
@@ -16,6 +17,7 @@ import {
   of,
   repeat,
   retry,
+  shareReplay,
   startWith,
   Subject,
   switchMap,
@@ -27,6 +29,7 @@ import {
   throttle,
   throwError,
   timeout,
+  toArray,
 } from 'rxjs';
 import {
   CognateElement,
@@ -45,6 +48,7 @@ import { TreeNode } from 'primeng/api';
 import { FormControl, FormGroup } from '@angular/forms';
 import { HttpResponseBase } from '@angular/common/http';
 import { Annotation, TextsService } from 'src/app/services/text/text.service';
+import { BibliographyService } from 'src/app/services/bibliography/bibliography.service';
 
 export interface TreeEvent {
   node: TreeNode;
@@ -84,6 +88,7 @@ export interface LexiconFilter {
   language: string;
   pos: string;
   book: string;
+  concept: string;
 }
 
 export interface StatisticsCounter {
@@ -125,11 +130,15 @@ export class LexiconComponent implements OnInit {
     'pos',
     'senseType',
     'conceptType',
+    'concept'
   ];
 
   first: number = 0;
   rows: number = 6;
   somethingWrong: boolean = false;
+  showSpinner : boolean = false;
+  treeViewOpt : any[] = [{name : 'Lexical Entry'}, {name: 'Semantic Field\'s'}];
+  treeViewSelected: any = {name: ''}
 
   // Definizione degli Observable per ottenere i parametri attivi dalla query URL
   // e mapparli alle proprietà pertinenti
@@ -138,9 +147,20 @@ export class LexiconComponent implements OnInit {
     takeUntil(this.destroy$),
     filter((params) => Object.keys(params).length != 0),
     map((queryParams: Params) => queryParams as LexiconFilter),
-    map((filter: LexiconFilter) => filter.filter)
+    map((filter: LexiconFilter) => filter.filter),
+    tap((filter) => {
+      if(filter == 'concept'){
+        this.treeViewSelected = {name: "Semantic Field\'s"}
+      }else{
+        this.treeViewSelected = {name: "Lexical Entry"}
+      }
+    })
   );
 
+  checkIntegrity($event : any){
+    console.log($event)
+    this.treeViewOpt = [{name : 'Lexical Entry'}, {name: 'Semantic Field\'s'}];
+  }
   activeLetter: Observable<string> = this.activatedRoute.queryParams.pipe(
     takeUntil(this.destroy$),
     filter((params) => Object.keys(params).length != 0),
@@ -153,7 +173,25 @@ export class LexiconComponent implements OnInit {
     filter((params) => Object.keys(params).length != 0),
     map((queryParams: Params) => queryParams as LexiconFilter),
     map((filter: LexiconFilter) => filter.word),
-    tap((word) => (this.currentLexicalEntry = word))
+    tap((word) => {
+      this.currentLexicalEntry = word;
+      if(word){
+        this.treeViewSelected = {name: "Lexical Entry"}
+      }
+    }),
+  );
+
+  activeConcept: Observable<string> = this.activatedRoute.queryParams.pipe(
+    takeUntil(this.destroy$),
+    filter((params) => Object.keys(params).length != 0),
+    map((queryParams: Params) => queryParams as LexiconFilter),
+    map((filter: LexiconFilter) => filter.concept),
+    tap((concept) => {
+      this.currentConcept = concept; 
+      if(concept){
+        this.treeViewSelected = {name: "Semantic Field\'s"}
+      }
+    }),
   );
 
   activeForm: Observable<string> = this.activatedRoute.queryParams.pipe(
@@ -179,12 +217,13 @@ export class LexiconComponent implements OnInit {
   );
 
   // Observable per determinare se la query URL indica una lettera o una parola attiva
-  wordOrLetter: Observable<string> = this.activatedRoute.queryParams.pipe(
+  wordOrLetter: Observable<string|undefined> = this.activatedRoute.queryParams.pipe(
     takeUntil(this.destroy$),
     map((queryParams: Params) => queryParams as LexiconFilter),
     map((filter: LexiconFilter) => {
       if (filter.letter) return 'letter';
       if (filter.word) return 'word';
+      if(!filter.word && !filter.letter) return undefined;
       return '';
     })
   );
@@ -289,8 +328,8 @@ export class LexiconComponent implements OnInit {
 
   // Opzioni di tipo di modulo
   formTypeOptions: Array<object> = [
-    { label: 'Voce', value: 'voce' },
-    { label: 'Flessa', value: 'flessa' },
+    { label: 'Entry', value: 'entry' },
+    { label: 'Flexed', value: 'flexed' },
   ];
 
   // Stato attivo
@@ -310,6 +349,7 @@ export class LexiconComponent implements OnInit {
   );
   getFormReq$: BehaviorSubject<string> = new BehaviorSubject<string>('');
   getSensesReq$: BehaviorSubject<string> = new BehaviorSubject<string>('');
+  getSemanticFieldsReq$: BehaviorSubject<Array<any>> = new BehaviorSubject<Array<any>>([]);
   getEtymologiesListReq$: BehaviorSubject<string> = new BehaviorSubject<string>(
     ''
   );
@@ -333,6 +373,7 @@ export class LexiconComponent implements OnInit {
   // Voce lessicale e modulo correnti
   currentLexicalEntry: string = '';
   currentForm: string = '';
+  currentConcept : string = '';
 
   // Osservabile per ottenere una voce lessicale
   getLexicalEntry: Observable<LexicalElement> = this.getLexicalEntryReq$.pipe(
@@ -397,7 +438,8 @@ export class LexiconComponent implements OnInit {
             .getSenses(instanceName)
             .pipe(catchError((err) => this.thereWasAnError()))
         : of([])
-    )
+    ),
+    tap((res) => {if(res && res.length > 0) this.getSemanticFieldsReq$.next(res)})
   );
 
   // Osservabile per ottenere l'elenco dei moduli
@@ -451,6 +493,9 @@ export class LexiconComponent implements OnInit {
     );
 
   // Osservabile per ottenere i cognati
+  isLila : boolean = false;
+
+
   getCognates: Observable<CognateElement[]> = this.getCognatesReq$.pipe(
     take(1),
     tap((x) => (this.noCognates = false)),
@@ -461,9 +506,51 @@ export class LexiconComponent implements OnInit {
             .pipe(catchError((err) => this.thereWasAnError(err, 'cognates')))
         : of()
     ),
+    // Per ogni elemento nella lista dei cognates, effettua una chiamata a getLexicalEntryData
+    switchMap((cognates) =>
+      from(cognates).pipe(
+        mergeMap((cognate) =>
+          // Controlla se l'entity è un link a Lila
+          cognate.entity.startsWith('http://lila-erc.eu')
+            ? this.mapLilaCognates(cognate)
+            : this.lexiconService.getLexicalEntryData(cognate.entity).pipe(
+                map((lexicalData) => ({
+                  ...cognate,
+                  lexicalData,  // Aggiungi i dati lessicali all'elemento cognate
+                }))
+              )
+        ),
+        toArray() // Raccoglie tutti gli elementi in un array
+      )
+    ),
     map((cognates) => this.mapCognates(cognates)),
     tap((x) => console.log(x))
   );
+
+  getSemanticFields: Observable<any[]> = this.getSemanticFieldsReq$.pipe(
+    switchMap((items) =>
+      from(items).pipe(
+        mergeMap((item) =>
+          // Chiama la funzione `getSemanticFields` del lexicalService per ogni oggetto
+          this.lexiconService.getSemanticFields(item.sense).pipe(
+            catchError((error) => {
+              console.error(`Error fetching semantic fields for sense ${item.sense}:`, error);
+              return of();  // Ritorna un valore nullo in caso di errore per non interrompere il flusso
+            })
+          )
+        ),
+        // Raccogli tutti i risultati in un array
+        toArray()
+      )
+    ),
+    tap((results) => console.log(results)),  // Logga i risultati finali
+    shareReplay()  // Utilizza `shareReplay` per evitare di ripetere le chiamate HTTP
+  );
+
+  mapLilaCognates(extCognate : CognateElement){
+    extCognate.label = extCognate.entity.split('/')[extCognate.entity.split('/').length -1]
+    return of(extCognate);
+  }
 
   // Flag per indicare l'assenza di cognati
   noCognates: boolean = false;
@@ -498,12 +585,22 @@ export class LexiconComponent implements OnInit {
       this.lexiconService.getBibliographyByEntity(instanceName)
     ),
 
+    //la funzione va modificata qua
+    switchMap((biblioArray) =>
+      // Crea un Observable per ogni ID nel biblioArray.
+      from(biblioArray).pipe(
+        // Usa mergeMap per effettuare chiamate multiple al servizio filterBooks.
+        mergeMap((biblioItem) => this.bibliographyService.filterBooks({id: biblioItem.id, author: undefined, date: undefined, title: undefined})),
+        // Colleziona tutti i risultati in un array.
+        toArray()
+      )
+    ),
+    //map((res) => res[0]),
     // Emette i risultati ottenuti dalla richiesta e li stampa sulla console.
     tap((results) => console.log(results))
   );
 
-  treeViewOpt : any[] = [{name : 'lexicalEntry'}, {name: 'lexicalConcept'}];
-  treeViewSelected: any = {name: 'lexicalEntry'}
+  
 
   tabViewIndex : number = 1;
 
@@ -511,7 +608,8 @@ export class LexiconComponent implements OnInit {
     private route: Router,
     private activatedRoute: ActivatedRoute,
     private lexiconService: LexiconService,
-    private textService: TextsService
+    private textService: TextsService,
+    private bibliographyService : BibliographyService
   ) {}
 
   ngOnInit(): void {
@@ -551,6 +649,10 @@ export class LexiconComponent implements OnInit {
           // Se ci sono più parametri e il primo è 'filter', paginiamo i risultati
           if (keys.length > 1 && keys[0] == 'filter') {
             this.pagination({} as Paginator, keys[1], values[1]);
+          }
+
+          if(keys[0] == 'concept'){
+            this.pagination({} as Paginator, keys[0], values[0]);
           }
 
           // Se il primo parametro è 'word'
@@ -621,11 +723,11 @@ export class LexiconComponent implements OnInit {
       });
     }
 
-    if(node.data.lexicalConcept !== undefined){
+    if(node.data.lexicalConcept !== undefined && !node.leaf){
       lexicalInstanceName = node.data.lexicalConcept;
       
       this.route.navigate(['/lexicon'], {
-        queryParams: { filter: 'concept'}
+        queryParams: { filter: 'concept', concept: lexicalInstanceName}
       })
     }
   }
@@ -685,6 +787,7 @@ export class LexiconComponent implements OnInit {
       label: cog.label, // Etichetta del cognato
       entity: cog.entity, // Entità del cognato
       entityType: cog.entityType, // Tipo di entità del cognato
+      lexicalData : cog.lexicalData ? cog.lexicalData : undefined,
       link: cog.link, // Link associato al cognato
       linkType: cog.linkType, // Tipo di link associato al cognato
     }));
@@ -698,6 +801,7 @@ export class LexiconComponent implements OnInit {
 
   // Funzione per ottenere tutti i dati (usata per la paginazione)
   getAllData(f?: number, r?: number): void {
+    this.showSpinner = true;
     let rows = 0; // Numero di righe
     if (f && r) {
       // Se i parametri first e rows sono definiti
@@ -712,7 +816,8 @@ export class LexiconComponent implements OnInit {
 
     // Ottiene i dati del lessico in base alla paginazione
     this.paginationItems = this.lexiconService.lexicon$.pipe(
-      map((lexicon) => lexicon.slice(this.first, rows == 0 ? this.rows : rows))
+      map((lexicon) => lexicon.slice(this.first, rows == 0 ? this.rows : rows)),
+      tap(x=> this.showSpinner=false)
     );
     // Ottiene il numero totale di record nel lessico
     this.totalRecords = this.lexiconService.lexicon$.pipe(
@@ -722,6 +827,7 @@ export class LexiconComponent implements OnInit {
 
   // Funzione per filtrare i dati per lettera (usata per la paginazione)
   filterByLetter(f?: number, r?: number, letter?: string): void {
+    this.showSpinner = true;
     let rows = 0; // Numero di righe
     if (f && r) {
       // Se i parametri first e rows sono definiti
@@ -739,17 +845,20 @@ export class LexiconComponent implements OnInit {
       .filterByLetter(letter || '')
       .pipe(
         tap((x) => (this.somethingWrong = false)),
-        map((text) => text.slice(f, r))
+        map((text) => text.slice(f, r)),
+        tap(x => this.showSpinner=false)
       );
     // Ottiene il numero totale di record nel lessico dopo il filtro per lettera
     this.totalRecords = this.lexiconService.filterByLetter(letter || '').pipe(
       tap((x) => (this.somethingWrong = false)),
       map((texts) => texts.length)
     );
+
   }
 
   // Funzione per filtrare gli elementi per lingua
   filterByLanguage(f?: number, r?: number, lang?: string): void {
+    this.showSpinner = true;
     let rows = 0; // Inizializza il conteggio delle righe
     if (f && r) {
       this.first = f;
@@ -763,7 +872,7 @@ export class LexiconComponent implements OnInit {
     // Effettua la chiamata al servizio per filtrare gli elementi per lingua e li ritorna paginati
     this.paginationItems = this.lexiconService
       .filterByLanguage(lang || '')
-      .pipe(map((lexicon) => lexicon.slice(f, r)));
+      .pipe(map((lexicon) => lexicon.slice(f, r)),tap(x => this.showSpinner=false));
     // Imposta il numero totale di record ottenuti dalla chiamata al servizio per filtrare gli elementi per lingua
     this.totalRecords = this.lexiconService
       .filterByLanguage(lang || '')
@@ -772,6 +881,7 @@ export class LexiconComponent implements OnInit {
 
   // Funzione per filtrare gli elementi per parte del discorso
   filterByPos(f?: number, r?: number, pos?: string): void {
+    this.showSpinner = true;
     let rows = 0; // Inizializza il conteggio delle righe
     if (f && r) {
       this.first = f;
@@ -785,10 +895,58 @@ export class LexiconComponent implements OnInit {
     // Effettua la chiamata al servizio per filtrare gli elementi per parte del discorso e li ritorna paginati
     this.paginationItems = this.lexiconService
       .filterByPos(pos || '')
-      .pipe(map((lexicon) => lexicon.slice(f, r)));
+      .pipe(map((lexicon) => lexicon.slice(f, r)), tap(x => this.showSpinner=false));
     // Imposta il numero totale di record ottenuti dalla chiamata al servizio per filtrare gli elementi per parte del discorso
     this.totalRecords = this.lexiconService
       .filterByPos(pos || '')
+      .pipe(map((lexicon) => lexicon.length || 0));
+  }
+
+  mapSenseElement(lexicon : any) : LexicalElement[] {
+    return lexicon.map((lex: any) => ({
+      author: lex.creator,
+      completionDate: null,
+      confidence: lex.confidence,
+      creationDate: lex.creationDate,
+      hasChildren: null,
+      label: lex.definition.find((d:any) => d.propertyID === 'definition')?.propertyValue || '',
+      language: lex.lexicalEntryLabel.split('@')[lex.lexicalEntryLabel.split('@').length -1],
+      lastUpdate: lex.lastUpdate,
+      lexicalEntry: lex.lexicalEntry,
+      morphology: [],
+      note: lex.note,
+      pos: null,
+      revisionDate: null,
+      revisor: null,
+      stemType: null,
+      status: null,
+      type: null,
+    }));
+  }
+  
+  filterByConcept(f?: number, r?: number, concept?: string): void {
+    this.showSpinner = true;
+    let rows = 0; // Inizializza il conteggio delle righe
+    if (f && r) {
+      this.first = f;
+      rows = r;
+    } // Imposta il primo elemento e il numero di righe se entrambi sono definiti
+    if (!f && !r) {
+      this.first = 0;
+      this.rows = 6;
+    } // Se non sono definiti, reimposta il primo elemento a 0 e il numero di righe a 6
+
+    // Effettua la chiamata al servizio per filtrare gli elementi per parte del discorso e li ritorna paginati
+    this.paginationItems = this.lexiconService
+      .filterSensesByConcept(concept || '')
+      .pipe(
+        map((lexicon) => this.mapSenseElement(lexicon)),
+        map((lexicon) => lexicon.slice(f, r)), 
+        tap(x => this.showSpinner=false)
+      );
+    // Imposta il numero totale di record ottenuti dalla chiamata al servizio per filtrare gli elementi per parte del discorso
+    this.totalRecords = this.lexiconService
+      .filterSensesByConcept(concept || '')
       .pipe(map((lexicon) => lexicon.length || 0));
   }
 
@@ -835,6 +993,9 @@ export class LexiconComponent implements OnInit {
         case 'pos':
           this.filterByPos(this.first, rows, value);
           break; // Filtra per parte del discorso
+        case 'concept':
+          this.filterByConcept(this.first, rows, value);
+          break;
       }
       return;
     }

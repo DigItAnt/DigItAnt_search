@@ -509,7 +509,7 @@ export class BibliographyService {
     // Aggiunge il filtro per l'ID, se specificato nel form.
     if (formValues.id) {
       filters.push({
-        key: 'id',
+        key: 'key',
         value: `.*${formValues.id}.*`,
         op: 're',
       });
@@ -552,15 +552,23 @@ export class BibliographyService {
           books.map((book) => ({
             abstractNote: book.params['Abstract Note']?.join('; ') || '',
             author: book.params['Author']?.join('; ') || '',
+            citedRangeEntry: book.params['Cited Range Entry']?.join('; ') || '',
+            citedRangePage: book.params['Cited Range Page']?.join('; ') || '',
             date: book.params['Date']?.join('; ') || '',
             editor: book.params['Editor']?.join('; ') || '',
+            journalArticleTitle: book.params['Publication Title']?.join('; ') || '',
             isbn: book.params['ISBN']?.join('; ') || '',
+            issue: book.params['Issue']?.join('; ') || '',
             itemType: book.params['Item Type']?.join('; ') || '',
+            libraryCatalog: book.params['Library Catalog']?.join('; ') || '',
             key: book.params['Key']?.join('; ') || '',
+            numberOfVolumes: book.params['Number Of Volumes']?.join('; ') || '',
             pages: book.params['Pages']?.join('; ') || '',
             place: book.params['Place']?.join('; ') || '',
             publicationYear: book.params['Publication Year']?.join('; ') || '',
             publisher: book.params['Publisher']?.join('; ') || '',
+            serires: book.params['Series']?.join('; ') || '',
+            type: book.params['Item Type']?.join('; ') || '',
             title: book.params['Title']?.join('; ') || '',
             url: book.params['Url']?.join('; ') || '',
             volume: book.params['Volume']?.join('; ') || '',
@@ -731,7 +739,7 @@ export class BibliographyService {
     let params = new HttpParams()
       .set(
         'query',
-        `[_doc.itAnt_ID=".*" & attestation.bibliography.key=="${bookKey}"]`
+        `[_doc.bibliography.corresp="http://zotero.org/groups/2552746/items/${bookKey}"]`
       )
       .set('offset', '0')
       .set('limit', '500');

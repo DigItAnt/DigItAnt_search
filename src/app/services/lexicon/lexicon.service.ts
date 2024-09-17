@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { TreeNode } from 'primeng/api';
-import { map, Observable, of, pipe, shareReplay } from 'rxjs';
+import { catchError, from, map, mergeMap, Observable, of, pipe, shareReplay, switchMap, tap, toArray } from 'rxjs';
 import { StatisticsCounter } from 'src/app/views/lexicon/lexicon.component';
 import { environment } from 'src/environments/environment';
 
@@ -150,6 +150,7 @@ export interface CognateElement {
   label: string;
   entity: string;
   entityType: Array<string>;
+  lexicalData?: LexicalElement;
   link: string | null;
   linkType: string;
 }
@@ -400,6 +401,21 @@ export class LexiconService {
       );
   }
 
+  getSemanticFields(instanceName: string): Observable<CognateElement[]> {
+    return this.http
+      .get<CognateElement[]>(
+        `${
+          this.baseUrl
+        }lexicon/data/linguisticRelation?key=lexodemo&property=isLexicalizedSenseOf&id=${encodeURIComponent(
+          instanceName
+        )}`
+      )
+      .pipe(
+        map((res) => res),
+        shareReplay()
+      );
+  }
+
   // Questo metodo restituisce una lista di bibliografie in base al nome dell'istanza specificata.
   getBibliographyByEntity(instanceName: string): Observable<any[]> {
     return this.http
@@ -496,5 +512,38 @@ export class LexiconService {
         })
       )
     );
+  }
+
+  filterSensesByConcept(concept: string): Observable<any[]> {
+    return this.http
+      .get<any[]>(
+        `${
+          this.baseUrl
+        }lexicon/data/linguisticRelation?key=PRINitant19&property=lexicalizedSense&id=${encodeURIComponent(
+          concept
+        )}`
+      )
+      .pipe(
+        switchMap((res) =>
+          // Converti l'array di risultati in un Observable usando `from`
+          from(res).pipe(
+            // Usa `mergeMap` per effettuare chiamate HTTP parallele
+            mergeMap((item) =>
+              // Chiama l'endpoint per ogni `entity`
+              this.http.get(`${this.baseUrl}lexicon/data/lexicalSense`, {
+                params: { id: item.entity, module: 'core' }
+              })
+            ),
+            // Raccogli tutti i risultati in un array
+            toArray()
+          )
+        ),
+        catchError((error) => {
+          console.error('Error fetching senses by concept:', error);
+          return of([]);  // Ritorna un array vuoto in caso di errore
+        }),
+        tap(x => console.log(x)),
+        shareReplay()
+      );
   }
 }
