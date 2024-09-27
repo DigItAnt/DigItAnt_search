@@ -9,7 +9,11 @@ export class LabelMappingPipe implements PipeTransform {
     osc: 'Oscan', // 'osc' viene mappato a 'Oscan'
     xfa: 'Faliscan', // 'xfa' viene mappato a 'Faliscan'
     'grc-Grek': 'Greek',
-    lat: 'Latin'
+    lat: 'Latin',
+    xve: 'Venetic',
+    xcg: 'Cisalpine Celtic',
+    'lat-Latn': 'Latin',
+    'xve-Latn-x-xvelt': 'Venetic in Latin alphabet'
   };
 
   // Funzione che trasforma un'etichetta abbreviata nella sua forma completa, se presente nella mappatura.
