@@ -728,13 +728,18 @@ export function getFacsimile(rawXml: string): Array<Graphic> {
 }
 
 export function leidenDiplomaticBuilder(html: string, isVenetic?: boolean) {
-    let resHTMLArray = [];
+    let resHTMLArray: any[] = [];
     let nodes = new DOMParser().parseFromString(html, "text/html").querySelectorAll('#diplomatic .textpart');
-    if (!isVenetic) {
+    let filteredNodes = Array.from(nodes).filter(textpart => {
+        if(textpart && textpart.parentElement) return textpart.parentElement.querySelector('.textpartnumber') !== null;
+        else return;
+    });
+    /* if (!isVenetic) {
         nodes.forEach(el => resHTMLArray.push(el.innerHTML));
     } else {
         resHTMLArray.push(nodes[1].innerHTML);
-    }
+    } */
+    filteredNodes.forEach(el => resHTMLArray.push(el.innerHTML));
     return resHTMLArray;
 }
 
