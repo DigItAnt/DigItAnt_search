@@ -13,7 +13,7 @@ export const environment = {
   zoteroUrl : "https://api.zotero.org/groups/2552746/items",
 
   endpointPleiades : 'https://pleiades.stoa.org/places/',
-  endpointGeoNames : 'http://api.geonames.org/',
+  endpointGeoNames : 'https://secure.geonames.org/',
 };
 
 /*
