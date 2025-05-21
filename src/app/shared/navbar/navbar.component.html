@@ -1,7 +1,7 @@
 
 <div id="navbar">
     <p-toolbar class="block">
-        <span *ngIf="textItems | async"></span>
+        <span [hidden]="true" *ngIf="textItems | async"></span>
         <div class="p-toolbar-group-left">
             <a href="/home" (click)="$event.preventDefault()">                
                 <button routerLink="/home" routerLinkActive="active" pButton pRipple type="button" label="Home" class="p-button-secondary p-button-text"></button>

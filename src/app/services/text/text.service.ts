@@ -1044,12 +1044,31 @@ export class TextsService {
 
   // Funzione per mappare una richiesta XML.
   // Restituisce XmlAndId.
-  mapXmlRequest(res: XmlAndId): XmlAndId {
+  mapXmlRequest(res: XmlAndId, isVenetic?: boolean, isDiplomatic?: boolean): XmlAndId {
+    let xml = res.xml;
+  
+    // Se isVenetic è true, rimuovi il nodo <tei:div> con subtype="diplomatic"
+    /* if (isVenetic && isDiplomatic) {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xml, 'application/xml');
+  
+      // Trova il nodo <tei:div> con l'attributo subtype="diplomatic"
+      const divToRemove = xmlDoc.querySelector('div[subtype="interpretative"]');
+      
+      if (divToRemove) {
+        divToRemove.parentNode?.removeChild(divToRemove);
+      }
+  
+      // Converti nuovamente l'XML in stringa
+      const serializer = new XMLSerializer();
+      xml = serializer.serializeToString(xmlDoc);
+    } */
+  
     let object = {
-      xml: res.xml,
+      xml: xml,
       nodeId: res.nodeId,
     };
-
+  
     return object;
   }
 

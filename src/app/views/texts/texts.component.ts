@@ -555,7 +555,7 @@ export class TextsComponent implements OnInit {
       // Conserva il valore XML temporaneo della richiesta corrente per uso futuro
       tap((req) => (this.tempXml = req.xml)),
       // Trasforma la richiesta XML in un formato specifico tramite textService
-      map((req) => this.textService.mapXmlRequest(req)),
+      map((req) => this.textService.mapXmlRequest(req, false, false)),
       // Estrae i nodi figli TEI dalla richiesta trasformata
       map((req) => getTeiChildren(req)),
       // Ottiene dati interpretativi personalizzati basandosi sui nodi arrayNodes e gestisce eventuali errori
@@ -608,7 +608,7 @@ export class TextsComponent implements OnInit {
     // Filtra le richieste che hanno almeno una proprietà
     filter((req) => Object.keys(req).length > 0),
     // Mappa il XML grezzo in un formato specifico
-    map((rawXml) => this.textService.mapXmlRequest(rawXml)),
+    map((rawXml) => this.textService.mapXmlRequest(rawXml, this.isVenetic, true)),
     // Controlla se xml non è vuoto e ottiene il contenuto HTML, gestisce errori
     switchMap((req) =>
       req.xml != ''

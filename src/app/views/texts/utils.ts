@@ -729,17 +729,31 @@ export function getFacsimile(rawXml: string): Array<Graphic> {
 
 export function leidenDiplomaticBuilder(html: string, isVenetic?: boolean) {
     let resHTMLArray: any[] = [];
-    let nodes = new DOMParser().parseFromString(html, "text/html").querySelectorAll('#diplomatic .textpart');
-    let filteredNodes = Array.from(nodes).filter(textpart => {
-        if(textpart && textpart.parentElement) return textpart.parentElement.querySelector('.textpartnumber') !== null;
-        else return;
-    });
-    /* if (!isVenetic) {
-        nodes.forEach(el => resHTMLArray.push(el.innerHTML));
+    let doc = new DOMParser().parseFromString(html, "text/html");
+
+    // Se isVenetic è true, esegui le operazioni richieste
+    if (isVenetic) {
+        // Seleziona il div genitore con id "edition", classe "content" e l'attributo "data-section-content"
+        let parentContent = doc.querySelector('div#edition.content[data-section-content="data-section-content"]');
+
+        // Trova il primo div con id "edition" che non si trova sotto un nodo con id "diplomatic"
+        let firstEdition = parentContent?.querySelector('div#edition:not(#diplomatic)');
+
+        if (firstEdition) {
+            // Trova tutti i <div> con classe "textpart" all'interno del primo <div#edition>
+            let textParts = firstEdition.querySelectorAll('div.textpart');
+
+            // Estrai il contenuto testuale di ciascun "textpart" e aggiungilo all'array
+            textParts.forEach(textPart => {
+                resHTMLArray.push(textPart.innerHTML);
+            });
+        }
     } else {
-        resHTMLArray.push(nodes[1].innerHTML);
-    } */
-    filteredNodes.forEach(el => resHTMLArray.push(el.innerHTML));
+        // Comportamento precedente se isVenetic è false
+        let nodes = doc.querySelectorAll('#diplomatic .textpart');
+        nodes.forEach(el => resHTMLArray.push(el.innerHTML));
+    }
+
     return resHTMLArray;
 }
 
@@ -815,19 +829,30 @@ export function buildCustomInterpretative(renderer: Renderer2, TEINodes: Array<A
                     Array.from(body.childNodes).forEach((sub: any) => {
 
                         if (sub instanceof HTMLElement) {
+                            if (sub.id && sub.id.startsWith('al')) {
+                                // Estrai il numero dall'ID di sub (es. 'al5' -> 5)
+                                let lineNumber = parseInt(sub.id.substring(2), 10);
+                                if (!isNaN(lineNumber)) {
+                                    lineCounter = lineNumber;
+                                }
+                            }
+                        
                             if (nodeValue && sub.tagName == 'BR') {
                                 let span = renderer.createElement('span') as Element;
                                 renderer.addClass(span, 'linenumber');
                                 span.setAttribute('xmlid', nodeValue);
-                                let text = renderer.createText((lineCounter + 1).toString());
+                        
+                                // Crea il testo con il valore aggiornato di lineCounter
+                                let text = renderer.createText((lineCounter).toString());
                                 renderer.appendChild(span, text);
+                        
                                 if (sub.tagName == 'BR' && (sub.id == 'al1' || sub.id == 'al1b')) {
                                     HTML += span.outerHTML;
                                 } else {
                                     HTML += sub.outerHTML;
                                     HTML += span.outerHTML;
                                 }
-                                lineCounter = lineCounter + 1;
+                                
                             } else {
                                 if (!(sub.tagName == 'SPAN' && sub.classList.contains('linenumber'))) {
                                     HTML += sub.outerHTML;
@@ -851,7 +876,7 @@ export function getTranslationByXml(rawXml: string) {
     let translations: Array<string> = [];
 
     let nodes = new DOMParser().parseFromString(rawXml, "text/xml");
-    let translationNodes = Array.from(nodes.querySelectorAll("div[type='translation'"));
+    let translationNodes = Array.from(nodes.querySelectorAll("div[type='translation']"));
 
     if (translationNodes.length > 0) {
         translationNodes.forEach(element => {
